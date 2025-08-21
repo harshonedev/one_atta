@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:one_atta/core/di/injection_container.dart' as di;
+import 'package:one_atta/core/routing/app_router.dart';
+import 'package:one_atta/core/theme/theme.dart';
+import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize dependency injection
+  await di.init();
+
+  // Initialize router
+  AppRouter.init();
+
   runApp(const MainApp());
 }
 
@@ -9,11 +22,15 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MultiBlocProvider(
+      providers: [BlocProvider(create: (context) => di.sl<AuthBloc>())],
+      child: MaterialApp.router(
+        title: 'One Atta',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme().light(),
+        darkTheme: AppTheme().dark(),
+        themeMode: ThemeMode.light,
+        routerConfig: AppRouter.router,
       ),
     );
   }
