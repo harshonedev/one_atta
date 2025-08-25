@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:one_atta/features/auth/domain/entities/auth_credentials.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
@@ -11,39 +10,37 @@ abstract class AuthEvent extends Equatable {
 class AuthCheckRequested extends AuthEvent {}
 
 class AuthLoginRequested extends AuthEvent {
-  final AuthCredentials credentials;
+  final String phoneNumber;
 
-  const AuthLoginRequested({required this.credentials});
+  const AuthLoginRequested({required this.phoneNumber});
 
   @override
-  List<Object> get props => [credentials];
+  List<Object> get props => [phoneNumber];
 }
 
 class AuthRegisterRequested extends AuthEvent {
-  final RegisterCredentials credentials;
 
-  const AuthRegisterRequested({required this.credentials});
+  const AuthRegisterRequested();
 
   @override
-  List<Object> get props => [credentials];
+  List<Object> get props => [];
 }
 
 class AuthLogoutRequested extends AuthEvent {}
 
 class AuthForgotPasswordRequested extends AuthEvent {
-  final ForgotPasswordCredentials credentials;
 
-  const AuthForgotPasswordRequested({required this.credentials});
+  const AuthForgotPasswordRequested();
 
   @override
-  List<Object> get props => [credentials];
+  List<Object> get props => [];
 }
 
 class AuthResetPasswordRequested extends AuthEvent {
-  final ResetPasswordCredentials credentials;
 
-  const AuthResetPasswordRequested({required this.credentials});
+
+  const AuthResetPasswordRequested();
 
   @override
-  List<Object> get props => [credentials];
+  List<Object> get props => [];
 }

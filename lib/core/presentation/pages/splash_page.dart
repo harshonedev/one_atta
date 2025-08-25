@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/constants/app_assets.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:one_atta/features/auth/presentation/bloc/auth_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 
 class SplashPage extends StatefulWidget {
@@ -45,7 +45,7 @@ class _SplashPageState extends State<SplashPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: AspectRatio(
             aspectRatio: 376 / 58,
-            child: Center(child: Image.asset("assets/images/logo.png")),
+            child: Center(child: Image.asset(AppAssets.logo)),
           ),
         ),
       ),

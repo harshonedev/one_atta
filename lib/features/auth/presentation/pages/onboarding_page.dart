@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/constants/app_assets.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
@@ -11,10 +12,10 @@ class OnboardingPage extends StatelessWidget {
         children: [
           // Onboarding Image/Illustration
           Image.asset(
-            "assets/images/onboarding.png",
-            height: 300,
+            AppAssets.onboardingImage,
+            height: 320,
             width: double.infinity,
-            fit: BoxFit.contain,
+            fit: BoxFit.fill,
           ),
 
           // Content Section
@@ -39,7 +40,7 @@ class OnboardingPage extends StatelessWidget {
 
                   // Sign Up Button
                   FilledButton(
-                    onPressed: () => context.push('/login'),
+                    onPressed: () => context.push('/register'),
                     style: FilledButton.styleFrom(
                       backgroundColor: Theme.of(
                         context,

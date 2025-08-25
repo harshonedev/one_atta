@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/constants.dart';
-import 'package:one_atta/core/utils/validators.dart';
-import 'package:one_atta/features/auth/domain/entities/auth_credentials.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:one_atta/features/auth/presentation/bloc/auth_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
-import 'package:one_atta/features/auth/presentation/widgets/custom_button.dart';
-import 'package:one_atta/features/auth/presentation/widgets/custom_text_field.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,27 +12,37 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+  final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   @override
   void dispose() {
+    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      final credentials = AuthCredentials(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      context.read<AuthBloc>().add(
-        AuthLoginRequested(credentials: credentials),
+      // Navigate to OTP page with the phone number
+      context.push(
+        '/otp',
+        extra: {
+          'phoneNumber': _phoneController.text.trim(),
+          'isFromRegister': false,
+        },
       );
     }
   }
@@ -45,6 +50,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -59,125 +65,214 @@ class _LoginPageState extends State<LoginPage> {
           }
         },
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Spacer(),
-                  // Logo or App Name
-                  Center(
-                    child: Text(
-                      AppConstants.appName,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    32,
+              ),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    // Header with back button and title
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => context.pop(),
+                          icon: Icon(
+                            Icons.arrow_back_ios,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              AppConstants.appName,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                  ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 48), // Balance the back button
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 48),
 
-                  // Title
-                  Text(
-                    AppStrings.signInToYourAccount,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
+                    // Main content
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 32),
 
-                  // Email Field
-                  CustomTextField(
-                    label: AppStrings.email,
-                    hint: 'Enter your email',
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Email is required';
-                      }
-                      if (!EmailValidator.isValid(value)) {
-                        return AppStrings.invalidEmail;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                              // Welcome Back title
+                              Text(
+                                'Welcome Back',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
 
-                  // Password Field
-                  CustomTextField(
-                    label: AppStrings.password,
-                    hint: 'Enter your password',
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required';
-                      }
-                      if (!PasswordValidator.isValid(value)) {
-                        return AppStrings.invalidPassword;
-                      }
-                      return null;
-                    },
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                              // Subtitle
+                              Text(
+                                'Log in to personalize your atta experience.',
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                              const SizedBox(height: 32),
+
+                              // Tab bar view content
+                              Expanded(child: _buildPhoneLoginForm()),
+
+                              // Sign up link
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 32.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      AppStrings.dontHaveAccount,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        context.push('/register');
+                                      },
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                      child: Text(
+                                        AppStrings.signUp,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
                     ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        context.push('/forgot-password');
-                      },
-                      child: Text(AppStrings.forgotPassword),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Login Button
-                  BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      return CustomButton(
-                        text: AppStrings.signIn,
-                        onPressed: _handleLogin,
-                        isLoading: state is AuthLoading,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sign Up Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(AppStrings.dontHaveAccount),
-                      TextButton(
-                        onPressed: () {
-                          context.push('/register');
-                        },
-                        child: Text(AppStrings.signUp),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPhoneLoginForm() {
+    return Column(
+      children: [
+        // Phone number input
+        TextFormField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          style: Theme.of(context).textTheme.bodyLarge,
+          decoration: InputDecoration(
+            hintText: 'Phone number',
+            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.all(16),
+            filled: true,
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.inverseSurface.withValues(alpha: 0.1),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Phone number is required';
+            }
+            // Add phone validation if needed
+            return null;
+          },
+        ),
+        const Spacer(),
+
+        // Send OTP Button
+        BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            return FilledButton(
+              onPressed: state is AuthLoading ? null : _handleLogin,
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: state is AuthLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      'Send OTP',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 }

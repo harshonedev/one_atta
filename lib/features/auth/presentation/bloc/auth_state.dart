@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:one_atta/features/auth/domain/entities/user.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -39,4 +38,20 @@ class AuthSuccess extends AuthState {
 
   @override
   List<Object> get props => [message];
+}
+
+
+class User extends Equatable {
+  final String id;
+  final String phoneNumber;
+  final String? email;
+
+  const User({
+    required this.id,
+    required this.phoneNumber,
+    this.email,
+  });
+
+  @override
+  List<Object?> get props => [id, phoneNumber, email];
 }

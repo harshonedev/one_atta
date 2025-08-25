@@ -4,6 +4,7 @@ import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/routing/app_router.dart';
 import 'package:one_atta/core/theme/theme.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,10 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [BlocProvider(create: (context) => di.sl<AuthBloc>())],
+      providers: [
+        BlocProvider(create: (context) => di.sl<AuthBloc>()),
+        BlocProvider(create: (context) => HomeBloc()),
+      ],
       child: MaterialApp.router(
         title: 'One Atta',
         debugShowCheckedModeBanner: false,

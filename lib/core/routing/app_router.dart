@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/presentation/pages/splash_page.dart';
+import 'package:one_atta/core/presentation/pages/main_navigation_page.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
-import 'package:one_atta/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/login_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
-import 'package:one_atta/features/home/presentation/pages/home_page.dart';
+import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
 
 class AppRouter {
@@ -28,6 +28,7 @@ class AppRouter {
         final isOnAuth =
             state.fullPath == '/login' ||
             state.fullPath == '/register' ||
+            state.fullPath == '/otp' ||
             state.fullPath == '/forgot-password';
 
         // If user is authenticated and trying to access auth/onboarding pages, redirect to home
@@ -67,14 +68,17 @@ class AppRouter {
           builder: (context, state) => const RegisterPage(),
         ),
         GoRoute(
-          path: '/forgot-password',
-          name: 'forgot-password',
-          builder: (context, state) => const ForgotPasswordPage(),
+          path: '/otp',
+          name: 'otp',
+          builder: (context, state) {
+            final data = state.extra as Map<String, dynamic>? ?? {};
+            return OtpPage(data: data);
+          },
         ),
         GoRoute(
           path: '/home',
           name: 'home',
-          builder: (context, state) => const HomePage(),
+          builder: (context, state) => const MainNavigationPage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
