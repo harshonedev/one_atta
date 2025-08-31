@@ -10,7 +10,6 @@ import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
-import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
 import 'package:one_atta/features/blends/presentation/pages/blends_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blend_details_page.dart';
 
@@ -89,10 +88,7 @@ class AppRouter {
           name: 'recipe-details',
           builder: (context, state) {
             final recipeId = state.pathParameters['recipeId']!;
-            return BlocProvider(
-              create: (context) => RecipeDetailsBloc(),
-              child: RecipeDetailsPage(recipeId: recipeId),
-            );
+            return RecipeDetailsPage(recipeId: recipeId);
           },
         ),
         GoRoute(

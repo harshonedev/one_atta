@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../data/models/recipe.dart';
+import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 
 abstract class RecipesState extends Equatable {
   const RecipesState();
@@ -17,31 +17,27 @@ class RecipesLoading extends RecipesState {
 }
 
 class RecipesLoaded extends RecipesState {
-  final List<Recipe> recipes;
-  final List<Recipe> featuredRecipes;
-  final List<CommunityMember> communityMembers;
+  final List<RecipeEntity> recipes;
+  final List<RecipeEntity> filteredRecipes;
   final String selectedCategory;
   final String searchQuery;
 
   const RecipesLoaded({
     required this.recipes,
-    required this.featuredRecipes,
-    required this.communityMembers,
+    required this.filteredRecipes,
     this.selectedCategory = 'All',
     this.searchQuery = '',
   });
 
   RecipesLoaded copyWith({
-    List<Recipe>? recipes,
-    List<Recipe>? featuredRecipes,
-    List<CommunityMember>? communityMembers,
+    List<RecipeEntity>? recipes,
+    List<RecipeEntity>? filteredRecipes,
     String? selectedCategory,
     String? searchQuery,
   }) {
     return RecipesLoaded(
       recipes: recipes ?? this.recipes,
-      featuredRecipes: featuredRecipes ?? this.featuredRecipes,
-      communityMembers: communityMembers ?? this.communityMembers,
+      filteredRecipes: filteredRecipes ?? this.filteredRecipes,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
     );
@@ -50,11 +46,62 @@ class RecipesLoaded extends RecipesState {
   @override
   List<Object?> get props => [
     recipes,
-    featuredRecipes,
-    communityMembers,
+    filteredRecipes,
     selectedCategory,
     searchQuery,
   ];
+}
+
+class RecipeDetailsLoading extends RecipesState {
+  const RecipeDetailsLoading();
+}
+
+class RecipeDetailsLoaded extends RecipesState {
+  final RecipeEntity recipe;
+
+  const RecipeDetailsLoaded(this.recipe);
+
+  @override
+  List<Object?> get props => [recipe];
+}
+
+class RecipeCreating extends RecipesState {
+  const RecipeCreating();
+}
+
+class RecipeCreated extends RecipesState {
+  final RecipeEntity recipe;
+
+  const RecipeCreated(this.recipe);
+
+  @override
+  List<Object?> get props => [recipe];
+}
+
+class RecipeUpdating extends RecipesState {
+  const RecipeUpdating();
+}
+
+class RecipeUpdated extends RecipesState {
+  final RecipeEntity recipe;
+
+  const RecipeUpdated(this.recipe);
+
+  @override
+  List<Object?> get props => [recipe];
+}
+
+class RecipeDeleting extends RecipesState {
+  const RecipeDeleting();
+}
+
+class RecipeDeleted extends RecipesState {
+  final RecipeEntity recipe;
+
+  const RecipeDeleted(this.recipe);
+
+  @override
+  List<Object?> get props => [recipe];
 }
 
 class RecipesError extends RecipesState {

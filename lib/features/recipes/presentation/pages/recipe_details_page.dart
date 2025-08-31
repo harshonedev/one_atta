@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import '../bloc/recipe_details_bloc.dart';
-import '../bloc/recipe_details_event.dart';
-import '../bloc/recipe_details_state.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
+import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
+import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
+import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
+import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_event.dart';
+import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_state.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class RecipeDetailsPage extends StatefulWidget {
   final String recipeId;
@@ -17,791 +20,413 @@ class RecipeDetailsPage extends StatefulWidget {
 class _RecipeDetailsPageState extends State<RecipeDetailsPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  YoutubePlayerController? _youtubeController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     context.read<RecipeDetailsBloc>().add(LoadRecipeDetails(widget.recipeId));
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _youtubeController?.dispose();
     super.dispose();
   }
 
-  void _toggleFavorite() {
-    context.read<RecipeDetailsBloc>().add(
-      ToggleRecipeFavorite(widget.recipeId),
-    );
-  }
-
-  void _shareRecipe() {
-    context.read<RecipeDetailsBloc>().add(ShareRecipe(widget.recipeId));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Recipe shared!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
+  void _initializeYoutubePlayer(String videoUrl) {
+    final videoId = YoutubePlayer.convertUrlToId(videoUrl);
+    if (videoId != null) {
+      _youtubeController = YoutubePlayerController(
+        initialVideoId: videoId,
+        flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: BlocBuilder<RecipeDetailsBloc, RecipeDetailsState>(
+      body: BlocConsumer<RecipeDetailsBloc, RecipeDetailsState>(
+        listener: (context, state) {
+          if (state is RecipeDetailsError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is RecipeDetailsLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           }
 
           if (state is RecipeDetailsError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Recipe Details'),
+                centerTitle: false,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+              ),
+              body: ErrorPage(
+                onRetry: () {
+                  // Get recipe ID from context or navigation
+                },
+              ),
+            );
+          }
+
+          if (state is RecipeDetailsLoaded) {
+            return _buildRecipeContent(context, state.recipe);
+          }
+
+          return const SizedBox.shrink();
+        },
+      ),
+    );
+  }
+
+  Widget _buildRecipeContent(BuildContext context, RecipeEntity recipe) {
+    // Initialize YouTube player if video URL exists
+    if (recipe.videoUrl != null && _youtubeController == null) {
+      _initializeYoutubePlayer(recipe.videoUrl!);
+    }
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: CustomScrollView(
+        slivers: [
+          // App Bar with Recipe Image
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.error,
+                  // Recipe Image
+                  Positioned.fill(
+                    child: NetworkImageLoader(
+                      imageUrl: recipe.recipePicture ?? '',
+                      height: 300,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  // Gradient overlay
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Theme.of(
+                              context,
+                            ).colorScheme.surface.withValues(alpha: 0.8),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              IconButton(
+                onPressed: () => _toggleLike(context, recipe),
+                icon: Icon(
+                  Icons.favorite,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+          ),
+
+          // Recipe Title and Info
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    'Error loading recipe',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
+                    recipe.title,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  if (recipe.description?.isNotEmpty == true) ...[
+                    Text(
+                      recipe.description!,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: () => context.pop(),
-                    child: const Text('Go Back'),
-                  ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Recipe Stats
+                  _buildRecipeStats(context, recipe),
                 ],
               ),
-            );
-          }
+            ),
+          ),
 
-          if (state is RecipeDetailsLoaded) {
-            final recipe = state.recipe;
+          // Tab Bar
+          SliverPersistentHeader(
+            delegate: _SliverAppBarDelegate(
+              TabBar(
+                controller: _tabController,
+                labelColor: Theme.of(context).colorScheme.primary,
+                unselectedLabelColor: Theme.of(
+                  context,
+                ).colorScheme.onSurfaceVariant,
+                indicatorColor: Theme.of(context).colorScheme.primary,
+                tabs: const [
+                  Tab(text: 'Ingredients'),
+                  Tab(text: 'Instructions'),
+                ],
+              ),
+            ),
+            pinned: true,
+          ),
 
-            return CustomScrollView(
-              slivers: [
-                // Recipe Image Header
-                SliverAppBar(
-                  expandedHeight: 300,
-                  pinned: true,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  leading: Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surface.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      onPressed: () => context.pop(),
-                      icon: Icon(
-                        Icons.arrow_back_ios,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  actions: [
-                    Container(
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surface.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: _toggleFavorite,
-                        icon: Icon(
-                          state.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: state.isFavorite
-                              ? Colors.red
-                              : Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surface.withOpacity(0.9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        onPressed: _shareRecipe,
-                        icon: Icon(
-                          Icons.share,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
+          // Tab Content
+          SliverToBoxAdapter(
+            child: AnimatedBuilder(
+              animation: _tabController,
+              builder: (context, child) {
+                return IndexedStack(
+                  index: _tabController.index,
+                  children: [
+                    _buildIngredientsTab(context, recipe),
+                    _buildInstructionsTab(context, recipe),
                   ],
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Image.network(
-                      recipe.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHigh,
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 64,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                        );
-                      },
+                );
+              },
+            ),
+          ),
+
+          // YouTube Video Player
+          if (recipe.videoUrl != null && _youtubeController != null)
+            SliverToBoxAdapter(child: _buildYoutubePlayer()),
+
+          // Bottom spacing
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecipeStats(BuildContext context, RecipeEntity recipe) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(
+            context,
+            Icons.list_alt,
+            '${recipe.ingredients.length}',
+            'Ingredients',
+          ),
+          _buildStatItem(
+            context,
+            Icons.format_list_numbered,
+            '${recipe.steps.length}',
+            'Steps',
+          ),
+          _buildStatItem(context, Icons.favorite, '${recipe.likes}', 'Likes'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(
+    BuildContext context,
+    IconData icon,
+    String value,
+    String label,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _toggleLike(BuildContext context, RecipeEntity recipe) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Like feature coming soon!')));
+  }
+
+  Widget _buildIngredientsTab(BuildContext context, RecipeEntity recipe) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: recipe.ingredients.asMap().entries.map((entry) {
+          final index = entry.key;
+          final ingredient = entry.value;
+          return ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            leading: CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              radius: 15,
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            title: Text(
+              ingredient.name,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              '${ingredient.quantity} ${ingredient.unit}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildInstructionsTab(BuildContext context, RecipeEntity recipe) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: recipe.steps.asMap().entries.map((entry) {
+          final index = entry.key;
+          final step = entry.value;
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  radius: 15,
+                  child: Text(
+                    '${index + 1}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-
-                // Recipe Title and Info
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        Text(
-                          recipe.title,
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Description
-                        Text(
-                          recipe.description,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                height: 1.4,
-                              ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Recipe Info Row
-                        Row(
-                          children: [
-                            _buildInfoChip(
-                              context,
-                              Icons.access_time,
-                              '${recipe.prepTime} min',
-                            ),
-                            const SizedBox(width: 12),
-                            _buildInfoChip(
-                              context,
-                              Icons.star,
-                              recipe.rating.toString(),
-                              iconColor: Colors.amber,
-                            ),
-                            const SizedBox(width: 12),
-                            _buildInfoChip(
-                              context,
-                              Icons.trending_up,
-                              recipe.difficulty,
-                              textColor: _getDifficultyColor(
-                                recipe.difficulty,
-                                context,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Tab Bar
-                SliverToBoxAdapter(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      tabs: const [
-                        Tab(text: 'Ingredients'),
-                        Tab(text: 'Instructions'),
-                        Tab(text: 'Nutrition'),
-                        Tab(text: 'Video'),
-                      ],
-                      labelColor: Theme.of(context).colorScheme.primary,
-                      unselectedLabelColor: Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant,
-                      indicatorColor: Theme.of(context).colorScheme.primary,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      dividerColor: Colors.transparent,
-                      labelStyle: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
-                      unselectedLabelStyle: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w400),
-                    ),
-                  ),
-                ),
-
-                // Tab Content
-                SliverFillRemaining(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildIngredientsTab(recipe),
-                      _buildInstructionsTab(recipe),
-                      _buildNutritionTab(recipe),
-                      _buildVideoTab(recipe),
-                    ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    step,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(height: 1.5),
                   ),
                 ),
               ],
-            );
-          }
-
-          return const SizedBox.shrink();
-        },
-      ),
-      bottomNavigationBar: BlocBuilder<RecipeDetailsBloc, RecipeDetailsState>(
-        builder: (context, state) {
-          if (state is RecipeDetailsLoaded) {
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.shadow.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text(
-                              'Try This Blend feature coming soon!',
-                            ),
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                          ),
-                        );
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: Text(
-                        'Try This Blend',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    onPressed: _shareRecipe,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHigh,
-                      foregroundColor: Theme.of(
-                        context,
-                      ).colorScheme.onSurfaceVariant,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 24,
-                      ),
-                    ),
-                    child: Text(
-                      'Share Recipe',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  Widget _buildInfoChip(
-    BuildContext context,
-    IconData icon,
-    String label, {
-    Color? iconColor,
-    Color? textColor,
-  }) {
+  Widget _buildYoutubePlayer() {
+    if (_youtubeController == null) return const SizedBox.shrink();
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: iconColor ?? Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color:
-                  textColor ?? Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIngredientsTab(recipe) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ingredients',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: recipe.ingredients.length,
-              itemBuilder: (context, index) {
-                final ingredient = recipe.ingredients[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          ingredient.name,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                        ),
-                      ),
-                      Text(
-                        ingredient.quantity,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInstructionsTab(recipe) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Instructions',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: recipe.instructions.length,
-              itemBuilder: (context, index) {
-                final instruction = recipe.instructions[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          instruction,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                height: 1.4,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNutritionTab(recipe) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Nutrition',
+            'Recipe Video',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            'Per serving',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: YoutubePlayer(
+              controller: _youtubeController!,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: Theme.of(context).colorScheme.primary,
+              progressColors: ProgressBarColors(
+                playedColor: Theme.of(context).colorScheme.primary,
+                handleColor: Theme.of(context).colorScheme.primary,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // Calories - larger card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withOpacity(0.3),
-                  Theme.of(
-                    context,
-                  ).colorScheme.secondaryContainer.withOpacity(0.3),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Calories',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${recipe.nutrition.calories}',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Other nutrition info
-          Row(
-            children: [
-              Expanded(
-                child: _buildNutritionCard(
-                  'Protein',
-                  '${recipe.nutrition.protein}g',
-                  Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildNutritionCard(
-                  'Carbs',
-                  '${recipe.nutrition.carbs}g',
-                  Colors.orange,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildNutritionCard(
-                  'Fat',
-                  '${recipe.nutrition.fat}g',
-                  Colors.green,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(child: SizedBox()), // Empty space for symmetry
-            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildNutritionCard(String label, String value, Color color) {
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this._tabBar);
+
+  final TabBar _tabBar;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
+      color: Theme.of(context).colorScheme.surface,
+      child: _tabBar,
     );
   }
 
-  Widget _buildVideoTab(recipe) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Video',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          if (recipe.videoUrl != null)
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.play_circle_fill,
-                        size: 64,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text('Video player coming soon!'),
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                            ),
-                          );
-                        },
-                        child: Container(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                ),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.videocam_off,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No video available',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Check back later for video instructions',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Color _getDifficultyColor(String difficulty, BuildContext context) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
-        return Colors.green;
-      case 'medium':
-        return Colors.orange;
-      case 'hard':
-        return Colors.red;
-      default:
-        return Theme.of(context).colorScheme.primary;
-    }
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }

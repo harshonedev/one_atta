@@ -5,6 +5,7 @@ import 'package:one_atta/core/routing/app_router.dart';
 import 'package:one_atta/core/theme/theme.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
+import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 
 void main() async {
@@ -28,7 +29,9 @@ class MainApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => di.sl<AuthBloc>()),
         BlocProvider(create: (context) => HomeBloc()),
-        BlocProvider(create: (context) => RecipesBloc()),
+        BlocProvider(create: (context) => di.sl<RecipesBloc>()),
+        BlocProvider(create: (context) => di.sl<RecipeDetailsBloc>()),
+      
       ],
       child: MaterialApp.router(
         title: 'One Atta',

@@ -2,6 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:one_atta/core/constants/constants.dart';
+import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
+import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source_impl.dart';
+import 'package:one_atta/features/recipes/data/repositories/recipes_repository_impl.dart';
+import 'package:one_atta/features/recipes/domain/repositories/recipes_repository.dart';
+import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
+import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // BLoC
@@ -78,6 +84,21 @@ Future<void> init() async {
         },
       ),
     ),
+  );
+
+  // Features - Recipes
+  // BLoC
+  sl.registerFactory(() => RecipesBloc(repository: sl()));
+  sl.registerFactory(() => RecipeDetailsBloc(repository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<RecipesRepository>(
+    () => RecipesRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<RecipesRemoteDataSource>(
+    () => RecipesRemoteDataSourceImpl(dio: sl()),
   );
 
   //! External

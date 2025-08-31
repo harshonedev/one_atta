@@ -1,148 +1,173 @@
-class Recipe {
+import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
+import 'package:one_atta/features/recipes/domain/entities/ingredient_entity.dart';
+import 'package:one_atta/features/recipes/domain/entities/user_entity.dart';
+import 'package:one_atta/features/recipes/domain/entities/blend_entity.dart';
+
+class RecipeModel {
   final String id;
   final String title;
-  final String description;
-  final String imageUrl;
-  final int prepTime;
-  final double rating;
-  final String difficulty;
-  final List<String> categories;
-  final List<Ingredient> ingredients;
-  final List<String> instructions;
-  final Nutrition nutrition;
+  final List<IngredientModel> ingredients;
+  final List<String> steps;
+  final String? description;
+  final BlendModel? blendUsed;
   final String? videoUrl;
-  final bool isFeatured;
+  final int likes;
+  final String? recipePicture;
+  final UserModel? createdBy;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
-  Recipe({
+  RecipeModel({
     required this.id,
     required this.title,
-    required this.description,
-    required this.imageUrl,
-    required this.prepTime,
-    required this.rating,
-    required this.difficulty,
-    required this.categories,
     required this.ingredients,
-    required this.instructions,
-    required this.nutrition,
+    required this.steps,
+    this.description,
+    this.blendUsed,
     this.videoUrl,
-    this.isFeatured = false,
+    required this.likes,
+    this.recipePicture,
+    this.createdBy,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
-  factory Recipe.fromJson(Map<String, dynamic> json) {
-    return Recipe(
-      id: json['id'] ?? '',
+  factory RecipeModel.fromJson(Map<String, dynamic> json) {
+    return RecipeModel(
+      id: json['_id'] ?? '',
       title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
-      prepTime: json['prepTime'] ?? 0,
-      rating: (json['rating'] ?? 0.0).toDouble(),
-      difficulty: json['difficulty'] ?? 'Easy',
-      categories: List<String>.from(json['categories'] ?? []),
       ingredients:
           (json['ingredients'] as List<dynamic>?)
-              ?.map((e) => Ingredient.fromJson(e))
+              ?.map((e) => IngredientModel.fromJson(e))
               .toList() ??
           [],
-      instructions: List<String>.from(json['instructions'] ?? []),
-      nutrition: Nutrition.fromJson(json['nutrition'] ?? {}),
-      videoUrl: json['videoUrl'],
-      isFeatured: json['isFeatured'] ?? false,
+      steps: List<String>.from(json['steps'] ?? []),
+      description: json['description'],
+      blendUsed: json['blend_used'] != null
+          ? BlendModel.fromJson(json['blend_used'])
+          : null,
+      videoUrl: json['video_url'],
+      likes: json['likes'] ?? 0,
+      recipePicture: json['recipe_picture'],
+      createdBy: json['created_by'] != null
+          ? UserModel.fromJson(json['created_by'])
+          : null,
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      '_id': id,
       'title': title,
-      'description': description,
-      'imageUrl': imageUrl,
-      'prepTime': prepTime,
-      'rating': rating,
-      'difficulty': difficulty,
-      'categories': categories,
       'ingredients': ingredients.map((e) => e.toJson()).toList(),
-      'instructions': instructions,
-      'nutrition': nutrition.toJson(),
-      'videoUrl': videoUrl,
-      'isFeatured': isFeatured,
+      'steps': steps,
+      'description': description,
+      'blend_used': blendUsed?.toJson(),
+      'video_url': videoUrl,
+      'likes': likes,
+      'recipe_picture': recipePicture,
+      'created_by': createdBy?.toJson(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
-}
 
-class Ingredient {
-  final String name;
-  final String quantity;
-
-  Ingredient({required this.name, required this.quantity});
-
-  factory Ingredient.fromJson(Map<String, dynamic> json) {
-    return Ingredient(
-      name: json['name'] ?? '',
-      quantity: json['quantity'] ?? '',
+  RecipeEntity toEntity() {
+    return RecipeEntity(
+      id: id,
+      title: title,
+      ingredients: ingredients.map((e) => e.toEntity()).toList(),
+      steps: steps,
+      description: description,
+      blendUsed: blendUsed?.toEntity(),
+      videoUrl: videoUrl,
+      likes: likes,
+      recipePicture: recipePicture,
+      createdBy: createdBy?.toEntity(),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {'name': name, 'quantity': quantity};
-  }
 }
 
-class Nutrition {
-  final int calories;
-  final int protein;
-  final int carbs;
-  final int fat;
+class IngredientModel {
+  final String name;
+  final double quantity;
+  final String unit;
 
-  Nutrition({
-    required this.calories,
-    required this.protein,
-    required this.carbs,
-    required this.fat,
+  IngredientModel({
+    required this.name,
+    required this.quantity,
+    required this.unit,
   });
 
-  factory Nutrition.fromJson(Map<String, dynamic> json) {
-    return Nutrition(
-      calories: json['calories'] ?? 0,
-      protein: json['protein'] ?? 0,
-      carbs: json['carbs'] ?? 0,
-      fat: json['fat'] ?? 0,
+  factory IngredientModel.fromJson(Map<String, dynamic> json) {
+    return IngredientModel(
+      name: json['name'] ?? '',
+      quantity: (json['quantity'] ?? 0).toDouble(),
+      unit: json['unit'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'calories': calories,
-      'protein': protein,
-      'carbs': carbs,
-      'fat': fat,
-    };
+    return {'name': name, 'quantity': quantity, 'unit': unit};
+  }
+
+  IngredientEntity toEntity() {
+    return IngredientEntity(name: name, quantity: quantity, unit: unit);
   }
 }
 
-class CommunityMember {
+class BlendModel {
   final String id;
   final String name;
-  final String imageUrl;
-  final double rating;
+  final String? description;
 
-  CommunityMember({
-    required this.id,
-    required this.name,
-    required this.imageUrl,
-    required this.rating,
-  });
+  BlendModel({required this.id, required this.name, this.description});
 
-  factory CommunityMember.fromJson(Map<String, dynamic> json) {
-    return CommunityMember(
-      id: json['id'] ?? '',
+  factory BlendModel.fromJson(Map<String, dynamic> json) {
+    return BlendModel(
+      id: json['_id'] ?? '',
       name: json['name'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
-      rating: (json['rating'] ?? 0.0).toDouble(),
+      description: json['description'],
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'imageUrl': imageUrl, 'rating': rating};
+    return {'_id': id, 'name': name, 'description': description};
+  }
+
+  RecipeBlendEntity toEntity() {
+    return RecipeBlendEntity(id: id, name: name, description: description);
+  }
+}
+
+class UserModel {
+  final String id;
+  final String name;
+  final String email;
+
+  UserModel({required this.id, required this.name, required this.email});
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['_id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'_id': id, 'name': name, 'email': email};
+  }
+
+  UserEntity toEntity() {
+    return UserEntity(id: id, name: name, email: email);
   }
 }

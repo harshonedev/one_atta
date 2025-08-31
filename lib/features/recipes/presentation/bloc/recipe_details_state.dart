@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../data/models/recipe.dart';
+import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 
 abstract class RecipeDetailsState extends Equatable {
   const RecipeDetailsState();
@@ -17,12 +17,12 @@ class RecipeDetailsLoading extends RecipeDetailsState {
 }
 
 class RecipeDetailsLoaded extends RecipeDetailsState {
-  final Recipe recipe;
+  final RecipeEntity recipe;
   final bool isFavorite;
 
   const RecipeDetailsLoaded({required this.recipe, this.isFavorite = false});
 
-  RecipeDetailsLoaded copyWith({Recipe? recipe, bool? isFavorite}) {
+  RecipeDetailsLoaded copyWith({RecipeEntity? recipe, bool? isFavorite}) {
     return RecipeDetailsLoaded(
       recipe: recipe ?? this.recipe,
       isFavorite: isFavorite ?? this.isFavorite,
