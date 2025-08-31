@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
 import 'package:one_atta/core/presentation/widgets/svg_image_loader.dart';
 import 'package:one_atta/features/blends/domain/entities/additive_entity.dart';
