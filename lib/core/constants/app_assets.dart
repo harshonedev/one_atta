@@ -25,7 +25,7 @@ class AppAssets {
       'https://images.unsplash.com/photo-1708782343717-be4ea260249a?w=300&h=200&fit=crop';
 
   // Icons
-  static const String grainIcon = 'assets/icons/grain.png';
+  static const String grainIcon = 'assets/icons/grain.svg';
   static const String textureIcon = 'assets/icons/texture.png';
   static const String additivesIcon = 'assets/icons/additives.png';
 

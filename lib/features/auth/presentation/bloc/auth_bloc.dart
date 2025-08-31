@@ -23,22 +23,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final isLoggedInResult = await authRepository.isLoggedIn();
 
-    isLoggedInResult.fold((failure) => emit(AuthUnauthenticated()), (
-      isLoggedIn,
-    ) async {
-      if (isLoggedIn) {
-        final userResult = await authRepository.getCurrentUser();
-        userResult.fold((failure) => emit(AuthUnauthenticated()), (user) {
-          if (user != null) {
-            emit(AuthAuthenticated(user: user));
-          } else {
-            emit(AuthUnauthenticated());
-          }
-        });
-      } else {
-        emit(AuthUnauthenticated());
-      }
-    });
+    await isLoggedInResult.fold(
+      (failure) async => emit(AuthUnauthenticated()),
+      (isLoggedIn) async {
+        if (isLoggedIn) {
+          final userResult = await authRepository.getCurrentUser();
+          userResult.fold((failure) => emit(AuthUnauthenticated()), (user) {
+            if (user != null) {
+              emit(AuthAuthenticated(user: user));
+            } else {
+              emit(AuthUnauthenticated());
+            }
+          });
+        } else {
+          emit(AuthUnauthenticated());
+        }
+      },
+    );
   }
 
   Future<void> _onSendLoginOtpRequested(

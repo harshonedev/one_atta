@@ -71,193 +71,280 @@ class _RegisterPageState extends State<RegisterPage> {
           }
         },
         child: SafeArea(
-          child: Column(
-            children: [
-              // Header with back button and title
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: Icon(
-                        Icons.arrow_back_ios,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          AppConstants.appName,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48), // Balance the IconButton
-                  ],
-                ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    32,
               ),
-
-              // Form content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    // Header with back button
+                    Row(
                       children: [
-                        const SizedBox(height: 32),
-
-                        // Title
-                        Text(
-                          'Create Account',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Text(
-                          'Join us and start your journey',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        // Name field
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Full Name',
-                            hintText: 'Enter your full name',
-                            border: OutlineInputBorder(),
+                        IconButton(
+                          onPressed: () => context.pop(),
+                          icon: Icon(
+                            Icons.arrow_back_ios,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your name';
-                            }
-                            return null;
-                          },
                         ),
+                        const Spacer(),
+                      ],
+                    ),
 
-                        const SizedBox(height: 20),
+                    // Main content
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 32),
 
-                        // Email field
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            hintText: 'Enter your email',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!RegExp(
-                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                            ).hasMatch(value)) {
-                              return 'Please enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Phone field
-                        TextFormField(
-                          controller: _phoneController,
-                          decoration: const InputDecoration(
-                            labelText: 'Phone Number',
-                            hintText: 'Enter your phone number',
-                            border: OutlineInputBorder(),
-                            prefixText: '+91 ',
-                          ),
-                          keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your phone number';
-                            }
-                            if (value.length != 10) {
-                              return 'Please enter a valid 10-digit phone number';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        // Register button
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            return SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: state is AuthLoading
-                                    ? null
-                                    : _handleRegister,
-                                child: state is AuthLoading
-                                    ? const CircularProgressIndicator()
-                                    : const Text('Create Account'),
+                              // Create Account title
+                              Text(
+                                'Create Account',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                    ),
                               ),
-                            );
-                          },
-                        ),
+                              const SizedBox(height: 8),
 
-                        const SizedBox(height: 20),
-
-                        // Login link
-                        Center(
-                          child: TextButton(
-                            onPressed: () => context.push('/login'),
-                            child: RichText(
-                              text: TextSpan(
-                                text: 'Already have an account? ',
-                                style: Theme.of(context).textTheme.bodyMedium
+                              // Subtitle
+                              Text(
+                                'Join us and start your journey',
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.onSurfaceVariant,
                                     ),
-                                children: [
-                                  TextSpan(
-                                    text: 'Login',
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
                               ),
-                            ),
+                              const SizedBox(height: 32),
+
+                              // Form fields
+                              _buildFormFields(),
+
+                              const Spacer(),
+
+                              // Create Account Button
+                              BlocBuilder<AuthBloc, AuthState>(
+                                builder: (context, state) {
+                                  return FilledButton(
+                                    onPressed: state is AuthLoading
+                                        ? null
+                                        : _handleRegister,
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        56,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: state is AuthLoading
+                                        ? SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Theme.of(
+                                                      context,
+                                                    ).colorScheme.onPrimary,
+                                                  ),
+                                            ),
+                                          )
+                                        : Text(
+                                            'Create Account',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.onPrimary,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Login link
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 32.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      AppStrings.alreadyHaveAccount,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        context.push('/login');
+                                      },
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                      child: Text(
+                                        AppStrings.signIn,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFormFields() {
+    return Column(
+      children: [
+        // Name field
+        TextFormField(
+          controller: _nameController,
+          style: Theme.of(context).textTheme.bodyLarge,
+          decoration: InputDecoration(
+            hintText: 'Full Name',
+            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.all(16),
+            filled: true,
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.inverseSurface.withValues(alpha: 0.1),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your name';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+
+        // Email field
+        TextFormField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          style: Theme.of(context).textTheme.bodyLarge,
+          decoration: InputDecoration(
+            hintText: 'Email',
+            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.all(16),
+            filled: true,
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.inverseSurface.withValues(alpha: 0.1),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your email';
+            }
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+              return 'Please enter a valid email';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+
+        // Phone field
+        TextFormField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          style: Theme.of(context).textTheme.bodyLarge,
+          decoration: InputDecoration(
+            hintText: 'Phone number',
+            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.all(16),
+            filled: true,
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.inverseSurface.withValues(alpha: 0.1),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your phone number';
+            }
+            if (value.length != 10) {
+              return 'Please enter a valid 10-digit phone number';
+            }
+            return null;
+          },
+        ),
+      ],
     );
   }
 }

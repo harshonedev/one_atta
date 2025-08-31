@@ -11,6 +11,8 @@ import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
+import 'package:one_atta/features/blends/presentation/pages/blends_page.dart';
+import 'package:one_atta/features/blends/presentation/pages/blend_details_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -91,6 +93,19 @@ class AppRouter {
               create: (context) => RecipeDetailsBloc(),
               child: RecipeDetailsPage(recipeId: recipeId),
             );
+          },
+        ),
+        GoRoute(
+          path: '/blends',
+          name: 'blends',
+          builder: (context, state) => const BlendsPage(),
+        ),
+        GoRoute(
+          path: '/blend-details/:blendId',
+          name: 'blend-details',
+          builder: (context, state) {
+            final blendId = state.pathParameters['blendId']!;
+            return BlendDetailsPage(blendId: blendId);
           },
         ),
       ],

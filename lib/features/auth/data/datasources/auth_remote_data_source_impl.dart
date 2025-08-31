@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:one_atta/features/auth/data/models/auth_response_model.dart';
@@ -6,7 +7,7 @@ import 'package:one_atta/features/auth/data/models/otp_response_model.dart';
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Dio dio;
-  static const String baseUrl = 'http://localhost:5000/api/app/auth';
+  static const String baseUrl = ApiEndpoints.auth;
 
   AuthRemoteDataSourceImpl({required this.dio});
 

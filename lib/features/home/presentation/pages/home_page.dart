@@ -146,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                     title: 'Trending Blends',
                     actionText: 'See All',
                     onActionPressed: () {
-                      // Navigate to trending blends page
+                      context.push('/blends');
                     },
                   ),
                 ),
@@ -161,7 +161,9 @@ class _HomePageState extends State<HomePage> {
                         return BlendCard(
                           blend: state.trendingBlends[index],
                           onTap: () {
-                            // Navigate to blend details
+                            context.push(
+                              '/blend-details/${state.trendingBlends[index].id}',
+                            );
                           },
                         );
                       },
@@ -313,50 +315,69 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCreateAttaSection(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primaryContainer,
-            Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Create Your Perfect Atta',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Customize your blend with our interactive builder',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStepItem(context, Icons.grain, 'Grains'),
-              _buildStepItem(context, Icons.texture, 'Texture'),
-              _buildStepItem(context, Icons.add_circle_outline, 'Additives'),
-              _buildStepItem(context, Icons.check_circle, 'Done'),
+    return GestureDetector(
+      onTap: () => context.push('/blends'),
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primaryContainer,
+              Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.8),
             ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Create Your Perfect Atta',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Customize your blend with our interactive builder',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  size: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStepItem(context, Icons.grain, 'Grains'),
+                _buildStepItem(context, Icons.texture, 'Texture'),
+                _buildStepItem(context, Icons.add_circle_outline, 'Additives'),
+                _buildStepItem(context, Icons.check_circle, 'Done'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
