@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:one_atta/features/auth/presentation/bloc/auth_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 
 class OtpPage extends StatefulWidget {
@@ -69,18 +70,44 @@ class _OtpPageState extends State<OtpPage> {
   void _resendOtp() {
     if (_canResend) {
       _startResendTimer();
-      // Here you would trigger the resend OTP logic
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('OTP sent successfully')));
+
+      if (isFromRegister) {
+        // Resend registration OTP
+        context.read<AuthBloc>().add(
+          SendRegistrationOtpRequested(
+            mobile: phoneNumber,
+            name: name,
+            email: email,
+          ),
+        );
+      } else {
+        // Resend login OTP
+        context.read<AuthBloc>().add(
+          SendLoginOtpRequested(mobile: phoneNumber),
+        );
+      }
     }
   }
 
   void _verifyOtp() {
     final otp = _otpControllers.map((controller) => controller.text).join();
     if (otp.length == 6) {
-      // Simulate OTP verification
-      context.go('/home');
+      if (isFromRegister) {
+        // Verify registration OTP
+        context.read<AuthBloc>().add(
+          VerifyRegistrationOtpRequested(
+            mobile: phoneNumber,
+            otp: otp,
+            name: name,
+            email: email,
+          ),
+        );
+      } else {
+        // Verify login OTP
+        context.read<AuthBloc>().add(
+          VerifyLoginOtpRequested(mobile: phoneNumber, otp: otp),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter complete OTP')),
@@ -118,6 +145,13 @@ class _OtpPageState extends State<OtpPage> {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          } else if (state is OtpSent) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
             );
           }

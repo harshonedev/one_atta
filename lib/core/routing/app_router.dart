@@ -9,6 +9,8 @@ import 'package:one_atta/features/auth/presentation/pages/login_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
+import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -79,6 +81,17 @@ class AppRouter {
           path: '/home',
           name: 'home',
           builder: (context, state) => const MainNavigationPage(),
+        ),
+        GoRoute(
+          path: '/recipe-details/:recipeId',
+          name: 'recipe-details',
+          builder: (context, state) {
+            final recipeId = state.pathParameters['recipeId']!;
+            return BlocProvider(
+              create: (context) => RecipeDetailsBloc(),
+              child: RecipeDetailsPage(recipeId: recipeId),
+            );
+          },
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

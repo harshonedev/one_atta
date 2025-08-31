@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:one_atta/features/auth/presentation/bloc/auth_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
@@ -36,13 +37,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
-      // Navigate to OTP page with the phone number
-      context.push(
-        '/otp',
-        extra: {
-          'phoneNumber': _phoneController.text.trim(),
-          'isFromRegister': false,
-        },
+      // Send OTP for login
+      context.read<AuthBloc>().add(
+        SendLoginOtpRequested(mobile: _phoneController.text.trim()),
       );
     }
   }
@@ -61,6 +58,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 content: Text(state.message),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
+            );
+          } else if (state is OtpSent) {
+            // Navigate to OTP page when OTP is sent
+            context.push(
+              '/otp',
+              extra: {
+                'phoneNumber': _phoneController.text.trim(),
+                'isFromRegister': false,
+                'message': state.message,
+                'testOtp': state.testOtp,
+              },
             );
           }
         },

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -12,7 +13,7 @@ class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
 
 class AuthAuthenticated extends AuthState {
-  final User user;
+  final UserEntity user;
 
   const AuthAuthenticated({required this.user});
 
@@ -40,18 +41,13 @@ class AuthSuccess extends AuthState {
   List<Object> get props => [message];
 }
 
+// OTP specific states
+class OtpSent extends AuthState {
+  final String message;
+  final String? testOtp; // For development/testing
 
-class User extends Equatable {
-  final String id;
-  final String phoneNumber;
-  final String? email;
-
-  const User({
-    required this.id,
-    required this.phoneNumber,
-    this.email,
-  });
+  const OtpSent({required this.message, this.testOtp});
 
   @override
-  List<Object?> get props => [id, phoneNumber, email];
+  List<Object?> get props => [message, testOtp];
 }

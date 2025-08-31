@@ -9,38 +9,57 @@ abstract class AuthEvent extends Equatable {
 
 class AuthCheckRequested extends AuthEvent {}
 
-class AuthLoginRequested extends AuthEvent {
-  final String phoneNumber;
+// Login OTP Events
+class SendLoginOtpRequested extends AuthEvent {
+  final String mobile;
 
-  const AuthLoginRequested({required this.phoneNumber});
+  const SendLoginOtpRequested({required this.mobile});
 
   @override
-  List<Object> get props => [phoneNumber];
+  List<Object> get props => [mobile];
 }
 
-class AuthRegisterRequested extends AuthEvent {
+class VerifyLoginOtpRequested extends AuthEvent {
+  final String mobile;
+  final String otp;
 
-  const AuthRegisterRequested();
+  const VerifyLoginOtpRequested({required this.mobile, required this.otp});
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [mobile, otp];
+}
+
+// Registration OTP Events
+class SendRegistrationOtpRequested extends AuthEvent {
+  final String mobile;
+  final String name;
+  final String email;
+
+  const SendRegistrationOtpRequested({
+    required this.mobile,
+    required this.name,
+    required this.email,
+  });
+
+  @override
+  List<Object> get props => [mobile, name, email];
+}
+
+class VerifyRegistrationOtpRequested extends AuthEvent {
+  final String mobile;
+  final String otp;
+  final String name;
+  final String email;
+
+  const VerifyRegistrationOtpRequested({
+    required this.mobile,
+    required this.otp,
+    required this.name,
+    required this.email,
+  });
+
+  @override
+  List<Object> get props => [mobile, otp, name, email];
 }
 
 class AuthLogoutRequested extends AuthEvent {}
-
-class AuthForgotPasswordRequested extends AuthEvent {
-
-  const AuthForgotPasswordRequested();
-
-  @override
-  List<Object> get props => [];
-}
-
-class AuthResetPasswordRequested extends AuthEvent {
-
-
-  const AuthResetPasswordRequested();
-
-  @override
-  List<Object> get props => [];
-}

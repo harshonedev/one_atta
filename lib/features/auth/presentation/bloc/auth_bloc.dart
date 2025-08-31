@@ -1,18 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:one_atta/core/constants/constants.dart';
+import 'package:one_atta/features/auth/domain/repositories/auth_repository.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
- 
+  final AuthRepository authRepository;
 
-  AuthBloc() : super(AuthInitial()) {
+  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
-    on<AuthLoginRequested>(_onAuthLoginRequested);
-    on<AuthRegisterRequested>(_onAuthRegisterRequested);
+    on<SendLoginOtpRequested>(_onSendLoginOtpRequested);
+    on<VerifyLoginOtpRequested>(_onVerifyLoginOtpRequested);
+    on<SendRegistrationOtpRequested>(_onSendRegistrationOtpRequested);
+    on<VerifyRegistrationOtpRequested>(_onVerifyRegistrationOtpRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
-    on<AuthForgotPasswordRequested>(_onAuthForgotPasswordRequested);
-    on<AuthResetPasswordRequested>(_onAuthResetPasswordRequested);
   }
 
   Future<void> _onAuthCheckRequested(
@@ -21,79 +21,101 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
-    // final isLoggedIn = await authRepository.isLoggedIn();
-    // if (isLoggedIn) {
-    //   final result = await getCurrentUserUseCase();
-    //   result.fold((failure) => emit(AuthUnauthenticated()), (user) {
-    //     if (user != null) {
-    //       emit(AuthAuthenticated(user: user));
-    //     } else {
-    //       emit(AuthUnauthenticated());
-    //     }
-    //   });
-    // } else {
-    //   emit(AuthUnauthenticated());
-    // }
+    final isLoggedInResult = await authRepository.isLoggedIn();
+
+    isLoggedInResult.fold((failure) => emit(AuthUnauthenticated()), (
+      isLoggedIn,
+    ) async {
+      if (isLoggedIn) {
+        final userResult = await authRepository.getCurrentUser();
+        userResult.fold((failure) => emit(AuthUnauthenticated()), (user) {
+          if (user != null) {
+            emit(AuthAuthenticated(user: user));
+          } else {
+            emit(AuthUnauthenticated());
+          }
+        });
+      } else {
+        emit(AuthUnauthenticated());
+      }
+    });
   }
 
-  Future<void> _onAuthLoginRequested(
-    AuthLoginRequested event,
+  Future<void> _onSendLoginOtpRequested(
+    SendLoginOtpRequested event,
     Emitter<AuthState> emit,
   ) async {
-    // emit(AuthLoading());
+    emit(AuthLoading());
 
-    // final result = await loginUseCase(event.credentials);
-    // result.fold(
-    //   (failure) => emit(AuthError(message: failure.message)),
-    //   (user) => emit(AuthAuthenticated(user: user)),
-    // );
+    final result = await authRepository.sendLoginOtp(event.mobile);
+    result.fold(
+      (failure) => emit(AuthError(message: failure.message)),
+      (otpResponse) => emit(
+        OtpSent(message: otpResponse.message, testOtp: otpResponse.testOtp),
+      ),
+    );
   }
 
-  Future<void> _onAuthRegisterRequested(
-    AuthRegisterRequested event,
+  Future<void> _onVerifyLoginOtpRequested(
+    VerifyLoginOtpRequested event,
     Emitter<AuthState> emit,
   ) async {
-    // emit(AuthLoading());
+    emit(AuthLoading());
 
-    // final result = await registerUseCase(event.credentials);
-    // result.fold(
-    //   (failure) => emit(AuthError(message: failure.message)),
-    //   (user) => emit(AuthAuthenticated(user: user)),
-    // );
+    final result = await authRepository.verifyLoginOtp(event.mobile, event.otp);
+    result.fold(
+      (failure) => emit(AuthError(message: failure.message)),
+      (authResponse) => emit(AuthAuthenticated(user: authResponse.user)),
+    );
+  }
+
+  Future<void> _onSendRegistrationOtpRequested(
+    SendRegistrationOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await authRepository.sendRegistrationOtp(
+      mobile: event.mobile,
+      name: event.name,
+      email: event.email,
+    );
+    result.fold(
+      (failure) => emit(AuthError(message: failure.message)),
+      (otpResponse) => emit(
+        OtpSent(message: otpResponse.message, testOtp: otpResponse.testOtp),
+      ),
+    );
+  }
+
+  Future<void> _onVerifyRegistrationOtpRequested(
+    VerifyRegistrationOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await authRepository.verifyRegistrationOtp(
+      mobile: event.mobile,
+      otp: event.otp,
+      name: event.name,
+      email: event.email,
+    );
+    result.fold(
+      (failure) => emit(AuthError(message: failure.message)),
+      (authResponse) => emit(AuthAuthenticated(user: authResponse.user)),
+    );
   }
 
   Future<void> _onAuthLogoutRequested(
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    // emit(AuthLoading());
+    emit(AuthLoading());
 
-    // final result = await logoutUseCase();
-    // result.fold(
-    //   (failure) => emit(AuthError(message: failure.message)),
-    //   (_) => emit(AuthUnauthenticated()),
-    // );
-  }
-
-  Future<void> _onAuthForgotPasswordRequested(
-    AuthForgotPasswordRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    // emit(AuthLoading());
-
-    // // TODO: Implement forgot password use case
-    // // For now, just show success message
-    // emit(const AuthSuccess(message: AppStrings.passwordResetSent));
-  }
-
-  Future<void> _onAuthResetPasswordRequested(
-    AuthResetPasswordRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    // emit(AuthLoading());
-
-    // // TODO: Implement reset password use case
-    // // For now, just show success message
-    // emit(const AuthSuccess(message: 'Password reset successful'));
+    final result = await authRepository.removeToken();
+    result.fold(
+      (failure) => emit(AuthError(message: failure.message)),
+      (_) => emit(AuthUnauthenticated()),
+    );
   }
 }
