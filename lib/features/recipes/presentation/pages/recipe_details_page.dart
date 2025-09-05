@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
@@ -79,13 +80,16 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
               body: ErrorPage(
                 onRetry: () {
                   // Get recipe ID from context or navigation
+                  context.read<RecipeDetailsBloc>().add(
+                    LoadRecipeDetails(widget.recipeId),
+                  );
                 },
               ),
             );
           }
 
           if (state is RecipeDetailsLoaded) {
-            return _buildRecipeContent(context, state.recipe);
+            return _buildRecipeContent(context, state);
           }
 
           return const SizedBox.shrink();
@@ -94,7 +98,9 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
     );
   }
 
-  Widget _buildRecipeContent(BuildContext context, RecipeEntity recipe) {
+  Widget _buildRecipeContent(BuildContext context, RecipeDetailsLoaded state) {
+    final recipe = state.recipe;
+
     // Initialize YouTube player if video URL exists
     if (recipe.videoUrl != null && _youtubeController == null) {
       _initializeYoutubePlayer(recipe.videoUrl!);
@@ -110,6 +116,22 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
             pinned: true,
             backgroundColor: Theme.of(context).colorScheme.surface,
             foregroundColor: Theme.of(context).colorScheme.onSurface,
+            leading: Container(
+              margin: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.7),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 children: [
@@ -146,11 +168,35 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
               ),
             ),
             actions: [
-              IconButton(
-                onPressed: () => _toggleLike(context, recipe),
-                icon: Icon(
-                  Icons.favorite,
-                  color: Theme.of(context).colorScheme.error,
+              Container(
+                margin: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.7),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  onPressed: state.isLiking
+                      ? null
+                      : () => _toggleLike(context, recipe.id),
+                  icon: state.isLiking
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        )
+                      : Icon(
+                          state.isLiked
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: state.isLiked
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.onSurface,
+                        ),
                 ),
               ),
             ],
@@ -181,11 +227,17 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                     const SizedBox(height: 16),
                   ],
                   // Recipe Stats
-                  _buildRecipeStats(context, recipe),
+                  _buildRecipeStats(context, recipe, state),
                 ],
               ),
             ),
           ),
+
+          // Blend Information Section
+          if (recipe.blendUsed != null)
+            SliverToBoxAdapter(
+              child: _buildBlendInformation(context, recipe.blendUsed!),
+            ),
 
           // Tab Bar
           SliverPersistentHeader(
@@ -233,7 +285,11 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
     );
   }
 
-  Widget _buildRecipeStats(BuildContext context, RecipeEntity recipe) {
+  Widget _buildRecipeStats(
+    BuildContext context,
+    RecipeEntity recipe,
+    RecipeDetailsLoaded state,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -251,7 +307,12 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
             '${recipe.steps.length}',
             'Steps',
           ),
-          _buildStatItem(context, Icons.favorite, '${recipe.likes}', 'Likes'),
+          _buildStatItem(
+            context,
+            Icons.favorite,
+            state.isLiking ? '...' : '${state.likesCount}',
+            'Likes',
+          ),
         ],
       ),
     );
@@ -284,10 +345,258 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
     );
   }
 
-  void _toggleLike(BuildContext context, RecipeEntity recipe) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Like feature coming soon!')));
+  void _toggleLike(BuildContext context, String recipeId) {
+    context.read<RecipeDetailsBloc>().add(LikeRecipe(recipeId));
+  }
+
+  Widget _buildBlendInformation(BuildContext context, blendUsed) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.1),
+            Theme.of(
+              context,
+            ).colorScheme.secondaryContainer.withValues(alpha: 0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            context.push('/blend-details/${blendUsed.id}');
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with Premium Badge
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'FEATURED BLEND',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            blendUsed.name,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 16,
+                    ),
+                  ],
+                ),
+
+                if (blendUsed.description?.isNotEmpty == true) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    blendUsed.description!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          context.push('/blend-details/${blendUsed.id}');
+                        },
+                        icon: Icon(
+                          Icons.visibility,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        label: Text(
+                          'View Details',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          _addBlendToCart(context, blendUsed);
+                        },
+                        icon: const Icon(Icons.add_shopping_cart, size: 18),
+                        label: const Text(
+                          'Add to Cart',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addBlendToCart(BuildContext context, blendUsed) {
+    // Show loading and success feedback
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Theme.of(context).colorScheme.onPrimary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '${blendUsed.name} added to cart!',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        action: SnackBarAction(
+          label: 'View Cart',
+          textColor: Theme.of(context).colorScheme.onPrimary,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.onPrimary.withValues(alpha: 0.1),
+          onPressed: () {
+            // TODO: Navigate to cart page
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Cart feature coming soon!'),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    // TODO: Implement actual add to cart logic
+    // This could involve:
+    // 1. Adding item to cart state/bloc
+    // 2. Calling cart repository/API
+    // 3. Updating cart count in app bar
+    // 4. Persisting cart data locally
   }
 
   Widget _buildIngredientsTab(BuildContext context, RecipeEntity recipe) {

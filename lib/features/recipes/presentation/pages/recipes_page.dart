@@ -54,8 +54,8 @@ class _RecipesViewState extends State<RecipesView> {
         actions: [
           IconButton(
             onPressed: () => _showCreateRecipeDialog(context),
-            icon: const Icon(Icons.add),
-            tooltip: 'Create Recipe',
+            icon: const Icon(Icons.shopping_cart_outlined),
+            tooltip: 'Cart',
           ),
         ],
       ),
@@ -68,8 +68,8 @@ class _RecipesViewState extends State<RecipesView> {
               controller: _searchController,
               onChanged: _onSearch,
               decoration: InputDecoration(
-                hintText: 'Search recipes...',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Search recipes',
+                prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
@@ -79,24 +79,25 @@ class _RecipesViewState extends State<RecipesView> {
                         },
                       )
                     : null,
+                hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                  borderSide: BorderSide.none,
                 ),
+                contentPadding: const EdgeInsets.all(16),
+                filled: true,
+                fillColor: Theme.of(
+                  context,
+                ).colorScheme.inverseSurface.withValues(alpha: 0.1),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                  borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  ),
+                  borderSide: BorderSide.none,
                 ),
               ),
             ),
@@ -218,9 +219,7 @@ class _RecipesViewState extends State<RecipesView> {
 
   void _showCreateRecipeDialog(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Create recipe feature coming soon!'),
-      ),
+      const SnackBar(content: Text('Create recipe feature coming soon!')),
     );
   }
 }

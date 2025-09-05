@@ -16,4 +16,10 @@ abstract class RecipesRemoteDataSource {
 
   /// Delete a recipe via the API
   Future<RecipeModel> deleteRecipe(String id);
+
+  /// Toggle like status for a recipe via the API
+  Future<Map<String, dynamic>> toggleRecipeLike(String id);
+
+  /// Get liked recipes by user via the API
+  Future<List<RecipeModel>> getLikedRecipes();
 }

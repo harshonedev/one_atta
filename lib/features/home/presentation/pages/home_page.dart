@@ -8,7 +8,6 @@ import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_event.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_state.dart';
-import 'package:one_atta/features/home/presentation/widgets/search_bar_widget.dart';
 import 'package:one_atta/features/home/presentation/widgets/blend_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/recipe_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/section_header.dart';
@@ -103,26 +102,12 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: CustomScrollView(
               slivers: [
-                // // Header
-                // SliverToBoxAdapter(child: _buildHeader(context, state.userProfile)),
-
-                // Search Bar
-                SliverToBoxAdapter(
-                  child: SearchBarWidget(
-                    onChanged: (query) {
-                      if (query.isNotEmpty) {
-                        context.read<HomeBloc>().add(SearchBlends(query));
-                      }
-                    },
-                  ),
-                ),
-
                 // Create Your Perfect Atta Section
                 SliverToBoxAdapter(child: _buildCreateAttaSection(context)),
 
                 // Ready to Sell Blends Section
                 SliverToBoxAdapter(
-                  child: SectionHeader(title: 'Ready to Sell Blends'),
+                  child: SectionHeader(title: 'Daily Essentials'),
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -297,16 +282,12 @@ class _HomePageState extends State<HomePage> {
           // Settings icon
           IconButton(
             onPressed: () {
-              _showLogoutDialog(context);
+              // navigate to cart page
             },
-            icon: SvgPicture.asset(
-              AppAssets.helpIcon,
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                Theme.of(context).colorScheme.onSurface,
-                BlendMode.srcIn,
-              ),
+            icon: Icon(
+              Icons.shopping_cart_outlined,
+              size: 24,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -359,11 +340,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  size: 20,
-                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -409,33 +385,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                context.go('/onboarding');
-                // Navigator.of(dialogContext).pop();
-                // context.read<AuthBloc>().add(AuthLogoutRequested());
-              },
-              child: const Text('Logout'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Widget _buildReviewSection(BuildContext context) {
     return Padding(
@@ -568,14 +517,14 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (BuildContext dialogContext) {
         int rating = 0;
-        String reviewText = '';
 
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surface,
               title: Row(
                 children: [
-                  Icon(Icons.star, color: Colors.amber, size: 24),
+                  Icon(Icons.edit_note_rounded, size: 32),
                   const SizedBox(width: 8),
                   const Text('Write a Review'),
                 ],
@@ -609,7 +558,7 @@ class _HomePageState extends State<HomePage> {
                   const Text('Tell us about your experience:'),
                   const SizedBox(height: 8),
                   TextField(
-                    maxLines: 3,
+                    maxLines: 2,
                     decoration: InputDecoration(
                       hintText:
                           'Share your thoughts about taste, texture, and overall experience...',
@@ -618,7 +567,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     onChanged: (value) {
-                      reviewText = value;
                     },
                   ),
                 ],
@@ -634,7 +582,6 @@ class _HomePageState extends State<HomePage> {
                   onPressed: rating > 0
                       ? () {
                           // Here you would typically save the review
-                          print('Review: $reviewText, Rating: $rating');
                           Navigator.of(dialogContext).pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -652,7 +599,7 @@ class _HomePageState extends State<HomePage> {
                           );
                         }
                       : null,
-                  child: const Text('Submit Review'),
+                  child: const Text('Submit'),
                 ),
               ],
             );

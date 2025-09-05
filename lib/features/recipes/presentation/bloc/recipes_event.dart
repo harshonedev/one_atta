@@ -67,3 +67,7 @@ class SearchRecipes extends RecipesEvent {
   @override
   List<Object?> get props => [query];
 }
+
+class LoadLikedRecipes extends RecipesEvent {
+  const LoadLikedRecipes();
+}

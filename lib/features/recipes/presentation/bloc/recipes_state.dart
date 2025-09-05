@@ -112,3 +112,16 @@ class RecipesError extends RecipesState {
   @override
   List<Object?> get props => [message];
 }
+
+class LikedRecipesLoading extends RecipesState {
+  const LikedRecipesLoading();
+}
+
+class LikedRecipesLoaded extends RecipesState {
+  final List<RecipeEntity> likedRecipes;
+
+  const LikedRecipesLoaded(this.likedRecipes);
+
+  @override
+  List<Object?> get props => [likedRecipes];
+}

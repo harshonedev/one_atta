@@ -19,18 +19,42 @@ class RecipeDetailsLoading extends RecipeDetailsState {
 class RecipeDetailsLoaded extends RecipeDetailsState {
   final RecipeEntity recipe;
   final bool isFavorite;
+  final bool isLiked;
+  final int likesCount;
+  final bool isLiking;
 
-  const RecipeDetailsLoaded({required this.recipe, this.isFavorite = false});
+  const RecipeDetailsLoaded({
+    required this.recipe,
+    this.isFavorite = false,
+    this.isLiked = false,
+    required this.likesCount,
+    this.isLiking = false,
+  });
 
-  RecipeDetailsLoaded copyWith({RecipeEntity? recipe, bool? isFavorite}) {
+  RecipeDetailsLoaded copyWith({
+    RecipeEntity? recipe,
+    bool? isFavorite,
+    bool? isLiked,
+    int? likesCount,
+    bool? isLiking,
+  }) {
     return RecipeDetailsLoaded(
       recipe: recipe ?? this.recipe,
       isFavorite: isFavorite ?? this.isFavorite,
+      isLiked: isLiked ?? this.isLiked,
+      likesCount: likesCount ?? this.likesCount,
+      isLiking: isLiking ?? this.isLiking,
     );
   }
 
   @override
-  List<Object?> get props => [recipe, isFavorite];
+  List<Object?> get props => [
+    recipe,
+    isFavorite,
+    isLiked,
+    likesCount,
+    isLiking,
+  ];
 }
 
 class RecipeDetailsError extends RecipeDetailsState {

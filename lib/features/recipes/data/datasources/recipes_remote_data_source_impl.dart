@@ -167,4 +167,77 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
       throw ServerFailure('An unexpected error occurred: $e');
     }
   }
+
+  @override
+  Future<Map<String, dynamic>> toggleRecipeLike(String id) async {
+    try {
+      final response = await dio.post('$baseUrl/$id/like');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return response.data['data'];
+      } else {
+        throw ServerFailure(
+          response.data['message'] ?? 'Failed to toggle recipe like',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        throw const NetworkFailure('Network connection failed');
+      }
+
+      if (e.response?.statusCode == 401) {
+        throw const UnauthorizedFailure('Not authorized, token failed');
+      }
+
+      if (e.response?.statusCode == 404) {
+        throw ServerFailure('Recipe not found');
+      }
+
+      final message =
+          e.response?.data?['message'] ?? 'Failed to toggle recipe like';
+      throw ServerFailure(message);
+    } catch (e) {
+      throw ServerFailure('An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<List<RecipeModel>> getLikedRecipes() async {
+    try {
+      final response = await dio.get('$baseUrl/liked');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final List<dynamic> recipesData = response.data['data'];
+        return recipesData
+            .map((recipe) => RecipeModel.fromJson(recipe))
+            .toList();
+      } else {
+        throw ServerFailure(
+          response.data['message'] ?? 'Failed to fetch liked recipes',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        throw const NetworkFailure('Network connection failed');
+      }
+
+      if (e.response?.statusCode == 401) {
+        throw const UnauthorizedFailure('Not authorized, token failed');
+      }
+
+      if (e.response?.statusCode == 404) {
+        throw ServerFailure('User not found');
+      }
+
+      final message =
+          e.response?.data?['message'] ?? 'Failed to fetch liked recipes';
+      throw ServerFailure(message);
+    } catch (e) {
+      throw ServerFailure('An unexpected error occurred: $e');
+    }
+  }
 }

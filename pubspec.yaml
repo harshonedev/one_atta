@@ -31,6 +31,9 @@ dependencies:
   youtube_player_flutter: ^9.0.3
   material_design_icons_flutter: ^7.0.7296
   logger: ^2.6.1
+  dotted_border: ^3.1.0
+  #Share Plus
+  share_plus: ^11.1.0
   
 
 dev_dependencies:

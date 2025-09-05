@@ -1,3 +1,4 @@
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import 'package:one_atta/features/blends/presentation/bloc/blend_details_event.d
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_state.dart';
 import 'package:one_atta/features/blends/presentation/widgets/ingredients_card.dart';
 import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
+import 'package:share_plus/share_plus.dart';
 
 class BlendDetailsPage extends StatelessWidget {
   final String blendId;
@@ -36,7 +38,7 @@ class BlendDetailsView extends StatelessWidget {
       body: BlocConsumer<BlendDetailsBloc, BlendDetailsState>(
         listener: (context, state) {
           if (state is BlendDetailsShared) {
-            _showShareDialog(context, state.shareCode);
+            // _showShareDialog(context, state.shareCode);
           } else if (state is BlendDetailsSubscribed) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -83,6 +85,7 @@ class BlendDetailsView extends StatelessWidget {
               context,
               blend,
               state is BlendDetailsActionLoading,
+              state,
             );
           }
 
@@ -106,7 +109,12 @@ class BlendDetailsView extends StatelessWidget {
     );
   }
 
-  Widget _buildBlendDetails(BuildContext context, blend, bool isLoading) {
+  Widget _buildBlendDetails(
+    BuildContext context,
+    dynamic blend,
+    bool isLoading,
+    BlendDetailsState state,
+  ) {
     return CustomScrollView(
       slivers: [
         // App bar with image
@@ -115,6 +123,14 @@ class BlendDetailsView extends StatelessWidget {
           pinned: true,
           backgroundColor: Theme.of(context).colorScheme.surface,
           foregroundColor: Theme.of(context).colorScheme.onSurface,
+          leading: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+              shape: BoxShape.circle,
+            ),
+            child: BackButton(color: Theme.of(context).colorScheme.onSurface),
+          ),
           flexibleSpace: FlexibleSpaceBar(
             background: Container(
               decoration: BoxDecoration(
@@ -218,22 +234,24 @@ class BlendDetailsView extends StatelessWidget {
             ),
           ),
           actions: [
-            IconButton(
-              onPressed: isLoading
-                  ? null
-                  : () {
-                      context.read<BlendDetailsBloc>().add(
-                        ShareBlendFromDetails(blendId),
-                      );
-                    },
-              icon: isLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.share_rounded),
-              color: Theme.of(context).colorScheme.onSurface,
+            Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                onPressed: () {
+                  SharePlus.instance.share(
+                    ShareParams(
+                      text: blend.shareCode,
+                      subject: 'Check out this Blend: ${blend.name}',
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.share),
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ],
         ),
@@ -328,6 +346,69 @@ class BlendDetailsView extends StatelessWidget {
                 ),
               ),
 
+              // Share code section
+              if (blend.shareCode != null && blend.shareCode.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      Text(
+                        'Share this Blend',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      DottedBorder(
+                        options: RectDottedBorderOptions(
+                          dashPattern: const [8, 4],
+                          strokeWidth: 2,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.7),
+                        ),
+
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                blend.shareCode,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.copy),
+                                onPressed: () {
+                                  Clipboard.setData(
+                                    ClipboardData(text: blend.shareCode),
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Share code copied!'),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               // Ingredients
               IngredientsCard(additives: blend.additives),
 
@@ -375,55 +456,6 @@ class BlendDetailsView extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(benefit, style: Theme.of(context).textTheme.bodyMedium),
-        ],
-      ),
-    );
-  }
-
-  void _showShareDialog(BuildContext context, String shareCode) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: const Text('Blend Shared'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Share this code with others:'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                shareCode,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-          FilledButton(
-            onPressed: () {
-              // Copy to clipboard or share
-              Clipboard.setData(ClipboardData(text: shareCode));
-
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Share code copied!')),
-              );
-            },
-            child: const Text('Copy'),
-          ),
         ],
       ),
     );

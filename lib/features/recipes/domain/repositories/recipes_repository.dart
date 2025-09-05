@@ -22,4 +22,10 @@ abstract class RecipesRepository {
 
   /// Delete a recipe
   Future<Either<Failure, RecipeEntity>> deleteRecipe(String id);
+
+  /// Toggle like status for a recipe
+  Future<Either<Failure, Map<String, dynamic>>> toggleRecipeLike(String id);
+
+  /// Get liked recipes by user
+  Future<Either<Failure, List<RecipeEntity>>> getLikedRecipes();
 }

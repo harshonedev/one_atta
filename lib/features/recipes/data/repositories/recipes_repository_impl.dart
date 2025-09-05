@@ -78,4 +78,30 @@ class RecipesRepositoryImpl implements RecipesRepository {
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> toggleRecipeLike(
+    String id,
+  ) async {
+    try {
+      final result = await remoteDataSource.toggleRecipeLike(id);
+      return Right(result);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error occurred: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<RecipeEntity>>> getLikedRecipes() async {
+    try {
+      final result = await remoteDataSource.getLikedRecipes();
+      return Right(result.map((recipe) => recipe.toEntity()).toList());
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error occurred: $e'));
+    }
+  }
 }

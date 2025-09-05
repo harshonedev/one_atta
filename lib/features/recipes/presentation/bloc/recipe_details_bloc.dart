@@ -11,6 +11,7 @@ class RecipeDetailsBloc extends Bloc<RecipeDetailsEvent, RecipeDetailsState> {
     on<LoadRecipeDetails>(_onLoadRecipeDetails);
     on<ToggleRecipeFavorite>(_onToggleRecipeFavorite);
     on<ShareRecipe>(_onShareRecipe);
+    on<LikeRecipe>(_onLikeRecipe);
   }
 
   Future<void> _onLoadRecipeDetails(
@@ -23,8 +24,58 @@ class RecipeDetailsBloc extends Bloc<RecipeDetailsEvent, RecipeDetailsState> {
 
     result.fold(
       (failure) => emit(RecipeDetailsError(failure.message)),
-      (recipe) => emit(RecipeDetailsLoaded(recipe: recipe)),
+      (recipe) =>
+          emit(RecipeDetailsLoaded(recipe: recipe, likesCount: recipe.likes)),
     );
+  }
+
+  Future<void> _onLikeRecipe(
+    LikeRecipe event,
+    Emitter<RecipeDetailsState> emit,
+  ) async {
+    if (state is RecipeDetailsLoaded) {
+      final currentState = state as RecipeDetailsLoaded;
+
+      // Optimistic update - immediately update the UI
+      final newLikesCount = currentState.isLiked
+          ? currentState.likesCount - 1
+          : currentState.likesCount + 1;
+
+      emit(
+        currentState.copyWith(
+          isLiked: !currentState.isLiked,
+          likesCount: newLikesCount,
+          isLiking: true,
+        ),
+      );
+
+      // Sync with remote database
+      final result = await repository.toggleRecipeLike(event.recipeId);
+
+      result.fold(
+        (failure) {
+          // Revert the optimistic update on failure
+          emit(
+            currentState.copyWith(
+              isLiked: currentState.isLiked,
+              likesCount: currentState.likesCount,
+              isLiking: false,
+            ),
+          );
+          emit(RecipeDetailsError(failure.message));
+        },
+        (likeData) {
+          // Update with actual server response
+          emit(
+            currentState.copyWith(
+              isLiked: likeData['isLiked'] ?? !currentState.isLiked,
+              likesCount: likeData['likesCount'] ?? newLikesCount,
+              isLiking: false,
+            ),
+          );
+        },
+      );
+    }
   }
 
   Future<void> _onToggleRecipeFavorite(

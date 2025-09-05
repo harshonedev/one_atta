@@ -37,9 +37,9 @@ class BlendsView extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => _showShareCodeDialog(context),
-            icon: const Icon(Icons.qr_code_2_rounded),
-            tooltip: 'Find by Share Code',
+            onPressed: () => {},
+            icon: const Icon(Icons.shopping_cart_outlined),
+            tooltip: 'Cart',
           ),
         ],
       ),
@@ -88,10 +88,7 @@ class BlendsView extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // TODO: Navigate to create blend page
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Create blend feature coming soon!')),
-          );
+          context.push('/customizer');
         },
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -202,48 +199,4 @@ class BlendsView extends StatelessWidget {
     );
   }
 
-  void _showShareCodeDialog(BuildContext context) {
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text(
-          'Find Blend by Share Code',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Enter share code',
-            hintText: 'e.g., ABC1234',
-            border: OutlineInputBorder(),
-          ),
-          textCapitalization: TextCapitalization.characters,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final shareCode = controller.text.trim();
-              if (shareCode.isNotEmpty) {
-                Navigator.of(context).pop();
-                context.read<BlendsBloc>().add(GetBlendByShareCode(shareCode));
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            ),
-            child: const Text('Find'),
-          ),
-        ],
-      ),
-    );
-  }
 }

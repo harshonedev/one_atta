@@ -38,7 +38,8 @@ The `protect` middleware is used to authenticate users:
   blend_used: ObjectId,            // Reference to Blend model
   video_url: String,
   likes: Number (default: 0),
-  recipe_picture: String,          // Image URL
+  profile_picture: String,          // Image URL
+  liked_recipes: [ObjectId],        // Array of liked recipe IDs (User model)
   created_by: ObjectId (required), // Reference to User model
   createdAt: Date,
   updatedAt: Date
@@ -46,6 +47,15 @@ The `protect` middleware is used to authenticate users:
 ```
 
 ## API Endpoints
+
+### Quick Reference
+- `GET /recipes` - Get all recipes (public)
+- `GET /recipes/liked` - Get user's liked recipes (authenticated)
+- `GET /recipes/:id` - Get recipe by ID (public)
+- `POST /recipes` - Create new recipe (public)
+- `POST /recipes/:id/like` - Like/unlike recipe (authenticated)
+- `PUT /recipes/:id` - Update recipe (authenticated)
+- `DELETE /recipes/:id` - Delete recipe (authenticated)
 
 ### 1. Get All Recipes
 
@@ -294,7 +304,149 @@ Updates an existing recipe.
 }
 ```
 
-### 5. Delete Recipe
+### 6. Like/Unlike Recipe
+
+**POST** `/recipes/:id/like`
+
+Toggles the like status for a specific recipe. If the recipe is already liked by the user, it will be unliked, and vice versa.
+
+#### Request
+- **Authentication**: Required (Bearer token)
+- **Headers**: 
+  - `Authorization: Bearer <token>`
+- **Parameters**: 
+  - `id` (string, required): MongoDB ObjectId of the recipe to like/unlike
+
+#### Response
+
+**Success (200) - Recipe Liked**
+```json
+{
+  "success": true,
+  "message": "Recipe liked",
+  "data": {
+    "isLiked": true,
+    "likesCount": 26,
+    "message": "Recipe liked"
+  }
+}
+```
+
+**Success (200) - Recipe Unliked**
+```json
+{
+  "success": true,
+  "message": "Recipe unliked",
+  "data": {
+    "isLiked": false,
+    "likesCount": 25,
+    "message": "Recipe unliked"
+  }
+}
+```
+
+**Error (401)**
+```json
+{
+  "success": false,
+  "message": "Not authorized, token failed"
+}
+```
+
+**Error (404)**
+```json
+{
+  "success": false,
+  "message": "Recipe not found"
+}
+```
+
+### 7. Get Liked Recipes by User
+
+**GET** `/recipes/liked`
+
+Retrieves all recipes that the authenticated user has liked, with populated blend and creator information.
+
+#### Request
+- **Authentication**: Required (Bearer token)
+- **Headers**: 
+  - `Authorization: Bearer <token>`
+
+#### Response
+
+**Success (200)**
+```json
+{
+  "success": true,
+  "message": "Liked recipes fetched successfully",
+  "data": [
+    {
+      "_id": "64f5a1b2c3d4e5f6g7h8i9j0",
+      "title": "Spicy Chicken Curry",
+      "ingredients": [
+        {
+          "name": "chicken",
+          "quantity": 500,
+          "unit": "gm"
+        },
+        {
+          "name": "onions",
+          "quantity": 2,
+          "unit": "pieces"
+        }
+      ],
+      "steps": [
+        "Heat oil in a pan",
+        "Add onions and cook until golden",
+        "Add chicken and spices"
+      ],
+      "description": "A delicious spicy chicken curry recipe",
+      "blend_used": {
+        "_id": "64f5a1b2c3d4e5f6g7h8i9j1",
+        "name": "Garam Masala Blend",
+        "description": "Traditional Indian spice blend"
+      },
+      "video_url": "https://youtube.com/watch?v=example",
+      "likes": 25,
+      "recipe_picture": "https://s3.amazonaws.com/recipe-images/curry.jpg",
+      "created_by": {
+        "_id": "64f5a1b2c3d4e5f6g7h8i9j2",
+        "name": "Chef John",
+        "email": "chef@example.com"
+      },
+      "createdAt": "2023-09-04T10:30:00.000Z",
+      "updatedAt": "2023-09-04T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+**Success (200) - No Liked Recipes**
+```json
+{
+  "success": true,
+  "message": "Liked recipes fetched successfully",
+  "data": []
+}
+```
+
+**Error (401)**
+```json
+{
+  "success": false,
+  "message": "Not authorized, token failed"
+}
+```
+
+**Error (404)**
+```json
+{
+  "success": false,
+  "message": "User not found"
+}
+```
+
+### 8. Delete Recipe
 
 **DELETE** `/recipes/:id`
 
@@ -391,6 +543,18 @@ curl -X DELETE http://localhost:3000/recipes/64f5a1b2c3d4e5f6g7h8i9j0 \
   -H "Authorization: Bearer your_jwt_token"
 ```
 
+#### Like/Unlike Recipe (Authenticated)
+```bash
+curl -X POST http://localhost:3000/recipes/64f5a1b2c3d4e5f6g7h8i9j0/like \
+  -H "Authorization: Bearer your_jwt_token"
+```
+
+#### Get Liked Recipes (Authenticated)
+```bash
+curl -X GET http://localhost:3000/recipes/liked \
+  -H "Authorization: Bearer your_jwt_token"
+```
+
 ### Using JavaScript/Fetch
 
 #### Get Recipe by ID
@@ -421,6 +585,30 @@ fetch('/recipes', {
 .then(data => console.log(data));
 ```
 
+#### Like/Unlike Recipe
+```javascript
+fetch('/recipes/64f5a1b2c3d4e5f6g7h8i9j0/like', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+#### Get Liked Recipes
+```javascript
+fetch('/recipes/liked', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
 ## Notes
 
 1. **User Assignment**: When creating recipes without authentication, `created_by` defaults to "000000000000000000000000"
@@ -428,7 +616,13 @@ fetch('/recipes', {
 3. **Timestamps**: All recipes include `createdAt` and `updatedAt` timestamps
 4. **Validation**: The `title` field is required for recipe creation
 5. **Ingredients Structure**: Each ingredient must have `name`, `quantity`, and `unit` fields
-6. **Authentication**: Update and delete operations require valid JWT authentication
+6. **Authentication**: Update, delete, like, and get liked recipes operations require valid JWT authentication
+7. **Like System**: 
+   - The like endpoint works as a toggle (like/unlike)
+   - Liking a recipe adds it to the user's `liked_recipes` array and increments the recipe's `likes` count
+   - Unliking removes it from the user's array and decrements the count
+   - Users can only see their own liked recipes through the `/recipes/liked` endpoint
+8. **Route Order**: The `/recipes/liked` route must be defined before `/recipes/:id` to avoid route conflicts
 
 ## Related Models
 

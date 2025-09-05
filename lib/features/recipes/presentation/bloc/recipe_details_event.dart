@@ -33,3 +33,12 @@ class ShareRecipe extends RecipeDetailsEvent {
   @override
   List<Object?> get props => [recipeId];
 }
+
+class LikeRecipe extends RecipeDetailsEvent {
+  final String recipeId;
+
+  const LikeRecipe(this.recipeId);
+
+  @override
+  List<Object?> get props => [recipeId];
+}

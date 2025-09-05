@@ -15,6 +15,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     on<DeleteRecipe>(_onDeleteRecipe);
     on<FilterRecipesByCategory>(_onFilterRecipesByCategory);
     on<SearchRecipes>(_onSearchRecipes);
+    on<LoadLikedRecipes>(_onLoadLikedRecipes);
   }
 
   Future<void> _onLoadRecipes(
@@ -200,5 +201,19 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
         ),
       );
     }
+  }
+
+  Future<void> _onLoadLikedRecipes(
+    LoadLikedRecipes event,
+    Emitter<RecipesState> emit,
+  ) async {
+    emit(const LikedRecipesLoading());
+
+    final result = await repository.getLikedRecipes();
+
+    result.fold(
+      (failure) => emit(RecipesError(failure.message)),
+      (likedRecipes) => emit(LikedRecipesLoaded(likedRecipes)),
+    );
   }
 }
