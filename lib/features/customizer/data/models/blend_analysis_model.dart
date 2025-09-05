@@ -1,13 +1,14 @@
+import 'package:equatable/equatable.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_analysis_entity.dart';
 
-class BlendAnalysisModel {
+class BlendAnalysisModel extends Equatable {
   final NutritionalInfoModel nutritionalInfoPer100g;
   final RotiCharacteristicsModel rotiCharacteristics;
   final List<String> healthBenefits;
   final List<String> allergens;
   final String suitabilityNotes;
 
-  BlendAnalysisModel({
+  const BlendAnalysisModel({
     required this.nutritionalInfoPer100g,
     required this.rotiCharacteristics,
     required this.healthBenefits,
@@ -17,8 +18,8 @@ class BlendAnalysisModel {
 
   factory BlendAnalysisModel.fromJson(Map<String, dynamic> json) {
     // Handle the actual API response structure
-    final nutrients = json['nutrients'] as Map<String, dynamic>?;
-    final rotiInfo = json['roti_info'] as Map<String, dynamic>?;
+    final nutrients = json['nutritional_info_per_100g'] as Map<String, dynamic>?;
+    final rotiInfo = json['roti_characteristics'] as Map<String, dynamic>?;
 
     return BlendAnalysisModel(
       nutritionalInfoPer100g: NutritionalInfoModel.fromJson(nutrients ?? {}),
@@ -61,9 +62,19 @@ class BlendAnalysisModel {
       suitabilityNotes: suitabilityNotes,
     );
   }
+  
+  @override
+  
+  List<Object?> get props => [
+    nutritionalInfoPer100g,
+    rotiCharacteristics,
+    healthBenefits,
+    allergens,
+    suitabilityNotes,
+  ];
 }
 
-class NutritionalInfoModel {
+class NutritionalInfoModel extends Equatable {
   final double calories;
   final double protein;
   final double fat;
@@ -71,7 +82,7 @@ class NutritionalInfoModel {
   final double fiber;
   final double iron;
 
-  NutritionalInfoModel({
+  const NutritionalInfoModel({
     required this.calories,
     required this.protein,
     required this.fat,
@@ -112,9 +123,19 @@ class NutritionalInfoModel {
       iron: iron,
     );
   }
+  
+  @override
+  List<Object?> get props => [
+    calories,
+    protein,
+    fat,
+    carbohydrates,
+    fiber,
+    iron,
+  ];
 }
 
-class RotiCharacteristicsModel {
+class RotiCharacteristicsModel extends Equatable {
   final String taste;
   final int tasteRating;
   final String texture;
@@ -122,7 +143,7 @@ class RotiCharacteristicsModel {
   final String softness;
   final int softnessRating;
 
-  RotiCharacteristicsModel({
+  const RotiCharacteristicsModel({
     required this.taste,
     required this.tasteRating,
     required this.texture,
@@ -165,4 +186,14 @@ class RotiCharacteristicsModel {
       softnessRating: softnessRating,
     );
   }
+  
+  @override
+  List<Object?> get props => [
+    taste,
+    tasteRating,
+    texture,
+    textureRating,
+    softness,
+    softnessRating,
+  ];
 }

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:logger/logger.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/customizer/data/datasources/customizer_remote_data_source.dart';
 import 'package:one_atta/features/customizer/data/models/blend_request_model.dart';
@@ -8,6 +9,7 @@ import 'package:one_atta/features/customizer/domain/repositories/customizer_repo
 
 class CustomizerRepositoryImpl implements CustomizerRepository {
   final CustomizerRemoteDataSource remoteDataSource;
+  final logger = Logger();
 
   CustomizerRepositoryImpl({required this.remoteDataSource});
 
@@ -18,6 +20,8 @@ class CustomizerRepositoryImpl implements CustomizerRepository {
     try {
       final blendRequestModel = BlendRequestModel.fromEntity(blendRequest);
       final result = await remoteDataSource.analyzeBlend(blendRequestModel);
+      logger.i('Blend analysis result: $result');
+      logger.i('Blend analysis result (as entity): ${result.toEntity()}');
       return Right(result.toEntity());
     } on Failure catch (failure) {
       return Left(failure);

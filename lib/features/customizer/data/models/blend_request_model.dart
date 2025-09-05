@@ -1,6 +1,6 @@
 import 'package:one_atta/features/customizer/domain/entities/blend_request_entity.dart';
 
-class BlendRequestModel {
+class BlendRequestModel  {
   final Map<String, int> ingredients;
   final int totalWeightG;
 

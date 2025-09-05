@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:logger/logger.dart';
 import 'package:one_atta/features/customizer/presentation/models/ingredient.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_analysis_entity.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_request_entity.dart';
@@ -184,9 +185,10 @@ enum PacketSize { kg1, kg3, kg5 }
 
 // Bloc
 class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
-  final CustomizerRepository? customizerRepository;
+  final CustomizerRepository customizerRepository;
+  final Logger logger = Logger();
 
-  CustomizerBloc({this.customizerRepository})
+  CustomizerBloc({required this.customizerRepository})
     : super(CustomizerState.initial()) {
     on<InitializeCustomizer>(_onInitializeCustomizer);
     on<SelectPacketSize>(_onSelectPacketSize);
@@ -363,48 +365,61 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     AnalyzeBlend event,
     Emitter<CustomizerState> emit,
   ) async {
-    if (customizerRepository == null) return;
-
     emit(state.copyWith(isAnalyzing: true, clearError: true));
+
+    final start = DateTime.now();
+    const minDuration = Duration(seconds: 8); // ensure animation visible
+
+    BlendAnalysisEntity? successfulAnalysis;
+    String? failureMessage;
 
     try {
       // Prepare ingredients map with weights in grams
       final ingredientsMap = <String, int>{};
-
-      // Add all selected ingredients
       for (final ingredient in state.selectedIngredients) {
         final weight = (ingredient.percentage * state.totalWeight).round();
-        final name = ingredient.name.toLowerCase();
+        final name = ingredient.name.toLowerCase() == 'malta'
+            ? 'joo'
+            : ingredient.name.toLowerCase();
         ingredientsMap[name] = weight;
       }
-
-      // Ensure total adds up correctly, add remaining to wheat if needed
+      // Fill remainder into wheat if floating-point / rounding left gap
       final totalMapped = ingredientsMap.values.fold(0, (a, b) => a + b);
       if (totalMapped < state.totalWeight) {
         ingredientsMap['wheat'] =
             (ingredientsMap['wheat'] ?? 0) + (state.totalWeight - totalMapped);
       }
 
+      logger.i('Analyzing blend with ingredients: $ingredientsMap');
+
       final blendRequest = BlendRequestEntity(
         ingredients: ingredientsMap,
         totalWeightG: state.totalWeight,
       );
 
-      final result = await customizerRepository!.analyzeBlend(blendRequest);
-
+      final result = await customizerRepository.analyzeBlend(blendRequest);
       result.fold(
-        (failure) =>
-            emit(state.copyWith(isAnalyzing: false, error: failure.message)),
-        (analysis) =>
-            emit(state.copyWith(isAnalyzing: false, analysisResult: analysis)),
+        (failure) => failureMessage = failure.message,
+        (analysis) => successfulAnalysis = analysis,
       );
     } catch (e) {
-      emit(
-        state.copyWith(
-          isAnalyzing: false,
-          error: 'Failed to analyze blend: $e',
-        ),
-      );
+      failureMessage = 'Failed to analyze blend: $e';
+    } finally {
+      final elapsed = DateTime.now().difference(start);
+      if (elapsed < minDuration) {
+        final remaining = minDuration - elapsed;
+        await Future.delayed(remaining);
+      }
+      if (failureMessage != null) {
+        emit(state.copyWith(isAnalyzing: false, error: failureMessage));
+      } else {
+        emit(
+          state.copyWith(
+            isAnalyzing: false,
+            analysisResult: successfulAnalysis,
+          ),
+        );
+      }
     }
   }
 
@@ -412,8 +427,6 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     SaveBlend event,
     Emitter<CustomizerState> emit,
   ) async {
-    if (customizerRepository == null) return;
-
     emit(state.copyWith(isSaving: true, clearError: true));
 
     try {
@@ -438,7 +451,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
         weightKg: state.totalWeight / 1000,
       );
 
-      final result = await customizerRepository!.saveBlend(saveBlendRequest);
+      final result = await customizerRepository.saveBlend(saveBlendRequest);
 
       result.fold(
         (failure) =>

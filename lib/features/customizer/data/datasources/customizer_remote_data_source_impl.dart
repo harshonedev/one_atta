@@ -22,19 +22,22 @@ class CustomizerRemoteDataSourceImpl implements CustomizerRemoteDataSource {
   ) async {
     final logger = Logger();
     try {
-      // Get token for optional authentication
+      // Get token for  authentication
       final token = await authLocalDataSource.getToken();
 
-      // Prepare headers with optional authentication
+      
+      
+
+      // Add authorization header if token is available
+      if (token == null) {
+        throw UnauthorizedFailure('No authentication token found');
+      }
+
       final headers = <String, dynamic>{
         'Content-Type': 'application/json',
         'x-api-key': AppConstants.appAPIKey,
+        'Authorization': 'Bearer $token',
       };
-
-      // Add authorization header if token is available
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
 
       final response = await dio.post(
         '${ApiEndpoints.baseUrl}/blends/custom/analyze',
