@@ -9,7 +9,7 @@ class WeightOption {
   const WeightOption({required this.weightInGrams, required this.label});
 }
 
-class SelectedIngredientCard extends StatefulWidget {
+class SelectedIngredientCard extends StatelessWidget {
   final Ingredient ingredient;
   final int totalWeight;
   final PacketSize packetSize;
@@ -29,55 +29,11 @@ class SelectedIngredientCard extends StatefulWidget {
     required this.onPercentageChanged,
   });
 
-  @override
-  State<SelectedIngredientCard> createState() => _SelectedIngredientCardState();
-}
-
-class _SelectedIngredientCardState extends State<SelectedIngredientCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _removeAnimationController;
-  late Animation<double> _slideAnimation;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _removeAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _slideAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _removeAnimationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _removeAnimationController,
-        curve: Curves.easeInOut,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _removeAnimationController.dispose();
-    super.dispose();
-  }
-
-  void _handleRemove() {
-    _removeAnimationController.forward().then((_) {
-      widget.onRemoved();
-    });
-  }
-
-  int get weightInGrams =>
-      (widget.ingredient.percentage * widget.totalWeight).round();
+  int get weightInGrams => (ingredient.percentage * totalWeight).round();
 
   // Calculate step size for slider based on packet size (100g increments)
   double get stepSize {
-    switch (widget.packetSize) {
+    switch (packetSize) {
       case PacketSize.kg1:
         return 0.1; // 10% for 1kg (100g steps)
       case PacketSize.kg3:
@@ -94,7 +50,7 @@ class _SelectedIngredientCardState extends State<SelectedIngredientCard>
 
   // Get weight options based on packet size
   List<WeightOption> get weightOptions {
-    switch (widget.packetSize) {
+    switch (packetSize) {
       case PacketSize.kg1:
         return [
           WeightOption(weightInGrams: 200, label: '200g'),
@@ -119,11 +75,15 @@ class _SelectedIngredientCardState extends State<SelectedIngredientCard>
     }
   }
 
-  void _setPercentage(double percentage, {bool showSnackbarOnLimit = false}) {
+  void _setPercentage(
+    BuildContext context,
+    double percentage, {
+    bool showSnackbarOnLimit = false,
+  }) {
     final snappedValue = _snapToStep(percentage.clamp(0.0, 1.0));
-    final currentPercentage = widget.ingredient.percentage;
+    final currentPercentage = ingredient.percentage;
     final percentageDifference = snappedValue - currentPercentage;
-    final newTotalPercentage = widget.totalPercentage + percentageDifference;
+    final newTotalPercentage = totalPercentage + percentageDifference;
 
     // Use a small tolerance for floating-point comparison (0.001 = 0.1%)
     const tolerance = 0.001;
@@ -131,15 +91,15 @@ class _SelectedIngredientCardState extends State<SelectedIngredientCard>
     // Check if the new percentage would exceed capacity
     if (newTotalPercentage > (1.0 + tolerance) && percentageDifference > 0) {
       if (showSnackbarOnLimit) {
-        _showCapacityExceededSnackbar();
+        _showCapacityExceededSnackbar(context);
       }
       return;
     }
 
-    widget.onPercentageChanged(snappedValue);
+    onPercentageChanged(snappedValue);
   }
 
-  void _showCapacityExceededSnackbar() {
+  void _showCapacityExceededSnackbar(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -171,150 +131,125 @@ class _SelectedIngredientCardState extends State<SelectedIngredientCard>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _removeAnimationController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_slideAnimation.value * 300, 0),
-          child: Opacity(
-            opacity: _fadeAnimation.value,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(16),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  ingredient.icon,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  size: 20,
+                ),
               ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          widget.ingredient.icon,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          size: 20,
-                        ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ingredient.name,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.ingredient.name,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
-                                  ),
-                            ),
-                            Text(
-                              '${weightInGrams}g',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    Text(
+                      '${weightInGrams}g',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${(widget.ingredient.percentage * 100).toStringAsFixed(0)}%',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSecondaryContainer,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: _handleRemove,
-                        icon: Icon(
-                          Icons.remove_circle_outline,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        iconSize: 20,
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Column(
-                    children: [
-                      // Slider
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 20,
-                          activeTrackColor: Theme.of(
-                            context,
-                          ).colorScheme.secondary,
-                          thumbShape: SliderComponentShape.noThumb,
-                          inactiveTrackColor: Theme.of(
-                            context,
-                          ).colorScheme.outline.withOpacity(0.3),
-                          thumbColor: Theme.of(context).colorScheme.secondary,
-                          overlayColor: Theme.of(
-                            context,
-                          ).colorScheme.secondary.withOpacity(0.1),
-                        ),
-                        child: Slider(
-                          value: widget.ingredient.percentage,
-                          onChanged: (value) {
-                            _setPercentage(value); // No snackbar for slider
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Weight Options
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: weightOptions
-                            .map((option) => _buildWeightOption(option))
-                            .toList(),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${(ingredient.percentage * 100).toStringAsFixed(0)}%',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: onRemoved,
+                icon: Icon(
+                  Icons.remove_circle_outline,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                iconSize: 20,
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+            ],
           ),
-        );
-      },
+          const SizedBox(height: 12),
+          Column(
+            children: [
+              // Slider
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 20,
+                  activeTrackColor: Theme.of(context).colorScheme.secondary,
+                  thumbShape: SliderComponentShape.noThumb,
+                  inactiveTrackColor: Theme.of(
+                    context,
+                  ).colorScheme.outline.withOpacity(0.3),
+                  thumbColor: Theme.of(context).colorScheme.secondary,
+                  overlayColor: Theme.of(
+                    context,
+                  ).colorScheme.secondary.withOpacity(0.1),
+                ),
+                child: Slider(
+                  value: ingredient.percentage,
+                  onChanged: (value) {
+                    _setPercentage(context, value); // No snackbar for slider
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Weight Options
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: weightOptions
+                    .map((option) => _buildWeightOption(context, option))
+                    .toList(),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildWeightOption(WeightOption option) {
+  Widget _buildWeightOption(BuildContext context, WeightOption option) {
     // Calculate the percentage equivalent for this weight
-    final targetPercentage = option.weightInGrams / widget.totalWeight;
-    final isSelected =
-        (widget.ingredient.percentage - targetPercentage).abs() < 0.01;
-    final currentPercentage = widget.ingredient.percentage;
+    final targetPercentage = option.weightInGrams / totalWeight;
+    final isSelected = (ingredient.percentage - targetPercentage).abs() < 0.01;
+    final currentPercentage = ingredient.percentage;
     final percentageDifference = targetPercentage - currentPercentage;
-    final newTotalPercentage = widget.totalPercentage + percentageDifference;
+    final newTotalPercentage = totalPercentage + percentageDifference;
 
     // Use same tolerance as in _setPercentage method
     const tolerance = 0.001;
@@ -323,8 +258,12 @@ class _SelectedIngredientCardState extends State<SelectedIngredientCard>
 
     return GestureDetector(
       onTap: wouldExceedCapacity
-          ? () => _setPercentage(targetPercentage, showSnackbarOnLimit: true)
-          : () => _setPercentage(targetPercentage),
+          ? () => _setPercentage(
+              context,
+              targetPercentage,
+              showSnackbarOnLimit: true,
+            )
+          : () => _setPercentage(context, targetPercentage),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(

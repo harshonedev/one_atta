@@ -72,6 +72,7 @@ class TotalProgressCard extends StatelessWidget {
               Theme.of(context).colorScheme.tertiary,
             ),
             minHeight: 6,
+            borderRadius: BorderRadius.circular(8),
           ),
           if (isMaxReached) ...[
             const SizedBox(height: 8),
