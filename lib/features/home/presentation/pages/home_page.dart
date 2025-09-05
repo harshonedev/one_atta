@@ -316,7 +316,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCreateAttaSection(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/blends'),
+      onTap: () => context.push('/customizer'),
       child: Container(
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(20),

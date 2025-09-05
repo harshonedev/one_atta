@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
+import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 
 // Data sources
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
@@ -30,6 +31,12 @@ import 'package:one_atta/features/blends/data/datasources/blends_remote_data_sou
 import 'package:one_atta/features/blends/data/datasources/blends_remote_data_source_impl.dart';
 import 'package:one_atta/features/blends/data/repositories/blends_repository_impl.dart';
 import 'package:one_atta/features/blends/domain/repositories/blends_repository.dart';
+
+// Customizer
+import 'package:one_atta/features/customizer/data/datasources/customizer_remote_data_source.dart';
+import 'package:one_atta/features/customizer/data/datasources/customizer_remote_data_source_impl.dart';
+import 'package:one_atta/features/customizer/data/repositories/customizer_repository_impl.dart';
+import 'package:one_atta/features/customizer/domain/repositories/customizer_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -66,6 +73,20 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<BlendsRemoteDataSource>(
     () => BlendsRemoteDataSourceImpl(dio: sl()),
+  );
+
+  //! Features - Customizer
+  // BLoC
+  sl.registerFactory(() => CustomizerBloc(customizerRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<CustomizerRepository>(
+    () => CustomizerRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<CustomizerRemoteDataSource>(
+    () => CustomizerRemoteDataSourceImpl(dio: sl(), authLocalDataSource: sl()),
   );
 
   //! Core

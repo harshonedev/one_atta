@@ -12,6 +12,8 @@ import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blends_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blend_details_page.dart';
+import 'package:one_atta/features/customizer/presentation/customizer_page.dart';
+import 'package:one_atta/features/customizer/presentation/analysis_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -103,6 +105,16 @@ class AppRouter {
             final blendId = state.pathParameters['blendId']!;
             return BlendDetailsPage(blendId: blendId);
           },
+        ),
+        GoRoute(
+          path: '/customizer',
+          name: 'customizer',
+          builder: (context, state) => const CustomizerPage(),
+        ),
+        GoRoute(
+          path: '/analysis',
+          name: 'analysis',
+          builder: (context, state) => const AnalysisPage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

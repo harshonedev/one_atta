@@ -1,6 +1,7 @@
 class ApiEndpoints {
   static const String baseUrl = 'https://one-atta-backend.onrender.com/api/app';
   static const String auth = '$baseUrl/auth';
+  static const String blends = '$baseUrl/blends';
 }
 
 class AppConstants {
@@ -9,7 +10,7 @@ class AppConstants {
   static const String userKey = 'user_data';
   static const String refreshTokenKey = 'refresh_token';
   static const String isLoggedInKey = 'is_logged_in';
-  static const String appAPIKey  = "Q8vjsTrlKX12bFNw3VHAyqGZ4Ch9xRpUWoaMfdPziE"; 
+  static const String appAPIKey = "Q8vjsTrlKX12bFNw3VHAyqGZ4Ch9xRpUWoaMfdPziE";
 }
 
 class AppStrings {
@@ -42,7 +43,4 @@ class AppStrings {
   static const String logoutSuccess = 'Logout successful';
   static const String passwordResetSent =
       'Password reset link sent to your email';
-
-  
-  
 }

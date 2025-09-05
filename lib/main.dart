@@ -7,6 +7,7 @@ import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
+import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +32,7 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => HomeBloc()),
         BlocProvider(create: (context) => di.sl<RecipesBloc>()),
         BlocProvider(create: (context) => di.sl<RecipeDetailsBloc>()),
-      
+        BlocProvider(create: (context) => di.sl<CustomizerBloc>()),
       ],
       child: MaterialApp.router(
         title: 'One Atta',

@@ -391,7 +391,93 @@ PUT /api/blends/:id
 
 ---
 
-### 7. Get Blend by Share Code
+### 7. Analyze Custom Blend
+```http
+POST /api/blends/custom/analyze
+```
+
+**Description:** Analyze a custom blend using AI to get nutritional insights and characteristics. This endpoint uses Azure OpenAI to analyze the ingredients and their proportions to provide detailed information about the blend.
+
+**Authentication:** 
+
+**Request Body:**
+```json
+{
+  "ingredients": {
+    "wheat": 2800,
+    "bajra": 1000,
+    "ragi": 600,
+    "chana": 400,
+    "makka": 200,
+    "joo": 0
+  },
+  "total_weight_g": 5000
+}
+```
+
+**Required Fields:**
+- `ingredients` (object): Ingredient names and their weights in grams
+- `total_weight_g` (number): Total weight of the blend in grams
+
+
+**Response:**
+```json
+{
+    "nutritional_info_per_100g": {
+        "calories": 349.9,
+        "protein": 11.4,
+        "fat": 3.3,
+        "carbohydrates": 70,
+        "fiber": 10.3,
+        "iron": 4.4
+    },
+    "roti_characteristics": {
+        "taste": "Rustic with strong grainy undertone",
+        "taste_rating": 5,
+        "texture": "Slightly coarse but balanced",
+        "texture_rating": 7,
+        "softness": "Very soft and pliable",
+        "softness_rating": 9
+    },
+    "health_benefits": [
+        "Gluten-free friendly if wheat/joo excluded.",
+        "Supports sustained energy release.",
+        "Good source of iron, supports healthy blood circulation."
+    ],
+    "allergens": [
+        "Contains gluten (wheat).",
+        "Contains gluten (barley).",
+        "May contain chickpea allergens.",
+        "Corn sensitivity risk."
+    ],
+    "suitability_notes": "Not suitable for gluten-intolerant individuals."
+}
+```
+
+**Error Responses:**
+- `400` - Bad Request (Missing ingredients or total_weight_g)
+```json
+{
+  "error": "Missing ingredients or total_weight_g"
+}
+```
+- `500` - Internal Server Error (AI service error or invalid JSON response)
+```json
+{
+  "error": "Failed to analyze blend"
+}
+```
+
+**Notes:**
+- This endpoint uses Azure OpenAI's fine-tuned model for food and nutrition analysis
+- The response format is JSON and provides comprehensive nutritional and characteristic information
+- Ingredient weights should be provided in grams
+- The AI model is trained specifically for flour blend analysis
+- Response includes educational disclaimer about the nutritional information
+
+---
+
+### 8. Get Blend by Share Code
 ```http
 GET /api/blends/by-share-code/:share_code
 ```
