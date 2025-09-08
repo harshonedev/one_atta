@@ -23,3 +23,15 @@ class SearchBlends extends HomeEvent {
 class RefreshHomeData extends HomeEvent {
   const RefreshHomeData();
 }
+
+class LoadTrendingBlends extends HomeEvent {
+  const LoadTrendingBlends();
+}
+
+class LoadFeaturedRecipes extends HomeEvent {
+  const LoadFeaturedRecipes();
+}
+
+class LoadUserProfile extends HomeEvent {
+  const LoadUserProfile();
+}

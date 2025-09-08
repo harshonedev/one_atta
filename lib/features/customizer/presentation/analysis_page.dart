@@ -98,9 +98,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
                 const SizedBox(height: 24),
                 _AllergensCard(analysis: state.analysisResult!),
                 const SizedBox(height: 24),
-                _ActionButtonsSection(isSaving: state.isSaving),
-                const SizedBox(height: 24),
                 _DisclaimerSection(),
+
+                const SizedBox(height: 16),
+                _ActionButtonsSection(isSaving: state.isSaving),
               ],
             ),
           );

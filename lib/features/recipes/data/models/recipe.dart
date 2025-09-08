@@ -133,7 +133,7 @@ class BlendModel {
 
   factory BlendModel.fromJson(Map<String, dynamic> json) {
     return BlendModel(
-      id: json['_id'] ?? '',
+      id: json['id'] ?? '',
       name: json['name'] ?? '',
       description: json['description'],
     );

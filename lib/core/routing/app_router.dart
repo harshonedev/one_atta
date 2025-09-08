@@ -80,10 +80,36 @@ class AppRouter {
             return OtpPage(data: data);
           },
         ),
+        // Main navigation routes with bottom tabs
         GoRoute(
           path: '/home',
           name: 'home',
-          builder: (context, state) => const MainNavigationPage(),
+          builder: (context, state) =>
+              const MainNavigationPage(initialIndex: 0),
+        ),
+        GoRoute(
+          path: '/orders',
+          name: 'orders',
+          builder: (context, state) =>
+              const MainNavigationPage(initialIndex: 1),
+        ),
+        GoRoute(
+          path: '/reels',
+          name: 'reels',
+          builder: (context, state) =>
+              const MainNavigationPage(initialIndex: 2),
+        ),
+        GoRoute(
+          path: '/recipes',
+          name: 'recipes',
+          builder: (context, state) =>
+              const MainNavigationPage(initialIndex: 3),
+        ),
+        GoRoute(
+          path: '/more',
+          name: 'more',
+          builder: (context, state) =>
+              const MainNavigationPage(initialIndex: 4),
         ),
         GoRoute(
           path: '/recipe-details/:recipeId',

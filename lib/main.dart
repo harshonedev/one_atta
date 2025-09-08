@@ -29,7 +29,7 @@ class MainApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => di.sl<AuthBloc>()),
-        BlocProvider(create: (context) => HomeBloc()),
+        BlocProvider(create: (context) => di.sl<HomeBloc>()),
         BlocProvider(create: (context) => di.sl<RecipesBloc>()),
         BlocProvider(create: (context) => di.sl<RecipeDetailsBloc>()),
         BlocProvider(create: (context) => di.sl<CustomizerBloc>()),

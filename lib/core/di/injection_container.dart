@@ -15,6 +15,7 @@ import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
+import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 
 // Data sources
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
@@ -57,6 +58,16 @@ Future<void> init() async {
 
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
+  //! Features - Home
+  // BLoC
+  sl.registerFactory(
+    () => HomeBloc(
+      blendsRepository: sl(),
+      recipesRepository: sl(),
+      authRepository: sl(),
+    ),
   );
 
   //! Features - Blends

@@ -3,14 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
+import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
+import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_event.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_state.dart';
 import 'package:one_atta/features/home/presentation/widgets/blend_card.dart';
+import 'package:one_atta/features/home/presentation/widgets/daily_essentials_blend_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/recipe_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/section_header.dart';
+import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -41,10 +45,10 @@ class _HomePageState extends State<HomePage> {
           child: BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
               if (state is HomeLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return _buildLoadingContent(context);
               }
 
-              if (state is HomeError) {
+              if (state is HomeError && state.trendingBlends.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -83,11 +87,43 @@ class _HomePageState extends State<HomePage> {
                 return _buildHomeContent(context, state);
               }
 
+              if (state is HomeError) {
+                // Show error but with existing data
+                return _buildHomeContentWithError(context, state);
+              }
+
+              if (state is HomePartialLoading) {
+                return _buildHomeContentWithLoading(context, state);
+              }
+
+              if (state is HomeSearchResult) {
+                return _buildSearchResults(context, state);
+              }
+
               return const SizedBox.shrink();
             },
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLoadingContent(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        UserEntity? user;
+        if (authState is AuthAuthenticated) {
+          user = authState.user;
+        }
+
+        return Column(
+          children: [
+            _buildHeader(context, user),
+            _buildCreateAttaSection(context),
+            const Expanded(child: Center(child: CircularProgressIndicator())),
+          ],
+        );
+      },
     );
   }
 
@@ -98,7 +134,7 @@ class _HomePageState extends State<HomePage> {
       },
       child: Column(
         children: [
-          _buildHeader(context, state.userProfile),
+          _buildHeader(context, state.user),
           Expanded(
             child: CustomScrollView(
               slivers: [
@@ -113,10 +149,9 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      return BlendCard(
+                      return DailyEssentialsBlendCard(
                         blend: state.readyToSellBlends[index],
-                        isHorizontal: true,
-                        isReadyToSell: true,
+                        isCompact: true,
                         onTap: () {
                           // Navigate to blend details
                         },
@@ -137,18 +172,17 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 230,
+                    height: 220,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: state.trendingBlends.length,
                       itemBuilder: (context, index) {
+                        final blend = state.trendingBlends[index];
                         return BlendCard(
-                          blend: state.trendingBlends[index],
+                          blend: blend,
                           onTap: () {
-                            context.push(
-                              '/blend-details/${state.trendingBlends[index].id}',
-                            );
+                            context.push('/blend-details/${blend.id}');
                           },
                         );
                       },
@@ -162,7 +196,7 @@ class _HomePageState extends State<HomePage> {
                     title: 'Recipes For You',
                     actionText: 'See All',
                     onActionPressed: () {
-                      // Navigate to recipes page
+                      context.go('/recipes');
                     },
                   ),
                 ),
@@ -172,12 +206,13 @@ class _HomePageState extends State<HomePage> {
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: state.recipes.length,
+                      itemCount: state.featuredRecipes.length,
                       itemBuilder: (context, index) {
+                        final recipe = state.featuredRecipes[index];
                         return RecipeCard(
-                          recipe: state.recipes[index],
+                          recipe: recipe,
                           onTap: () {
-                            // Navigate to recipe details
+                            context.push('/recipe-details/${recipe.id}');
                           },
                         );
                       },
@@ -198,7 +233,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, userProfile) {
+  Widget _buildHeader(BuildContext context, UserEntity? user) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -210,7 +245,7 @@ class _HomePageState extends State<HomePage> {
                 radius: 20,
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 child: Text(
-                  userProfile.name.substring(0, 1).toUpperCase(),
+                  user?.name.substring(0, 1).toUpperCase() ?? 'U',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
@@ -222,7 +257,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hi, ${userProfile.name}!',
+                    'Hi, ${user?.name ?? 'User'}!',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -232,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                       Icon(Icons.star, size: 16, color: Colors.amber),
                       const SizedBox(width: 4),
                       Text(
-                        '${userProfile.grainPoints} Grain Points',
+                        '${user?.loyaltyPoints ?? 0} Atta Points',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w500,
@@ -358,33 +393,116 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildStepItem(BuildContext context, IconData icon, String label) {
+  Widget _buildHomeContentWithError(BuildContext context, HomeError state) {
     return Column(
       children: [
+        _buildHeader(context, state.user),
         Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: Theme.of(context).colorScheme.primaryContainer,
+          width: double.infinity,
+          color: Colors.red.shade50,
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red.shade700),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  state.message,
+                  style: TextStyle(color: Colors.red.shade700),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.read<HomeBloc>().add(const RefreshHomeData());
+                },
+                child: const Text('Retry'),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontWeight: FontWeight.w500,
+        Expanded(
+          child: _buildHomeContentData(
+            context,
+            state.user,
+            state.trendingBlends,
+            state.featuredRecipes,
+            state.readyToSellBlends,
           ),
         ),
       ],
     );
   }
 
+  Widget _buildHomeContentWithLoading(
+    BuildContext context,
+    HomePartialLoading state,
+  ) {
+    return Column(
+      children: [
+        _buildHeader(context, state.user),
+        if (state.isLoadingBlends ||
+            state.isLoadingRecipes ||
+            state.isLoadingUser)
+          const LinearProgressIndicator(),
+        Expanded(
+          child: _buildHomeContentData(
+            context,
+            state.user,
+            state.trendingBlends,
+            state.featuredRecipes,
+            state.readyToSellBlends,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchResults(BuildContext context, HomeSearchResult state) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  context.read<HomeBloc>().add(const LoadHomeData());
+                },
+                icon: const Icon(Icons.arrow_back),
+              ),
+              Expanded(
+                child: Text(
+                  'Search results for "${state.query}"',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (state.isLoading)
+          const LinearProgressIndicator()
+        else if (state.searchResults.isEmpty)
+          const Expanded(child: Center(child: Text('No blends found')))
+        else
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: state.searchResults.length,
+              itemBuilder: (context, index) {
+                final blend = state.searchResults[index];
+                return BlendCard(
+                  blend: blend,
+                  isHorizontal: true,
+                  onTap: () {
+                    context.push('/blend-details/${blend.id}');
+                  },
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
 
   Widget _buildReviewSection(BuildContext context) {
     return Padding(
@@ -566,8 +684,7 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onChanged: (value) {
-                    },
+                    onChanged: (value) {},
                   ),
                 ],
               ),
@@ -606,6 +723,136 @@ class _HomePageState extends State<HomePage> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildStepItem(BuildContext context, IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: Theme.of(context).colorScheme.primaryContainer,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHomeContentData(
+    BuildContext context,
+    UserEntity? user,
+    List<PublicBlendEntity> trendingBlends,
+    List<RecipeEntity> featuredRecipes,
+    List<BlendItem> readyToSellBlends,
+  ) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<HomeBloc>().add(const RefreshHomeData());
+      },
+      child: CustomScrollView(
+        slivers: [
+          // Create Your Perfect Atta Section
+          SliverToBoxAdapter(child: _buildCreateAttaSection(context)),
+
+          // Ready to Sell Blends Section
+          SliverToBoxAdapter(child: SectionHeader(title: 'Daily Essentials')),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                return DailyEssentialsBlendCard(
+                  blend: readyToSellBlends[index],
+                  isCompact: true,
+                  onTap: () {
+                    // Navigate to blend details
+                  },
+                );
+              }, childCount: readyToSellBlends.length),
+            ),
+          ),
+
+          // Trending Blends Section
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Trending Blends',
+              actionText: 'See All',
+              onActionPressed: () {
+                context.push('/blends');
+              },
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 220,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: trendingBlends.length,
+                itemBuilder: (context, index) {
+                  final blend = trendingBlends[index];
+                  return BlendCard(
+                    blend: blend,
+                    onTap: () {
+                      context.push('/blend-details/${blend.id}');
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // Recipes Section
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'Recipes For You',
+              actionText: 'See All',
+              onActionPressed: () {
+                context.go('/recipes');
+              },
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 210,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: featuredRecipes.length,
+                itemBuilder: (context, index) {
+                  final recipe = featuredRecipes[index];
+                  return RecipeCard(
+                    recipe: recipe,
+                    onTap: () {
+                      context.push('/recipe-details/${recipe.id}');
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // Review Section
+          SliverToBoxAdapter(child: _buildReviewSection(context)),
+
+          // Bottom padding
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
     );
   }
 }

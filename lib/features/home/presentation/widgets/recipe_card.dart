@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../bloc/home_models.dart';
+import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 
 class RecipeCard extends StatelessWidget {
-  final RecipeItem recipe;
+  final RecipeEntity recipe;
   final VoidCallback? onTap;
 
   const RecipeCard({super.key, required this.recipe, this.onTap});
@@ -24,7 +24,7 @@ class RecipeCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    recipe.imageUrl,
+                    recipe.recipePicture ?? '',
                     height: 120,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -61,30 +61,6 @@ class RecipeCard extends StatelessWidget {
                     },
                   ),
                 ),
-                if (recipe.tags.isNotEmpty)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        recipe.tags.first,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
 
@@ -96,7 +72,7 @@ class RecipeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      recipe.name,
+                      recipe.title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -115,7 +91,7 @@ class RecipeCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${recipe.cookingTime} mins',
+                          '${recipe.ingredients.length} Ingredients',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -131,7 +107,11 @@ class RecipeCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          recipe.difficulty,
+                          recipe.steps.length > 5
+                              ? 'Hard'
+                              : recipe.steps.length > 2
+                                  ? 'Medium'
+                                  : 'Easy',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -142,30 +122,7 @@ class RecipeCard extends StatelessWidget {
                       ],
                     ),
 
-                    const Spacer(),
 
-                    // Rating
-                    Row(
-                      children: [
-                        Icon(Icons.star, size: 16, color: Colors.amber),
-                        const SizedBox(width: 4),
-                        Text(
-                          recipe.rating.toString(),
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${recipe.reviewCount})',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),

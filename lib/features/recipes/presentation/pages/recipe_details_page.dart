@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
+import 'package:one_atta/features/recipes/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_event.dart';
@@ -349,7 +350,10 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
     context.read<RecipeDetailsBloc>().add(LikeRecipe(recipeId));
   }
 
-  Widget _buildBlendInformation(BuildContext context, blendUsed) {
+  Widget _buildBlendInformation(
+    BuildContext context,
+    RecipeBlendEntity blendUsed,
+  ) {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -366,15 +370,12 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-          width: 1,
-        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
+            print('View Blend Details Pressed - $blendUsed.id');
             context.push('/blend-details/${blendUsed.id}');
           },
           borderRadius: BorderRadius.circular(16),
@@ -386,64 +387,19 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                 // Header with Premium Badge
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.8),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.auto_awesome,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        size: 20,
-                      ),
+                    Icon(
+                      Icons.auto_awesome,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 16,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              'FEATURED BLEND',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimary,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
                           Text(
                             blendUsed.name,
-                            style: Theme.of(context).textTheme.titleLarge
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Theme.of(
@@ -475,7 +431,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                   ),
                 ],
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // Action Buttons
                 Row(
@@ -483,6 +439,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
+                          print('View Blend Details Pressed - $blendUsed.id');
                           context.push('/blend-details/${blendUsed.id}');
                         },
                         icon: Icon(
@@ -495,6 +452,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,
+                            fontSize: 14,
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
@@ -518,7 +476,10 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                         icon: const Icon(Icons.add_shopping_cart, size: 18),
                         label: const Text(
                           'Add to Cart',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
                         style: FilledButton.styleFrom(
                           backgroundColor: Theme.of(

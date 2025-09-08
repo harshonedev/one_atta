@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
 import 'package:one_atta/features/home/presentation/pages/home_page.dart';
 import 'package:one_atta/features/orders/presentation/pages/orders_page.dart';
@@ -8,14 +9,16 @@ import 'package:one_atta/features/recipes/presentation/pages/recipes_page.dart';
 import 'package:one_atta/features/more/presentation/pages/more_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
-  const MainNavigationPage({super.key});
+  final int initialIndex;
+
+  const MainNavigationPage({super.key, this.initialIndex = 0});
 
   @override
   State<MainNavigationPage> createState() => _MainNavigationPageState();
 }
 
 class _MainNavigationPageState extends State<MainNavigationPage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   final List<Widget> _pages = [
     const HomePage(),
@@ -25,10 +28,35 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     const MorePage(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+
+    // Navigate to the appropriate route based on the tab
+    switch (index) {
+      case 0:
+        context.go('/home');
+        break;
+      case 1:
+        context.go('/orders');
+        break;
+      case 2:
+        context.go('/reels');
+        break;
+      case 3:
+        context.go('/recipes');
+        break;
+      case 4:
+        context.go('/more');
+        break;
+    }
   }
 
   @override

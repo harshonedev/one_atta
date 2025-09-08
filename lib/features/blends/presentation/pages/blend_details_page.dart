@@ -327,7 +327,7 @@ class BlendDetailsView extends StatelessWidget {
                           onPressed: isLoading
                               ? null
                               : () {
-                                  // add to cart functionality
+                                  _addBlendToCart(context, blend);
                                 },
                           icon: isLoading
                               ? SizedBox(
@@ -459,5 +459,60 @@ class BlendDetailsView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _addBlendToCart(BuildContext context, blendUsed) {
+    // Show loading and success feedback
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Theme.of(context).colorScheme.onPrimary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '${blendUsed.name} added to cart!',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        action: SnackBarAction(
+          label: 'View Cart',
+          textColor: Theme.of(context).colorScheme.onPrimary,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.onPrimary.withValues(alpha: 0.1),
+          onPressed: () {
+            // TODO: Navigate to cart page
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Cart feature coming soon!'),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    // TODO: Implement actual add to cart logic
+    // This could involve:
+    // 1. Adding item to cart state/bloc
+    // 2. Calling cart repository/API
+    // 3. Updating cart count in app bar
+    // 4. Persisting cart data locally
   }
 }
