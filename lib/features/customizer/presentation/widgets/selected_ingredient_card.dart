@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/models/ingredient.dart';
+import 'package:one_atta/features/customizer/presentation/widgets/ingredient_details_popup.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 
 class WeightOption {
@@ -112,7 +114,7 @@ class SelectedIngredientCard extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Blend over capacity! Remove ingredients or reduce percentages.',
+                'Blend capacity exceeded. Reduce other ingredients first.',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onError,
                   fontWeight: FontWeight.w500,
@@ -123,177 +125,132 @@ class SelectedIngredientCard extends StatelessWidget {
         ),
         backgroundColor: Theme.of(context).colorScheme.error,
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(16),
+  void _showIngredientDetails(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Ingredient Details',
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      pageBuilder: (_, _, _) => BlocProvider.value(
+        value: BlocProvider.of<CustomizerBloc>(context),
+        child: IngredientDetailsPopup(
+          ingredient: ingredient,
+          totalWeight: totalWeight,
+          packetSize: packetSize,
+        ),
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  ingredient.icon,
-                  color: Theme.of(context).colorScheme.onSurface,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      ingredient.name,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      '${weightInGrams}g',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${(ingredient.percentage * 100).toStringAsFixed(0)}%',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: onRemoved,
-                icon: Icon(
-                  Icons.remove_circle_outline,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                iconSize: 20,
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-              ),
-            ],
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1).animate(curved),
+            child: child,
           ),
-          const SizedBox(height: 12),
-          Column(
-            children: [
-              // Slider
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  trackHeight: 20,
-                  activeTrackColor: Theme.of(context).colorScheme.secondary,
-                  thumbShape: SliderComponentShape.noThumb,
-                  inactiveTrackColor: Theme.of(
-                    context,
-                  ).colorScheme.outline.withOpacity(0.3),
-                  thumbColor: Theme.of(context).colorScheme.secondary,
-                  overlayColor: Theme.of(
-                    context,
-                  ).colorScheme.secondary.withOpacity(0.1),
-                ),
-                child: Slider(
-                  value: ingredient.percentage,
-                  onChanged: (value) {
-                    _setPercentage(context, value); // No snackbar for slider
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Weight Options
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: weightOptions
-                    .map((option) => _buildWeightOption(context, option))
-                    .toList(),
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 260),
     );
   }
 
-  Widget _buildWeightOption(BuildContext context, WeightOption option) {
-    // Calculate the percentage equivalent for this weight
-    final targetPercentage = option.weightInGrams / totalWeight;
-    final isSelected = (ingredient.percentage - targetPercentage).abs() < 0.01;
-    final currentPercentage = ingredient.percentage;
-    final percentageDifference = targetPercentage - currentPercentage;
-    final newTotalPercentage = totalPercentage + percentageDifference;
-
-    // Use same tolerance as in _setPercentage method
-    const tolerance = 0.001;
-    final wouldExceedCapacity =
-        newTotalPercentage > (1.0 + tolerance) && percentageDifference > 0;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final int displayWeight = weightInGrams;
+    final double displayPercentage = ingredient.percentage * 100;
 
     return GestureDetector(
-      onTap: wouldExceedCapacity
-          ? () => _setPercentage(
-              context,
-              targetPercentage,
-              showSnackbarOnLimit: true,
-            )
-          : () => _setPercentage(context, targetPercentage),
+      onTap: () => _showIngredientDetails(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: wouldExceedCapacity
-              ? Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withOpacity(0.5)
-              : isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: wouldExceedCapacity
-                ? Theme.of(context).colorScheme.outline.withOpacity(0.2)
-                : isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Text(
-          option.label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: wouldExceedCapacity
-                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.5)
-                : isSelected
-                ? Theme.of(context).colorScheme.onPrimary
-                : Theme.of(context).colorScheme.onSurface,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                // Ingredient Image
+                Image.asset(
+                  'assets/images/${ingredient.name.toLowerCase()}.png',
+                  height: 30,
+                  width: 30,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      ingredient.icon,
+                      size: 30,
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.8,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 16),
+                // Ingredient Name and Weight
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ingredient.name,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${displayWeight}g • ${displayPercentage.toStringAsFixed(0)}%',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Remove Button (all ingredients now removable)
+                IconButton(
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    color: colorScheme.error,
+                  ),
+                  onPressed: onRemoved,
+                ),
+              ],
+            ),
+            // const SizedBox(height: 16),
+            // // Slider
+            // SliderTheme(
+            //   data: SliderTheme.of(context).copyWith(
+            //     trackHeight: 8.0,
+            //     trackShape: const RoundedRectSliderTrackShape(),
+            //     activeTrackColor: colorScheme.primary,
+            //     inactiveTrackColor: colorScheme.surfaceVariant,
+            //     thumbShape: const RoundSliderThumbShape(
+            //       enabledThumbRadius: 10.0,
+            //     ),
+            //     thumbColor: colorScheme.primary,
+            //     overlayColor: colorScheme.primary.withOpacity(0.2),
+            //     overlayShape: const RoundSliderOverlayShape(
+            //       overlayRadius: 20.0,
+            //     ),
+            //   ),
+            //   child: Slider(
+            //     value: ingredient.percentage,
+            //     min: 0.0,
+            //     max: 1.0,
+            //     onChanged: (value) =>
+            //         _setPercentage(context, value, showSnackbarOnLimit: true),
+            //   ),
+            // ),
+          ],
         ),
       ),
     );

@@ -9,12 +9,12 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 200,
         margin: const EdgeInsets.only(right: 12),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -22,7 +22,7 @@ class RecipeCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   child: Image.network(
                     recipe.recipePicture ?? '',
                     height: 120,
@@ -110,8 +110,8 @@ class RecipeCard extends StatelessWidget {
                           recipe.steps.length > 5
                               ? 'Hard'
                               : recipe.steps.length > 2
-                                  ? 'Medium'
-                                  : 'Easy',
+                              ? 'Medium'
+                              : 'Easy',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -121,8 +121,6 @@ class RecipeCard extends StatelessWidget {
                         ),
                       ],
                     ),
-
-
                   ],
                 ),
               ),

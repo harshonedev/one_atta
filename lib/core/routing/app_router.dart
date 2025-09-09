@@ -12,16 +12,25 @@ import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blends_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blend_details_page.dart';
-import 'package:one_atta/features/customizer/presentation/customizer_page.dart';
-import 'package:one_atta/features/customizer/presentation/analysis_page.dart';
+import 'package:one_atta/features/customizer/presentation/pages/customizer_page.dart';
+import 'package:one_atta/features/customizer/presentation/pages/analysis_page.dart';
+import 'package:one_atta/features/home/presentation/pages/home_page.dart';
+import 'package:one_atta/features/orders/presentation/pages/orders_page.dart';
+import 'package:one_atta/features/reels/presentation/pages/reels_page.dart';
+import 'package:one_atta/features/recipes/presentation/pages/recipes_page.dart';
+import 'package:one_atta/features/more/presentation/pages/more_page.dart';
+import 'package:one_atta/features/cart/presentation/pages/cart_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
+  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
   static GoRouter get router => _router;
 
   static void init() {
     _router = GoRouter(
+      navigatorKey: _rootNavigatorKey,
       initialLocation: '/splash',
       redirect: (context, state) {
         // Get the auth bloc to check authentication state
@@ -80,36 +89,39 @@ class AppRouter {
             return OtpPage(data: data);
           },
         ),
-        // Main navigation routes with bottom tabs
-        GoRoute(
-          path: '/home',
-          name: 'home',
-          builder: (context, state) =>
-              const MainNavigationPage(initialIndex: 0),
-        ),
-        GoRoute(
-          path: '/orders',
-          name: 'orders',
-          builder: (context, state) =>
-              const MainNavigationPage(initialIndex: 1),
-        ),
-        GoRoute(
-          path: '/reels',
-          name: 'reels',
-          builder: (context, state) =>
-              const MainNavigationPage(initialIndex: 2),
-        ),
-        GoRoute(
-          path: '/recipes',
-          name: 'recipes',
-          builder: (context, state) =>
-              const MainNavigationPage(initialIndex: 3),
-        ),
-        GoRoute(
-          path: '/more',
-          name: 'more',
-          builder: (context, state) =>
-              const MainNavigationPage(initialIndex: 4),
+        // ShellRoute for bottom navigation to keep the BottomNavigationBar persistent
+        ShellRoute(
+          navigatorKey: _shellNavigatorKey,
+          builder: (context, state, child) {
+            return MainNavigationPage(child: child);
+          },
+          routes: [
+            GoRoute(
+              path: '/home',
+              name: 'home',
+              builder: (context, state) => const HomePage(),
+            ),
+            GoRoute(
+              path: '/orders',
+              name: 'orders',
+              builder: (context, state) => const OrdersPage(),
+            ),
+            GoRoute(
+              path: '/reels',
+              name: 'reels',
+              builder: (context, state) => const ReelsPage(),
+            ),
+            GoRoute(
+              path: '/recipes',
+              name: 'recipes',
+              builder: (context, state) => const RecipesPage(),
+            ),
+            GoRoute(
+              path: '/more',
+              name: 'more',
+              builder: (context, state) => const MorePage(),
+            ),
+          ],
         ),
         GoRoute(
           path: '/recipe-details/:recipeId',
@@ -141,6 +153,11 @@ class AppRouter {
           path: '/analysis',
           name: 'analysis',
           builder: (context, state) => const AnalysisPage(),
+        ),
+        GoRoute(
+          path: '/cart',
+          name: 'cart',
+          builder: (context, state) => const CartPage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

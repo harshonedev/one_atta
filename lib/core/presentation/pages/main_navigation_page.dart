@@ -2,70 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
-import 'package:one_atta/features/home/presentation/pages/home_page.dart';
-import 'package:one_atta/features/orders/presentation/pages/orders_page.dart';
-import 'package:one_atta/features/reels/presentation/pages/reels_page.dart';
-import 'package:one_atta/features/recipes/presentation/pages/recipes_page.dart';
-import 'package:one_atta/features/more/presentation/pages/more_page.dart';
 
-class MainNavigationPage extends StatefulWidget {
-  final int initialIndex;
+class MainNavigationPage extends StatelessWidget {
+  final Widget child;
 
-  const MainNavigationPage({super.key, this.initialIndex = 0});
-
-  @override
-  State<MainNavigationPage> createState() => _MainNavigationPageState();
-}
-
-class _MainNavigationPageState extends State<MainNavigationPage> {
-  late int _selectedIndex;
-
-  final List<Widget> _pages = [
-    const HomePage(),
-    const OrdersPage(),
-    const ReelsPage(),
-    const RecipesPage(),
-    const MorePage(),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIndex = widget.initialIndex;
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    // Navigate to the appropriate route based on the tab
-    switch (index) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/orders');
-        break;
-      case 2:
-        context.go('/reels');
-        break;
-      case 3:
-        context.go('/recipes');
-        break;
-      case 4:
-        context.go('/more');
-        break;
-    }
-  }
+  const MainNavigationPage({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
+    // keep selected index in sync with initialIndex provided by ShellRoute
+    // (MainNavigationPage will be rebuilt with updated initialIndex when shell route changes)
+
+    void onItemTapped(int index) {
+      switch (index) {
+        case 0:
+          context.go('/home');
+          break;
+        case 1:
+          context.go('/orders');
+          break;
+        case 2:
+          context.go('/reels');
+          break;
+        case 3:
+          context.go('/recipes');
+          break;
+        case 4:
+          context.go('/more');
+          break;
+      }
+    }
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: child,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
+        currentIndex: _calculateSelectedIndex(context),
         selectedItemColor: Theme.of(context).colorScheme.primaryContainer,
         unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
         selectedIconTheme: IconThemeData(
@@ -85,7 +57,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         selectedFontSize: 12.0,
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 8,
-        onTap: _onItemTapped,
+        onTap: onItemTapped,
         items: [
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
@@ -93,7 +65,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               width: 24,
               height: 24,
               colorFilter: ColorFilter.mode(
-                _selectedIndex == 0
+                _calculateSelectedIndex(context) == 0
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.onSurfaceVariant,
                 BlendMode.srcIn,
@@ -107,7 +79,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               width: 24,
               height: 24,
               colorFilter: ColorFilter.mode(
-                _selectedIndex == 1
+                _calculateSelectedIndex(context) == 1
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.onSurfaceVariant,
                 BlendMode.srcIn,
@@ -121,7 +93,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               width: 24,
               height: 24,
               colorFilter: ColorFilter.mode(
-                _selectedIndex == 2
+                _calculateSelectedIndex(context) == 2
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.onSurfaceVariant,
                 BlendMode.srcIn,
@@ -135,7 +107,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               width: 24,
               height: 24,
               colorFilter: ColorFilter.mode(
-                _selectedIndex == 3
+                _calculateSelectedIndex(context) == 3
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.onSurfaceVariant,
                 BlendMode.srcIn,
@@ -149,7 +121,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               width: 24,
               height: 24,
               colorFilter: ColorFilter.mode(
-                _selectedIndex == 4
+                _calculateSelectedIndex(context) == 4
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.onSurfaceVariant,
                 BlendMode.srcIn,
@@ -160,5 +132,15 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         ],
       ),
     );
+  }
+
+  int _calculateSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/home')) return 0;
+    if (location.startsWith('/orders')) return 1;
+    if (location.startsWith('/reels')) return 2;
+    if (location.startsWith('/recipes')) return 3;
+    if (location.startsWith('/more')) return 4;
+    return 0;
   }
 }

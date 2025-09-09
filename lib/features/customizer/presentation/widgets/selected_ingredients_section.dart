@@ -36,13 +36,17 @@ class _SelectedIngredientsSectionState
   @override
   void initState() {
     super.initState();
-    _currentIngredients = List.from(widget.selectedIngredients);
+    // Initialize with all selected ingredients (Wheat removable now)
+    _currentIngredients = List.of(widget.selectedIngredients);
   }
 
   @override
   void didUpdateWidget(SelectedIngredientsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _updateList(oldWidget.selectedIngredients, widget.selectedIngredients);
+    // Use full lists (including Wheat)
+    final oldList = List<Ingredient>.from(oldWidget.selectedIngredients);
+    final newList = List<Ingredient>.from(widget.selectedIngredients);
+    _updateList(oldList, newList);
   }
 
   void _updateList(List<Ingredient> oldList, List<Ingredient> newList) {
@@ -107,20 +111,16 @@ class _SelectedIngredientsSectionState
     );
   }
 
-  Widget _buildItem(
-    BuildContext context,
-    int index,
+  Widget _buildAnimatedItem(
+    Ingredient ingredient,
     Animation<double> animation,
   ) {
-    if (index >= _currentIngredients.length) return const SizedBox.shrink();
-
-    final ingredient = _currentIngredients[index];
     return SizeTransition(
       sizeFactor: animation,
       child: FadeTransition(
         opacity: animation,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
           child: SelectedIngredientCard(
             ingredient: ingredient,
             totalWeight: widget.totalWeight,
@@ -128,8 +128,9 @@ class _SelectedIngredientsSectionState
             totalPercentage: widget.totalPercentage,
             isMaxCapacityReached: widget.isMaxCapacityReached,
             onRemoved: () => widget.onIngredientRemoved(ingredient),
-            onPercentageChanged: (value) =>
-                widget.onPercentageChanged(ingredient, value),
+            onPercentageChanged: (newPercentage) {
+              widget.onPercentageChanged(ingredient, newPercentage);
+            },
           ),
         ),
       ),
@@ -140,10 +141,16 @@ class _SelectedIngredientsSectionState
   Widget build(BuildContext context) {
     return AnimatedList(
       key: _listKey,
+      initialItemCount: _currentIngredients.length,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      initialItemCount: _currentIngredients.length,
-      itemBuilder: _buildItem,
+      itemBuilder: (context, index, animation) {
+        if (index >= _currentIngredients.length) {
+          return const SizedBox.shrink();
+        }
+        final ingredient = _currentIngredients[index];
+        return _buildAnimatedItem(ingredient, animation);
+      },
     );
   }
 }

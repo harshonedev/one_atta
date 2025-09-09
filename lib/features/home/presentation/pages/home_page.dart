@@ -243,7 +243,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 child: Text(
                   user?.name.substring(0, 1).toUpperCase() ?? 'U',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -257,7 +257,7 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hi, ${user?.name ?? 'User'}!',
+                    'Hi, ${user?.name ?? 'User'}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -318,6 +318,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             onPressed: () {
               // navigate to cart page
+              context.push('/cart');
             },
             icon: Icon(
               Icons.shopping_cart_outlined,
@@ -339,10 +340,8 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).colorScheme.primaryContainer,
-              Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withValues(alpha: 0.8),
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -736,10 +735,7 @@ class _HomePageState extends State<HomePage> {
             color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: Theme.of(context).colorScheme.primaryContainer,
-          ),
+          child: Icon(icon, color: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(height: 8),
         Text(
@@ -828,7 +824,7 @@ class _HomePageState extends State<HomePage> {
           ),
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 210,
+              height: 200,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),

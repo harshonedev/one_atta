@@ -20,9 +20,7 @@ class RecipeCard extends StatelessWidget {
           children: [
             // Recipe Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
+              borderRadius: BorderRadius.circular(16),
               child: SizedBox(
                 height: 200,
                 width: double.infinity,

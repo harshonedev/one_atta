@@ -349,7 +349,7 @@ class _OtpPageState extends State<OtpPage> {
                                     style: FilledButton.styleFrom(
                                       backgroundColor: Theme.of(
                                         context,
-                                      ).colorScheme.primaryContainer,
+                                      ).colorScheme.primary,
                                       foregroundColor: Theme.of(
                                         context,
                                       ).colorScheme.onPrimary,

@@ -20,6 +20,7 @@ class AvailableIngredientsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Filter out already selected ingredients (Wheat now can be removed/added like others)
     final unselectedIngredients = availableIngredients
         .where(
           (ingredient) => !selectedIngredients.any(
@@ -29,25 +30,11 @@ class AvailableIngredientsSection extends StatelessWidget {
         .toList();
 
     if (unselectedIngredients.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Text(
-            'All ingredients have been added to your blend',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return SizedBox(
-      height: 120,
+      height: 120, // Increased height for larger cards
       child: ListView.builder(
         controller: scrollController,
         scrollDirection: Axis.horizontal,

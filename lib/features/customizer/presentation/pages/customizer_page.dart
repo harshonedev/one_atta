@@ -5,8 +5,8 @@ import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.d
 import 'package:one_atta/features/customizer/presentation/widgets/packet_size_selector.dart';
 import 'package:one_atta/features/customizer/presentation/widgets/total_progress_card.dart';
 import 'package:one_atta/features/customizer/presentation/widgets/available_ingredients_section.dart';
+import 'package:one_atta/features/customizer/presentation/bloc/packet_size_extension.dart';
 import 'package:one_atta/features/customizer/presentation/widgets/selected_ingredients_section.dart';
-import 'package:one_atta/features/customizer/presentation/widgets/section_header.dart';
 
 class CustomizerPage extends StatefulWidget {
   const CustomizerPage({super.key});
@@ -17,7 +17,6 @@ class CustomizerPage extends StatefulWidget {
 
 class _CustomizerPageState extends State<CustomizerPage> {
   final ScrollController _horizontalScrollController = ScrollController();
-  final ScrollController _selectedScrollController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -28,7 +27,6 @@ class _CustomizerPageState extends State<CustomizerPage> {
   @override
   void dispose() {
     _horizontalScrollController.dispose();
-    _selectedScrollController.dispose();
     super.dispose();
   }
 
@@ -115,19 +113,20 @@ class _CustomizerPageState extends State<CustomizerPage> {
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 48),
 
           // Total Progress Indicator
           TotalProgressCard(
             totalPercentage: state.totalPercentage,
             isMaxReached: state.isMaxCapacityReached,
+            totalWeight:
+                state.totalWeight / 1000.0, // Convert grams to kg for display
+            packetSize: state.selectedPacketSize.weightInKg.toDouble(),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Available Ingredients Section
-          const SectionHeader(title: 'Customize Your Blend'),
-          const SizedBox(height: 12),
           AvailableIngredientsSection(
             availableIngredients: state.availableIngredients,
             selectedIngredients: state.selectedIngredients,
@@ -142,8 +141,30 @@ class _CustomizerPageState extends State<CustomizerPage> {
 
           // Selected Ingredients Section
           if (state.selectedIngredients.isNotEmpty) ...[
-            const SectionHeader(title: 'Your Custom Blend'),
-            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0, left: 4, right: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.touch_app_outlined,
+                    size: 18,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Tap an ingredient to fine‑tune its amount',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             SelectedIngredientsSection(
               selectedIngredients: state.selectedIngredients,
               totalWeight: state.totalWeight,
@@ -163,13 +184,12 @@ class _CustomizerPageState extends State<CustomizerPage> {
             ),
           ],
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
           // Analyze Button
-          Container(
+          SizedBox(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ElevatedButton(
+            child: FilledButton(
               onPressed: state.selectedIngredients.isNotEmpty
                   ? () {
                       // Check if blend is at 100% before analyzing
@@ -217,37 +237,23 @@ class _CustomizerPageState extends State<CustomizerPage> {
                       context.push('/analysis');
                     }
                   : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(50),
                 ),
-                elevation: 2,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.analytics_outlined,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Analyze Blend',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Analyze Blend',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
               ),
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
         ],
       ),
     );

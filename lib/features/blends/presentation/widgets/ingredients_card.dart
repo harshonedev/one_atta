@@ -49,14 +49,14 @@ class IngredientsCard extends StatelessWidget {
               children: [
                 Icon(
                   Icons.check_circle,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Total: ${additives.fold<double>(0, (sum, additive) => sum + additive.percentage).toStringAsFixed(1)}%',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -79,12 +79,12 @@ class IngredientsCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
+              color: Theme.of(context).colorScheme.surfaceBright,
               borderRadius: BorderRadius.circular(8),
             ),
             child: SvgImageLoader(
               assetName: AppAssets.grainIcon,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               width: 20,
               height: 20,
               fit: BoxFit.contain,

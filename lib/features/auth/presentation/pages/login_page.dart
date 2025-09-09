@@ -251,7 +251,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             return FilledButton(
               onPressed: state is AuthLoading ? null : _handleLogin,
               style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 minimumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(

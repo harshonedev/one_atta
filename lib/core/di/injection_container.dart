@@ -16,6 +16,7 @@ import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 
 // Data sources
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
@@ -38,6 +39,18 @@ import 'package:one_atta/features/customizer/data/datasources/customizer_remote_
 import 'package:one_atta/features/customizer/data/datasources/customizer_remote_data_source_impl.dart';
 import 'package:one_atta/features/customizer/data/repositories/customizer_repository_impl.dart';
 import 'package:one_atta/features/customizer/domain/repositories/customizer_repository.dart';
+
+// Cart
+import 'package:one_atta/features/cart/data/datasources/cart_local_data_source.dart';
+import 'package:one_atta/features/cart/data/datasources/cart_local_data_source_impl.dart';
+import 'package:one_atta/features/cart/data/repositories/cart_repository_impl.dart';
+import 'package:one_atta/features/cart/domain/repositories/cart_repository.dart';
+import 'package:one_atta/features/cart/domain/usecases/add_to_cart_usecase.dart';
+import 'package:one_atta/features/cart/domain/usecases/clear_cart_usecase.dart';
+import 'package:one_atta/features/cart/domain/usecases/get_cart_item_count_usecase.dart';
+import 'package:one_atta/features/cart/domain/usecases/get_cart_usecase.dart';
+import 'package:one_atta/features/cart/domain/usecases/remove_from_cart_usecase.dart';
+import 'package:one_atta/features/cart/domain/usecases/update_cart_item_quantity_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -98,6 +111,37 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<CustomizerRemoteDataSource>(
     () => CustomizerRemoteDataSourceImpl(dio: sl(), authLocalDataSource: sl()),
+  );
+
+  //! Features - Cart
+  // BLoC
+  sl.registerFactory(
+    () => CartBloc(
+      getCartUseCase: sl(),
+      addToCartUseCase: sl(),
+      removeFromCartUseCase: sl(),
+      updateCartItemQuantityUseCase: sl(),
+      clearCartUseCase: sl(),
+      getCartItemCountUseCase: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetCartUseCase(sl()));
+  sl.registerLazySingleton(() => AddToCartUseCase(sl()));
+  sl.registerLazySingleton(() => RemoveFromCartUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCartItemQuantityUseCase(sl()));
+  sl.registerLazySingleton(() => ClearCartUseCase(sl()));
+  sl.registerLazySingleton(() => GetCartItemCountUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<CartRepository>(
+    () => CartRepositoryImpl(localDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<CartLocalDataSource>(
+    () => CartLocalDataSourceImpl(),
   );
 
   //! Core

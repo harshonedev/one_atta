@@ -151,7 +151,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     style: FilledButton.styleFrom(
                                       backgroundColor: Theme.of(
                                         context,
-                                      ).colorScheme.primaryContainer,
+                                      ).colorScheme.primary,
                                       foregroundColor: Theme.of(
                                         context,
                                       ).colorScheme.onPrimary,

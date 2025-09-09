@@ -383,11 +383,17 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
             : ingredient.name.toLowerCase();
         ingredientsMap[name] = weight;
       }
-      // Fill remainder into wheat if floating-point / rounding left gap
+      // Fill any remainder into wheat if present, otherwise the first ingredient
       final totalMapped = ingredientsMap.values.fold(0, (a, b) => a + b);
-      if (totalMapped < state.totalWeight) {
-        ingredientsMap['wheat'] =
-            (ingredientsMap['wheat'] ?? 0) + (state.totalWeight - totalMapped);
+      if (totalMapped < state.totalWeight && ingredientsMap.isNotEmpty) {
+        final remainder = state.totalWeight - totalMapped;
+        if (ingredientsMap.containsKey('wheat')) {
+          ingredientsMap['wheat'] = (ingredientsMap['wheat'] ?? 0) + remainder;
+        } else {
+          final firstKey = ingredientsMap.keys.first;
+          ingredientsMap[firstKey] =
+              (ingredientsMap[firstKey] ?? 0) + remainder;
+        }
       }
 
       logger.i('Analyzing blend with ingredients: $ingredientsMap');

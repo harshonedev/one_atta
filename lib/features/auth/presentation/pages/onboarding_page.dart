@@ -42,9 +42,7 @@ class OnboardingPage extends StatelessWidget {
                   FilledButton(
                     onPressed: () => context.push('/register'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.max,
@@ -101,7 +99,7 @@ class OnboardingPage extends StatelessWidget {
                   Text(
                     'By continuing, you agree to our Terms of Service and Privacy Policy.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),

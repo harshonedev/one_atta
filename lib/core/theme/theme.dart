@@ -6,10 +6,10 @@ class AppTheme {
   static ColorScheme lightScheme() {
     return const ColorScheme(
       brightness: Brightness.light,
-      primary: Color(0xff944a00),
-      surfaceTint: Color(0xff944a00),
+      primary: Color(0xffe67e22),
+      surfaceTint: Color(0xffe67e22),
       onPrimary: Color(0xffffffff),
-      primaryContainer: Color(0xffe67e22),
+      primaryContainer: Color(0xff944a00),
       onPrimaryContainer: Color(0xff502600),
       secondary: Color(0xff83532f),
       onSecondary: Color(0xffffffff),
@@ -62,7 +62,7 @@ class AppTheme {
     return const ColorScheme(
       brightness: Brightness.light,
       primary: Color(0xff582a00),
-      surfaceTint: Color(0xff944a00),
+      surfaceTint: Color(0xffe67e22),
       onPrimary: Color(0xffffffff),
       primaryContainer: Color(0xffaa5600),
       onPrimaryContainer: Color(0xffffffff),
@@ -117,7 +117,7 @@ class AppTheme {
     return const ColorScheme(
       brightness: Brightness.light,
       primary: Color(0xff492100),
-      surfaceTint: Color(0xff944a00),
+      surfaceTint: Color(0xffe67e22),
       onPrimary: Color(0xffffffff),
       primaryContainer: Color(0xff743900),
       onPrimaryContainer: Color(0xffffffff),
@@ -196,7 +196,7 @@ class AppTheme {
       shadow: Color(0xff000000),
       scrim: Color(0xff000000),
       inverseSurface: Color(0xfff2dfd4),
-      inversePrimary: Color(0xff944a00),
+      inversePrimary: Color(0xffe67e22),
       primaryFixed: Color(0xffffdcc5),
       onPrimaryFixed: Color(0xff301400),
       primaryFixedDim: Color(0xffffb783),

@@ -55,56 +55,67 @@ class _IngredientCardState extends State<IngredientCard>
         return Transform.scale(
           scale: _scaleAnimation.value,
           child: Container(
-            width: 100,
-            margin: const EdgeInsets.only(right: 12),
+            width: 120, // Increased width
+            margin: const EdgeInsets.all(8),
             child: GestureDetector(
               onTap: _handleTap,
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: widget.isSelected
                       ? Theme.of(context).colorScheme.primaryContainer
-                      : Theme.of(context).colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(12),
+                      : Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.shadow.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: widget.isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        widget.ingredient.icon,
-                        color: widget.isSelected
-                            ? Theme.of(context).colorScheme.onPrimary
-                            : Theme.of(context).colorScheme.onSurface,
-                        size: 20,
-                      ),
+                    // Use an image for the ingredient
+                    Image.asset(
+                      'assets/images/${widget.ingredient.name.toLowerCase()}.png',
+                      height: 30,
+                      width: 30,
+                      fit: BoxFit.contain,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback to icon if image fails to load
+                        return Icon(
+                          widget.ingredient.icon,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                          size: 30,
+                        );
+                      },
                     ),
                     const SizedBox(height: 8),
                     Text(
                       widget.ingredient.name,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: widget.isSelected
-                            ? Theme.of(context).colorScheme.onPrimaryContainer
-                            : Theme.of(context).colorScheme.onSurface,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    if (!widget.isSelected) ...[
-                      const SizedBox(height: 4),
-                      Icon(
-                        Icons.add_circle_outline,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ],
+                    //const SizedBox(height: 4),
+                    // Placeholder for nutritional info
+                    // Text(
+                    //   'P / % F',
+                    //   style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    //     color: Theme.of(
+                    //       context,
+                    //     ).colorScheme.onSurface.withOpacity(0.6),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
