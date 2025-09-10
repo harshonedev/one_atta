@@ -2,6 +2,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
@@ -9,6 +10,9 @@ import 'package:one_atta/features/blends/presentation/bloc/blend_details_event.d
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_state.dart';
 import 'package:one_atta/features/blends/presentation/widgets/ingredients_card.dart';
 import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
+import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:share_plus/share_plus.dart';
 
 class BlendDetailsPage extends StatelessWidget {
@@ -462,7 +466,21 @@ class BlendDetailsView extends StatelessWidget {
   }
 
   void _addBlendToCart(BuildContext context, blendUsed) {
-    // Show loading and success feedback
+    // Add blend to cart using proper cart bloc
+    final cartItem = CartItemEntity(
+      productId: blendUsed.id,
+      productName: blendUsed.name,
+      productType: 'blend',
+      quantity: 1,
+      price: blendUsed.pricePerKg,
+      imageUrl: BlendImages.getImageForBlend(blendUsed.id),
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    context.read<CartBloc>().add(AddItemToCart(item: cartItem));
+
+    // Show success feedback
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -496,23 +514,10 @@ class BlendDetailsView extends StatelessWidget {
             context,
           ).colorScheme.onPrimary.withValues(alpha: 0.1),
           onPressed: () {
-            // TODO: Navigate to cart page
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Cart feature coming soon!'),
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-              ),
-            );
+            context.push('/cart');
           },
         ),
       ),
     );
-
-    // TODO: Implement actual add to cart logic
-    // This could involve:
-    // 1. Adding item to cart state/bloc
-    // 2. Calling cart repository/API
-    // 3. Updating cart count in app bar
-    // 4. Persisting cart data locally
   }
 }

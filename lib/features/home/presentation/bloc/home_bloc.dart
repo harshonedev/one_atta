@@ -285,6 +285,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             'Traditional whole wheat flour blend perfect for daily use',
         imageUrl: AppAssets.attaImage,
         category: 'Classic',
+        pricePerKg: 50.0,
         tags: ['Traditional', 'Whole Wheat', 'Daily Use'],
       ),
       const BlendItem(
@@ -293,6 +294,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         description: 'Special spiced flour blend for authentic bedmi puri',
         imageUrl: AppAssets.bedmiImage,
         category: 'Special',
+        pricePerKg: 70.0,
         tags: ['Spiced', 'Traditional', 'Authentic'],
       ),
       const BlendItem(
@@ -301,6 +303,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         description: 'Mixed gram and wheat flour blend rich in protein',
         imageUrl: AppAssets.missiImage,
         category: 'Protein',
+        pricePerKg: 80.0,
         tags: ['Gram', 'Wheat', 'High Protein'],
       ),
     ];
@@ -314,6 +317,7 @@ class BlendItem extends Equatable {
   final String imageUrl;
   final String category;
   final List<String> tags;
+  final double pricePerKg;
 
   const BlendItem({
     required this.id,
@@ -322,6 +326,7 @@ class BlendItem extends Equatable {
     required this.imageUrl,
     required this.category,
     required this.tags,
+    required this.pricePerKg,
   });
 
   @override
@@ -332,5 +337,6 @@ class BlendItem extends Equatable {
         imageUrl,
         category,
         tags,
+        pricePerKg,
       ];
 }

@@ -9,9 +9,13 @@ import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_impl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await CartHiveDataSourceImpl.initHive();
 
   // Initialize dependency injection
   await di.init();

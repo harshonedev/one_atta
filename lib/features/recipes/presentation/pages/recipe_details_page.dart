@@ -469,29 +469,32 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          _addBlendToCart(context, blendUsed);
-                        },
-                        icon: const Icon(Icons.add_shopping_cart, size: 18),
-                        label: const Text(
-                          'Add to Cart',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                      child: Tooltip(
+                        message:
+                            'View blend details for pricing and cart options',
+                        child: FilledButton.icon(
+                          onPressed:
+                              null, // Disabled since we don't have pricing
+                          icon: const Icon(Icons.info_outline, size: 18),
+                          label: const Text(
+                            'View Details',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onSurface,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     ),
@@ -503,61 +506,6 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
         ),
       ),
     );
-  }
-
-  void _addBlendToCart(BuildContext context, blendUsed) {
-    // Show loading and success feedback
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: Theme.of(context).colorScheme.onPrimary,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                '${blendUsed.name} added to cart!',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: SnackBarAction(
-          label: 'View Cart',
-          textColor: Theme.of(context).colorScheme.onPrimary,
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.onPrimary.withValues(alpha: 0.1),
-          onPressed: () {
-            // TODO: Navigate to cart page
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Cart feature coming soon!'),
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-              ),
-            );
-          },
-        ),
-      ),
-    );
-
-    // TODO: Implement actual add to cart logic
-    // This could involve:
-    // 1. Adding item to cart state/bloc
-    // 2. Calling cart repository/API
-    // 3. Updating cart count in app bar
-    // 4. Persisting cart data locally
   }
 
   Widget _buildIngredientsTab(BuildContext context, RecipeEntity recipe) {

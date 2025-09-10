@@ -43,7 +43,7 @@ class EmptyCartWidget extends StatelessWidget {
 
             // Subtitle
             Text(
-              'Add some delicious recipes or custom blends to get started!',
+              'Add some delicious custom blends to get started!',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -52,52 +52,25 @@ class EmptyCartWidget extends StatelessWidget {
 
             const SizedBox(height: 32),
 
-            // Browse buttons
-            Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.go('/recipes');
-                    },
-                    icon: const Icon(Icons.restaurant_menu),
-                    label: const Text('Browse Recipes'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+            // Browse button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // Navigate to blends page when available
+                  context.go('/home');
+                },
+                icon: const Icon(Icons.inventory_2),
+                label: const Text('Explore Blends'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-
-                const SizedBox(height: 12),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Navigate to blends page when available
-                      context.go('/home');
-                    },
-                    icon: const Icon(Icons.inventory_2),
-                    label: const Text('Explore Blends'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),

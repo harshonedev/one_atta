@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
+import 'package:one_atta/features/cart/presentation/widgets/add_to_cart_button.dart';
 
 class BlendListCard extends StatelessWidget {
   final PublicBlendEntity blend;
@@ -95,56 +96,41 @@ class BlendListCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
-                  // // Ingredients preview
-                  // Text(
-                  //   'Ingredients:',
-                  //   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  //     fontWeight: FontWeight.w600,
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 8),
-
-                  // Wrap(
-                  //   spacing: 8,
-                  //   runSpacing: 4,
-                  //   children: blend.additives.take(3).map((additive) {
-                  //     return Container(
-                  //       padding: const EdgeInsets.symmetric(
-                  //         horizontal: 8,
-                  //         vertical: 4,
-                  //       ),
-                  //       decoration: BoxDecoration(
-                  //         color: Theme.of(
-                  //           context,
-                  //         ).colorScheme.surfaceContainerHigh,
-                  //         borderRadius: BorderRadius.circular(8),
-                  //       ),
-                  //       child: Text(
-                  //         '${additive.originalDetails.name} (${additive.percentage.toStringAsFixed(0)}%)',
-                  //         style: Theme.of(context).textTheme.bodySmall
-                  //             ?.copyWith(
-                  //               color: Theme.of(
-                  //                 context,
-                  //               ).colorScheme.onSurfaceVariant,
-                  //             ),
-                  //       ),
-                  //     );
-                  //   }).toList(),
-                  // ),
-
-                  // if (blend.additives.length > 3)
-                  //   Padding(
-                  //     padding: const EdgeInsets.only(top: 4),
-                  //     child: Text(
-                  //       '+${blend.additives.length - 3} more ingredients',
-                  //       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  //         color: Theme.of(context).colorScheme.primary,
-                  //         fontStyle: FontStyle.italic,
-                  //       ),
-                  //     ),
-                  //   ),
+                  // Action buttons row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: onTap,
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'View Details',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      CompactAddToCartButton(
+                        productId: blend.id,
+                        productName: blend.name,
+                        productType: 'blend',
+                        price: blend.pricePerKg,
+                        imageUrl: BlendImages.getImageForBlend(blend.id),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

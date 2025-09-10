@@ -60,23 +60,10 @@ class RecipeCard extends StatelessWidget {
                     const SizedBox(height: 12),
                   ],
                   // Recipe Stats
+                  // Stats Row
                   Row(
                     children: [
-                      // Ingredients Count
-                      Icon(
-                        Icons.list_alt,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${recipe.ingredients.length} ingredients',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Steps Count
+                      // Steps count
                       Icon(
                         Icons.format_list_numbered,
                         size: 16,
@@ -104,6 +91,36 @@ class RecipeCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+
+                  // Quick action button
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: onTap,
+                      icon: Icon(
+                        recipe.blendUsed != null
+                            ? Icons.restaurant_menu
+                            : Icons.menu_book,
+                        size: 16,
+                      ),
+                      label: Text(
+                        recipe.blendUsed != null
+                            ? 'Cook with ${recipe.blendUsed!.name}'
+                            : 'View Recipe',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

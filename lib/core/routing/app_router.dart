@@ -20,6 +20,8 @@ import 'package:one_atta/features/reels/presentation/pages/reels_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipes_page.dart';
 import 'package:one_atta/features/more/presentation/pages/more_page.dart';
 import 'package:one_atta/features/cart/presentation/pages/cart_page.dart';
+import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essential_details_page.dart';
+import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essentials_demo_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -158,6 +160,19 @@ class AppRouter {
           path: '/cart',
           name: 'cart',
           builder: (context, state) => const CartPage(),
+        ),
+        GoRoute(
+          path: '/daily-essential-details/:productId',
+          name: 'daily-essential-details',
+          builder: (context, state) {
+            final productId = state.pathParameters['productId']!;
+            return DailyEssentialDetailsPage(productId: productId);
+          },
+        ),
+        GoRoute(
+          path: '/daily-essentials-demo',
+          name: 'daily-essentials-demo',
+          builder: (context, state) => const DailyEssentialsDemoPage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

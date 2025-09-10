@@ -42,7 +42,7 @@ import 'package:one_atta/features/customizer/domain/repositories/customizer_repo
 
 // Cart
 import 'package:one_atta/features/cart/data/datasources/cart_local_data_source.dart';
-import 'package:one_atta/features/cart/data/datasources/cart_local_data_source_impl.dart';
+import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_impl.dart';
 import 'package:one_atta/features/cart/data/repositories/cart_repository_impl.dart';
 import 'package:one_atta/features/cart/domain/repositories/cart_repository.dart';
 import 'package:one_atta/features/cart/domain/usecases/add_to_cart_usecase.dart';
@@ -140,9 +140,7 @@ Future<void> init() async {
   );
 
   // Data sources
-  sl.registerLazySingleton<CartLocalDataSource>(
-    () => CartLocalDataSourceImpl(),
-  );
+  sl.registerLazySingleton<CartLocalDataSource>(() => CartHiveDataSourceImpl());
 
   //! Core
   sl.registerLazySingleton(() => http.Client());

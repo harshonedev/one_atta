@@ -9,109 +9,68 @@ class CartSummaryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final subtotal = cart.totalPrice;
-    final deliveryFee = 50.0; // Fixed delivery fee for now
-    final total = subtotal + deliveryFee;
+    const shipping = 0.0; // Free shipping as per design
+    final total = subtotal + shipping;
 
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Order summary header
-            Row(
-              children: [
-                Icon(
-                  Icons.receipt_long,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Order Summary',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Summary rows
             _buildSummaryRow(
               context,
-              'Items (${cart.totalItems})',
-              '₹${subtotal.toStringAsFixed(2)}',
+              'Subtotal',
+              '₹${subtotal.toStringAsFixed(0)}',
             ),
-
             const SizedBox(height: 8),
-
             _buildSummaryRow(
               context,
-              'Delivery Fee',
-              '₹${deliveryFee.toStringAsFixed(2)}',
+              'Shipping',
+              shipping == 0.0 ? 'Free' : '₹${shipping.toStringAsFixed(0)}',
             ),
-
-            const SizedBox(height: 12),
-
-            const Divider(),
-
-            const SizedBox(height: 12),
-
-            // Total
+            const SizedBox(height: 16),
+            const Divider(thickness: 1),
+            const SizedBox(height: 16),
             _buildSummaryRow(
               context,
               'Total',
-              '₹${total.toStringAsFixed(2)}',
+              '₹${total.toStringAsFixed(0)}',
               isTotal: true,
             ),
-
-            const SizedBox(height: 20),
-
-            // Checkout button
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
+              height: 56,
+              child: FilledButton(
                 onPressed: () {
-                  _showCheckoutDialog(context);
+                  // TODO: Implement checkout logic
                 },
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(28),
                   ),
-                  elevation: 2,
+                  elevation: 0,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.shopping_bag),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Proceed to Checkout',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: const Text(
+                  'Proceed to Checkout',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
+            
           ],
         ),
       ),
@@ -124,50 +83,23 @@ class CartSummaryWidget extends StatelessWidget {
     String value, {
     bool isTotal = false,
   }) {
+    final textStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+      color: isTotal
+          ? Theme.of(context).colorScheme.onSurface
+          : Theme.of(context).colorScheme.onSurfaceVariant,
+    );
+    final valueStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+      color: Theme.of(context).colorScheme.onSurface,
+    );
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
-            color: isTotal
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: isTotal
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
+        Text(label, style: textStyle),
+        Text(value, style: valueStyle),
       ],
-    );
-  }
-
-  void _showCheckoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Checkout'),
-          content: const Text(
-            'Checkout functionality will be implemented in a future update. Your cart items are saved locally.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

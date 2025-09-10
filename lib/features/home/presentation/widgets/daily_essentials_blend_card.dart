@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
+import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 
 class DailyEssentialsBlendCard extends StatelessWidget {
   final BlendItem blend;
@@ -172,31 +177,50 @@ class DailyEssentialsBlendCard extends StatelessWidget {
 
                       const Spacer(),
 
-                      // Action button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed:
-                              onAddToCart ??
-                              () => _addBlendToCart(context, blend),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                            foregroundColor: Theme.of(
-                              context,
-                            ).colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      // Price and action button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Price
+                          Text(
+                            '₹${blend.pricePerKg.toStringAsFixed(0)}/kg',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          // Action button
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  onAddToCart ??
+                                  () => _addBlendToCart(context, blend),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimary,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                'Add to Cart',
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            'Add to Cart',
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -278,30 +302,52 @@ class DailyEssentialsBlendCard extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 8),
-                  // Action button
-                  FilledButton(
-                    onPressed:
-                        onAddToCart ?? () => _addBlendToCart(context, blend),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+
+                  // Price and action button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Price
+                      Text(
+                        '₹${blend.pricePerKg.toStringAsFixed(0)}/kg',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+
+                      // Action button
+                      FilledButton(
+                        onPressed:
+                            onAddToCart ??
+                            () => _addBlendToCart(context, blend),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Add to Cart',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Add to Cart',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -313,7 +359,21 @@ class DailyEssentialsBlendCard extends StatelessWidget {
   }
 
   void _addBlendToCart(BuildContext context, blendUsed) {
-    // Show loading and success feedback
+    // Add blend to cart using proper cart bloc
+    final cartItem = CartItemEntity(
+      productId: blendUsed.id,
+      productName: blendUsed.name,
+      productType: 'blend',
+      quantity: 1,
+      price: blendUsed.pricePerKg,
+      imageUrl: blendUsed.imagePath,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    context.read<CartBloc>().add(AddItemToCart(item: cartItem));
+
+    // Show success feedback
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -347,23 +407,10 @@ class DailyEssentialsBlendCard extends StatelessWidget {
             context,
           ).colorScheme.onPrimary.withValues(alpha: 0.1),
           onPressed: () {
-            // TODO: Navigate to cart page
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Cart feature coming soon!'),
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-              ),
-            );
+            context.push('/cart');
           },
         ),
       ),
     );
-
-    // TODO: Implement actual add to cart logic
-    // This could involve:
-    // 1. Adding item to cart state/bloc
-    // 2. Calling cart repository/API
-    // 3. Updating cart count in app bar
-    // 4. Persisting cart data locally
   }
 }

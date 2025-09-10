@@ -96,7 +96,7 @@ context.read<CartBloc>().add(
 
 The cart is accessible via:
 - Cart badge in app bars (e.g., recipes page)
-- Direct navigation: `context.go('/cart')`
+- Direct navigation: `context.push('/cart')`
 - Cart icon shows live item count
 
 ### State Management

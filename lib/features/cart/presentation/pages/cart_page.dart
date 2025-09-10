@@ -30,32 +30,11 @@ class _CartPageState extends State<CartPage> {
         elevation: 0,
         title: Text(
           'Cart',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
-        actions: [
-          BlocBuilder<CartBloc, CartState>(
-            builder: (context, state) {
-              if (state is CartLoaded && state.cart.isNotEmpty) {
-                return TextButton(
-                  onPressed: () {
-                    _showClearCartDialog();
-                  },
-                  child: Text(
-                    'Clear',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
       ),
       body: BlocConsumer<CartBloc, CartState>(
         listener: (context, state) {
@@ -64,27 +43,6 @@ class _CartPageState extends State<CartPage> {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
-          } else if (state is CartItemAdded) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-              ),
-            );
-          } else if (state is CartItemRemoved) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          } else if (state is CartCleared) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.blue,
               ),
             );
           }
@@ -101,35 +59,58 @@ class _CartPageState extends State<CartPage> {
 
             return Column(
               children: [
+                _buildDeliveryEstimate(context),
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: state.cart.items.length,
-                    itemBuilder: (context, index) {
-                      final item = state.cart.items[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: CartItemWidget(
-                          item: item,
-                          onQuantityChanged: (quantity) {
-                            context.read<CartBloc>().add(
-                              UpdateItemQuantity(
-                                productId: item.productId,
-                                quantity: quantity,
-                              ),
-                            );
-                          },
-                          onRemove: () {
-                            context.read<CartBloc>().add(
-                              RemoveItemFromCart(productId: item.productId),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: state.cart.items.length,
+                        itemBuilder: (context, index) {
+                          final item = state.cart.items[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: CartItemWidget(
+                              item: item,
+                              onQuantityChanged: (quantity) {
+                                context.read<CartBloc>().add(
+                                  UpdateItemQuantity(
+                                    productId: item.productId,
+                                    quantity: quantity,
+                                  ),
+                                );
+                              },
+                              onRemove: () {
+                                context.read<CartBloc>().add(
+                                  RemoveItemFromCart(productId: item.productId),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      _buildOrderInfo(context),
+                    ],
                   ),
                 ),
                 CartSummaryWidget(cart: state.cart),
+
+                // Basic
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildInfoItem(context, Icons.lock, 'Secure Payment'),
+                    _buildInfoItem(context, Icons.sync, 'Free Returns'),
+                    _buildInfoItem(
+                      context,
+                      Icons.info_outline,
+                      'COD\nAvailable',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
               ],
             );
           }
@@ -140,35 +121,69 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  void _showClearCartDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Clear Cart'),
-          content: const Text(
-            'Are you sure you want to remove all items from your cart?',
+  Widget _buildDeliveryEstimate(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: Colors.green, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            'Get it by Tuesday, 14 Sept',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.read<CartBloc>().add(ClearCart());
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderInfo(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.local_offer,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 18,
               ),
-              child: const Text('Clear'),
-            ),
-          ],
-        );
-      },
+              const SizedBox(width: 8),
+              Text(
+                'This order will earn you 90 Atta Points',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(BuildContext context, IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          size: 16,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

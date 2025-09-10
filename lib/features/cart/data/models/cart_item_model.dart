@@ -1,17 +1,67 @@
+import 'package:hive/hive.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 
+part 'cart_item_model.g.dart';
+
+@HiveType(typeId: 0)
 class CartItemModel extends CartItemEntity {
+  @HiveField(0)
+  @override
+  final int? id;
+
+  @HiveField(1)
+  @override
+  final String productId;
+
+  @HiveField(2)
+  @override
+  final String productName;
+
+  @HiveField(3)
+  @override
+  final String productType;
+
+  @HiveField(4)
+  @override
+  final int quantity;
+
+  @HiveField(5)
+  @override
+  final double price;
+
+  @HiveField(6)
+  @override
+  final String? imageUrl;
+
+  @HiveField(7)
+  @override
+  final DateTime createdAt;
+
+  @HiveField(8)
+  @override
+  final DateTime updatedAt;
+
   const CartItemModel({
-    super.id,
-    required super.productId,
-    required super.productName,
-    required super.productType,
-    required super.quantity,
-    required super.price,
-    super.imageUrl,
-    required super.createdAt,
-    required super.updatedAt,
-  });
+    this.id,
+    required this.productId,
+    required this.productName,
+    required this.productType,
+    required this.quantity,
+    required this.price,
+    this.imageUrl,
+    required this.createdAt,
+    required this.updatedAt,
+  }) : super(
+         id: id,
+         productId: productId,
+         productName: productName,
+         productType: productType,
+         quantity: quantity,
+         price: price,
+         imageUrl: imageUrl,
+         createdAt: createdAt,
+         updatedAt: updatedAt,
+       );
 
   factory CartItemModel.fromMap(Map<String, dynamic> map) {
     return CartItemModel(
@@ -55,6 +105,7 @@ class CartItemModel extends CartItemEntity {
     );
   }
 
+  @override
   CartItemModel copyWith({
     int? id,
     String? productId,
