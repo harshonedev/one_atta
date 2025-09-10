@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
@@ -30,15 +31,112 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
     _percentage = widget.ingredient.percentage;
   }
 
-  List<int> _labelStops() {
+  // Dynamic labels that adjust based on current slider position
+  List<int> _getDynamicLabelStops() {
+    final currentWeight = (_percentage * widget.totalWeight).round();
+    final totalWeight = widget.totalWeight;
+
+    // Snap current weight to nearest 100g
+    final snappedCurrentWeight = (currentWeight / 100).round() * 100;
+
     switch (widget.packetSize) {
       case PacketSize.kg1:
-        return [100, 200, 300, widget.totalWeight];
+        final baseStops = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+        return _getRelevantStops(baseStops, snappedCurrentWeight, totalWeight);
       case PacketSize.kg3:
-        return [500, 1000, 1500, widget.totalWeight];
+        final baseStops = [
+          300,
+          600,
+          900,
+          1200,
+          1500,
+          1800,
+          2100,
+          2400,
+          2700,
+          3000,
+        ];
+        return _getRelevantStops(baseStops, snappedCurrentWeight, totalWeight);
       case PacketSize.kg5:
-        return [1000, 2000, 3000, widget.totalWeight];
+        final baseStops = [
+          500,
+          1000,
+          1500,
+          2000,
+          2500,
+          3000,
+          3500,
+          4000,
+          4500,
+          5000,
+        ];
+        return _getRelevantStops(baseStops, snappedCurrentWeight, totalWeight);
     }
+  }
+
+  // Get 4-5 relevant stops around current position
+  List<int> _getRelevantStops(
+    List<int> allStops,
+    int currentWeight,
+    int totalWeight,
+  ) {
+    // Always include 0 and totalWeight
+    final result = <int>{0};
+
+    // Find stops around current weight
+    final filteredStops = allStops
+        .where((stop) => stop <= totalWeight)
+        .toList();
+
+    // Find the position of current weight in the stops
+    int insertIndex = 0;
+    for (int i = 0; i < filteredStops.length; i++) {
+      if (filteredStops[i] <= currentWeight) {
+        insertIndex = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    // Add current weight if it's not already in the list
+    if (!filteredStops.contains(currentWeight) && currentWeight > 0) {
+      result.add(currentWeight);
+    }
+
+    // Add 1-2 stops before and after current position
+    for (
+      int i = math.max(0, insertIndex - 2);
+      i < math.min(filteredStops.length, insertIndex + 2);
+      i++
+    ) {
+      result.add(filteredStops[i]);
+    }
+
+    // Always include total weight
+    result.add(totalWeight);
+
+    // Convert to sorted list and limit to 5 items max
+    final sortedList = result.toList()..sort();
+    if (sortedList.length > 5) {
+      // Keep first, last, current, and 2 others
+      final List<int> finalList = [sortedList.first];
+      if (sortedList.contains(currentWeight) &&
+          currentWeight != sortedList.first &&
+          currentWeight != sortedList.last) {
+        finalList.add(currentWeight);
+      }
+      // Add one or two middle values
+      final middleIndex = sortedList.length ~/ 2;
+      if (middleIndex != 0 && middleIndex != sortedList.length - 1) {
+        finalList.add(sortedList[middleIndex]);
+      }
+      if (sortedList.last != sortedList.first) {
+        finalList.add(sortedList.last);
+      }
+      return finalList.toSet().toList()..sort();
+    }
+
+    return sortedList;
   }
 
   String _weightLabel(int grams) {
@@ -107,35 +205,78 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                   ),
                 ),
                 const SizedBox(height: 32),
+
                 _SliderWithTicks(
                   percentage: _percentage,
                   divisions: divisions,
                   onChanged: (p) => setState(() => _percentage = p),
                 ),
                 const SizedBox(height: 12),
+                // Dynamic weight labels based on current position
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: _labelStops()
+                    children: _getDynamicLabelStops()
                         .map(
                           (g) => Text(
                             _weightLabel(g),
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500,
+                              color: g == currentWeight
+                                  ? const Color(0xFFE59A3B)
+                                  : Colors.black54,
+                              fontWeight: g == currentWeight
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                         )
                         .toList(),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                // Current weight display - prominently shown
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${currentWeight}g',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFE59A3B),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '•',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${(_percentage * 100).toStringAsFixed(0)}%',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
                 Text(
-                  '${(_percentage * 100).toStringAsFixed(0)}% of blend',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                  'of blend',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 6),

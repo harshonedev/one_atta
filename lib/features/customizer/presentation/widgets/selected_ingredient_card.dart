@@ -45,11 +45,6 @@ class SelectedIngredientCard extends StatelessWidget {
     }
   }
 
-  // Snap value to nearest step
-  double _snapToStep(double value) {
-    return (value / stepSize).round() * stepSize;
-  }
-
   // Get weight options based on packet size
   List<WeightOption> get weightOptions {
     switch (packetSize) {
@@ -75,60 +70,6 @@ class SelectedIngredientCard extends StatelessWidget {
           WeightOption(weightInGrams: 4000, label: '4Kg'),
         ];
     }
-  }
-
-  void _setPercentage(
-    BuildContext context,
-    double percentage, {
-    bool showSnackbarOnLimit = false,
-  }) {
-    final snappedValue = _snapToStep(percentage.clamp(0.0, 1.0));
-    final currentPercentage = ingredient.percentage;
-    final percentageDifference = snappedValue - currentPercentage;
-    final newTotalPercentage = totalPercentage + percentageDifference;
-
-    // Use a small tolerance for floating-point comparison (0.001 = 0.1%)
-    const tolerance = 0.001;
-
-    // Check if the new percentage would exceed capacity
-    if (newTotalPercentage > (1.0 + tolerance) && percentageDifference > 0) {
-      if (showSnackbarOnLimit) {
-        _showCapacityExceededSnackbar(context);
-      }
-      return;
-    }
-
-    onPercentageChanged(snappedValue);
-  }
-
-  void _showCapacityExceededSnackbar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.warning_rounded,
-              color: Theme.of(context).colorScheme.onError,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Blend capacity exceeded. Reduce other ingredients first.',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onError,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
   }
 
   void _showIngredientDetails(BuildContext context) {
@@ -206,11 +147,37 @@ class SelectedIngredientCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      Text(
-                        '${displayWeight}g • ${displayPercentage.toStringAsFixed(0)}%',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${displayWeight}g',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${displayPercentage.toStringAsFixed(0)}%',
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

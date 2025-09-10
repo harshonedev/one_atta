@@ -68,6 +68,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
                 _RotiCharacteristicsCard(analysis: analysis),
                 const SizedBox(height: 24),
                 _HealthBenefitsCard(analysis: analysis),
+                const SizedBox(height: 24),
+                _AllergensCard(analysis: analysis),
+                const SizedBox(height: 24),
+                _SuitabilityNotesCard(analysis: analysis),
+                const SizedBox(height: 24),
+                _DisclaimerCard(),
                 const SizedBox(height: 32),
                 _ActionButtonsSection(isSaving: state.isSaving),
                 const SizedBox(height: 16),
@@ -200,6 +206,129 @@ class _HealthBenefitsCard extends StatelessWidget {
               ),
             )
             .toList(),
+      ),
+    );
+  }
+}
+
+class _AllergensCard extends StatelessWidget {
+  final BlendAnalysisEntity analysis;
+
+  const _AllergensCard({required this.analysis});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Allergen Information',
+      icon: Icons.warning_amber_outlined,
+      child: analysis.allergens.isEmpty
+          ? Text(
+              'No known allergens',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: analysis.allergens
+                  .map(
+                    (allergen) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 7, right: 8),
+                            child: Icon(
+                              Icons.warning_amber,
+                              color: Theme.of(context).colorScheme.error,
+                              size: 16,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              allergen,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+    );
+  }
+}
+
+class _SuitabilityNotesCard extends StatelessWidget {
+  final BlendAnalysisEntity analysis;
+
+  const _SuitabilityNotesCard({required this.analysis});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Suitability Notes',
+      icon: Icons.info_outline,
+      child: Text(
+        analysis.suitabilityNotes,
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+    );
+  }
+}
+
+class _DisclaimerCard extends StatelessWidget {
+  const _DisclaimerCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Important Disclaimer',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'This information is for educational purposes only and is not intended as medical advice. Roti characteristic predictions are estimates based on typical preparations. Consult with a healthcare professional or registered dietitian before making significant changes to your diet.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -371,7 +500,7 @@ class _SectionCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
               ],
@@ -450,7 +579,7 @@ class _CharacteristicRow extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.7),
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -638,7 +767,7 @@ class _AnalyzingLoaderState extends State<_AnalyzingLoader>
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.6),
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 24),
@@ -719,7 +848,7 @@ class _AnalyzeParticleState extends State<_AnalyzeParticle> {
         scheme.primary,
         scheme.secondary,
         scheme.tertiaryContainer,
-      ][seed].withOpacity(0.85);
+      ][seed].withValues(alpha: 0.85);
       _resolved = true;
     }
   }
@@ -748,7 +877,9 @@ class _AnalyzeParticleState extends State<_AnalyzeParticle> {
               widget.icon,
               size: _size,
               color: _color,
-              shadows: [Shadow(color: _color.withOpacity(0.4), blurRadius: 4)],
+              shadows: [
+                Shadow(color: _color.withValues(alpha: 0.4), blurRadius: 4),
+              ],
             ),
           ),
         );
