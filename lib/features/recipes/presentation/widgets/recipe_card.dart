@@ -97,7 +97,7 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: onTap,
                       icon: Icon(
                         recipe.blendUsed != null

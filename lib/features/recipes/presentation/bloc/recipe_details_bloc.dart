@@ -45,36 +45,36 @@ class RecipeDetailsBloc extends Bloc<RecipeDetailsEvent, RecipeDetailsState> {
         currentState.copyWith(
           isLiked: !currentState.isLiked,
           likesCount: newLikesCount,
-          isLiking: true,
+          isLiking: false,
         ),
       );
 
       // Sync with remote database
-      final result = await repository.toggleRecipeLike(event.recipeId);
+      repository.toggleRecipeLike(event.recipeId);
 
-      result.fold(
-        (failure) {
-          // Revert the optimistic update on failure
-          emit(
-            currentState.copyWith(
-              isLiked: currentState.isLiked,
-              likesCount: currentState.likesCount,
-              isLiking: false,
-            ),
-          );
-          emit(RecipeDetailsError(failure.message));
-        },
-        (likeData) {
-          // Update with actual server response
-          emit(
-            currentState.copyWith(
-              isLiked: likeData['isLiked'] ?? !currentState.isLiked,
-              likesCount: likeData['likesCount'] ?? newLikesCount,
-              isLiking: false,
-            ),
-          );
-        },
-      );
+      // result.fold(
+      //   (failure) {
+      //     // Revert the optimistic update on failure
+      //     emit(
+      //       currentState.copyWith(
+      //         isLiked: currentState.isLiked,
+      //         likesCount: currentState.likesCount,
+      //         isLiking: false,
+      //       ),
+      //     );
+      //     emit(RecipeDetailsError(failure.message));
+      //   },
+      //   (likeData) {
+      //     // Update with actual server response
+      //     emit(
+      //       currentState.copyWith(
+      //         isLiked: likeData['isLiked'] ?? !currentState.isLiked,
+      //         likesCount: likeData['likesCount'] ?? newLikesCount,
+      //         isLiking: false,
+      //       ),
+      //     );
+      //   },
+      // );
     }
   }
 

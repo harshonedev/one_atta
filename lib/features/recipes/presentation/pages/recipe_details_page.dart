@@ -437,59 +437,30 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          print('View Blend Details Pressed - $blendUsed.id');
-                          context.push('/blend-details/${blendUsed.id}');
-                        },
-                        icon: Icon(
-                          Icons.visibility,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        label: Text(
-                          'View Details',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
                       child: Tooltip(
-                        message:
-                            'View blend details for pricing and cart options',
-                        child: FilledButton.icon(
-                          onPressed:
-                              null, // Disabled since we don't have pricing
-                          icon: const Icon(Icons.info_outline, size: 18),
-                          label: const Text(
+                        message: 'View Blend Details',
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            context.push('/blend-details/${blendUsed.id}');
+                          },
+                          icon: Icon(
+                            Icons.visibility,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          label: Text(
                             'View Details',
                             style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
                           ),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            foregroundColor: Theme.of(
-                              context,
-                            ).colorScheme.onSurface,
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1.5,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),

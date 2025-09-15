@@ -358,7 +358,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
     );
   }
 
-  void _addBlendToCart(BuildContext context, blendUsed) {
+  void _addBlendToCart(BuildContext context, BlendItem blendUsed) {
     // Add blend to cart using proper cart bloc
     final cartItem = CartItemEntity(
       productId: blendUsed.id,
@@ -366,7 +366,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
       productType: 'blend',
       quantity: 1,
       price: blendUsed.pricePerKg,
-      imageUrl: blendUsed.imagePath,
+      imageUrl: blendUsed.imageUrl,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );

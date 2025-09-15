@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:logger/logger.dart';
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
@@ -8,6 +9,7 @@ import 'package:one_atta/features/recipes/data/models/recipe_request_model.dart'
 class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
   final Dio dio;
   static const String baseUrl = '${ApiEndpoints.baseUrl}/recipes';
+  final Logger logger = Logger();
 
   RecipesRemoteDataSourceImpl({required this.dio});
 
@@ -174,6 +176,7 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
       final response = await dio.post('$baseUrl/$id/like');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
+        logger.i('Toggle like response: ${response.data}');
         return response.data['data'];
       } else {
         throw ServerFailure(
