@@ -225,10 +225,17 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
         break;
     }
 
+    // Adjust ingredient percentages to ensure weights are multiples of 100g
+    final adjustedIngredients = _adjustIngredientsForPacketSize(
+      state.selectedIngredients,
+      newWeight,
+    );
+
     emit(
       state.copyWith(
         selectedPacketSize: event.packetSize,
         totalWeight: newWeight,
+        selectedIngredients: adjustedIngredients,
       ),
     );
   }
@@ -482,5 +489,75 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: 'Failed to save blend: $e'));
     }
+  }
+
+  /// Adjusts ingredient percentages to ensure weights are multiples of 100g
+  /// while maintaining proportions as closely as possible
+  List<Ingredient> _adjustIngredientsForPacketSize(
+    List<Ingredient> currentIngredients,
+    int newTotalWeight,
+  ) {
+    if (currentIngredients.isEmpty) return currentIngredients;
+
+    // Convert current percentages to weights in grams and round to 100g multiples
+    final adjustedIngredients = <Ingredient>[];
+    var totalAdjustedWeight = 0;
+
+    // First pass: convert to rounded weights
+    final roundedWeights = <int>[];
+    for (final ingredient in currentIngredients) {
+      final currentWeight = (ingredient.percentage * newTotalWeight).round();
+      final roundedWeight = (currentWeight / 100).round() * 100;
+      roundedWeights.add(roundedWeight);
+      totalAdjustedWeight += roundedWeight;
+    }
+
+    // Second pass: distribute remainder to maintain 100% total
+    final remainder = newTotalWeight - totalAdjustedWeight;
+
+    if (remainder != 0) {
+      // Find the ingredient with the largest rounding error to adjust
+      var maxErrorIndex = 0;
+      var maxError = 0.0;
+
+      for (int i = 0; i < currentIngredients.length; i++) {
+        final originalWeight =
+            currentIngredients[i].percentage * newTotalWeight;
+        final error = (originalWeight - roundedWeights[i]).abs();
+        if (error > maxError) {
+          maxError = error;
+          maxErrorIndex = i;
+        }
+      }
+
+      // Adjust the ingredient with the largest error
+      if (remainder > 0) {
+        // Add remainder in 100g increments
+        final increments = (remainder / 100).round();
+        roundedWeights[maxErrorIndex] += increments * 100;
+      } else {
+        // Subtract remainder in 100g increments
+        final decrements = (remainder.abs() / 100).round();
+        roundedWeights[maxErrorIndex] =
+            (roundedWeights[maxErrorIndex] - decrements * 100).clamp(
+              100,
+              newTotalWeight,
+            );
+      }
+    }
+
+    // Convert back to percentages and create adjusted ingredients
+    for (int i = 0; i < currentIngredients.length; i++) {
+      final newPercentage = roundedWeights[i] / newTotalWeight;
+      adjustedIngredients.add(
+        Ingredient(
+          name: currentIngredients[i].name,
+          percentage: newPercentage,
+          icon: currentIngredients[i].icon,
+        ),
+      );
+    }
+
+    return adjustedIngredients;
   }
 }
