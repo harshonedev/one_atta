@@ -262,6 +262,20 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
   void _onAddIngredient(AddIngredient event, Emitter<CustomizerState> emit) {
     if (state.isMaxCapacityReached) return;
 
+    final remainingPercentage = 1.0 - state.totalPercentage;
+    if (remainingPercentage <= 0.1) {
+      if (remainingPercentage <= 0) {
+        return; // No capacity left
+      }
+      event = AddIngredient(
+        Ingredient(
+          name: event.ingredient.name,
+          percentage: remainingPercentage,
+          icon: event.ingredient.icon,
+        ),
+      );
+    }
+
     final newSelectedIngredients = [
       ...state.selectedIngredients,
       event.ingredient,

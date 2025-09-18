@@ -198,5 +198,4 @@ class BlendsView extends StatelessWidget {
       ),
     );
   }
-
 }

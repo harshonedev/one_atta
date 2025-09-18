@@ -16,6 +16,7 @@ class AvailableIngredientsSection extends StatelessWidget {
     required this.isMaxCapacityReached,
     required this.onIngredientAdded,
     this.scrollController,
+
   });
 
   @override

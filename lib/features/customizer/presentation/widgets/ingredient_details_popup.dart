@@ -7,12 +7,17 @@ class IngredientDetailsPopup extends StatefulWidget {
   final Ingredient ingredient;
   final int totalWeight; // grams
   final PacketSize packetSize;
+  final double
+  currentTotalPercentage; // current total percentage of all ingredients
+  final bool isMaxCapacityReached;
 
   const IngredientDetailsPopup({
     super.key,
     required this.ingredient,
     required this.totalWeight,
     required this.packetSize,
+    required this.currentTotalPercentage,
+    required this.isMaxCapacityReached,
   });
 
   @override
@@ -23,6 +28,16 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
   late double _percentage; // 0 - 1
 
   int get divisions => (widget.totalWeight / 100).round(); // 100g steps
+
+  // Check if a new percentage would exceed max capacity
+  bool _wouldExceedCapacity(double newPercentage) {
+    const tolerance = 0.001; // Same tolerance as in the bloc
+    final currentIngredientPercentage = widget.ingredient.percentage;
+    final percentageDifference = newPercentage - currentIngredientPercentage;
+    final newTotalPercentage =
+        widget.currentTotalPercentage + percentageDifference;
+    return newTotalPercentage > (1.0 + tolerance);
+  }
 
   @override
   void initState() {
@@ -121,7 +136,12 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                   percentage: _percentage,
                   divisions: divisions,
                   totalWeight: widget.totalWeight,
-                  onChanged: (p) => setState(() => _percentage = p),
+                  onChanged: (p) {
+                    // Only allow the change if it's a decrease or if it doesn't exceed capacity
+                    if (p <= _percentage || !_wouldExceedCapacity(p)) {
+                      setState(() => _percentage = p);
+                    }
+                  },
                 ),
                 const SizedBox(height: 12),
                 // Constant weight labels with highlighting
@@ -342,7 +362,7 @@ class _PrimaryPillButton extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onPrimary,
               letterSpacing: 0.2,
             ),
           ),

@@ -84,6 +84,8 @@ class SelectedIngredientCard extends StatelessWidget {
           ingredient: ingredient,
           totalWeight: totalWeight,
           packetSize: packetSize,
+          currentTotalPercentage: totalPercentage,
+          isMaxCapacityReached: isMaxCapacityReached,
         ),
       ),
       transitionBuilder: (context, animation, secondaryAnimation, child) {

@@ -35,16 +35,15 @@ class SvgImageLoader extends StatelessWidget {
           colorFilter: color != null
               ? ColorFilter.mode(color!, BlendMode.srcIn)
               : null,
-          placeholderBuilder: (context) =>
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  width: width,
-                  height: height,
-                  color: Colors.grey.shade300,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-              ),
+          placeholderBuilder: (context) => Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              width: width,
+              height: height,
+              color: Colors.grey.shade300,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ),
         ),
       );
     } else {

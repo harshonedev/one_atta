@@ -70,8 +70,6 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
   @override
   Future<BlendDetailsModel> getBlendDetails(String id, String token) async {
     try {
-
-
       // add bearer token to headerr
       dio.options.headers['Authorization'] = "Bearer $token";
       final response = await dio.get('$baseUrl/$id');

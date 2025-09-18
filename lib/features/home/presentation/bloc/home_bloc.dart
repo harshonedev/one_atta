@@ -331,12 +331,12 @@ class BlendItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        imageUrl,
-        category,
-        tags,
-        pricePerKg,
-      ];
+    id,
+    name,
+    description,
+    imageUrl,
+    category,
+    tags,
+    pricePerKg,
+  ];
 }

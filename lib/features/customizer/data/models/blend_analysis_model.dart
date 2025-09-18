@@ -18,7 +18,8 @@ class BlendAnalysisModel extends Equatable {
 
   factory BlendAnalysisModel.fromJson(Map<String, dynamic> json) {
     // Handle the actual API response structure
-    final nutrients = json['nutritional_info_per_100g'] as Map<String, dynamic>?;
+    final nutrients =
+        json['nutritional_info_per_100g'] as Map<String, dynamic>?;
     final rotiInfo = json['roti_characteristics'] as Map<String, dynamic>?;
 
     return BlendAnalysisModel(
@@ -62,9 +63,8 @@ class BlendAnalysisModel extends Equatable {
       suitabilityNotes: suitabilityNotes,
     );
   }
-  
+
   @override
-  
   List<Object?> get props => [
     nutritionalInfoPer100g,
     rotiCharacteristics,
@@ -123,7 +123,7 @@ class NutritionalInfoModel extends Equatable {
       iron: iron,
     );
   }
-  
+
   @override
   List<Object?> get props => [
     calories,
@@ -186,7 +186,7 @@ class RotiCharacteristicsModel extends Equatable {
       softnessRating: softnessRating,
     );
   }
-  
+
   @override
   List<Object?> get props => [
     taste,
