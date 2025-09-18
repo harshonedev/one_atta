@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
@@ -31,120 +30,32 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
     _percentage = widget.ingredient.percentage;
   }
 
-  // Dynamic labels that adjust based on current slider position
-  List<int> _getDynamicLabelStops() {
-    final currentWeight = (_percentage * widget.totalWeight).round();
+  // Constant 5 stops aligned with slider ticks (every 100g)
+  List<int> _getConstantStops() {
     final totalWeight = widget.totalWeight;
-
-    // Snap current weight to nearest 100g
-    final snappedCurrentWeight = (currentWeight / 100).round() * 100;
-
-    switch (widget.packetSize) {
-      case PacketSize.kg1:
-        final baseStops = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
-        return _getRelevantStops(baseStops, snappedCurrentWeight, totalWeight);
-      case PacketSize.kg3:
-        final baseStops = [
-          300,
-          600,
-          900,
-          1200,
-          1500,
-          1800,
-          2100,
-          2400,
-          2700,
-          3000,
-        ];
-        return _getRelevantStops(baseStops, snappedCurrentWeight, totalWeight);
-      case PacketSize.kg5:
-        final baseStops = [
-          500,
-          1000,
-          1500,
-          2000,
-          2500,
-          3000,
-          3500,
-          4000,
-          4500,
-          5000,
-        ];
-        return _getRelevantStops(baseStops, snappedCurrentWeight, totalWeight);
-    }
+    final step = totalWeight ~/ 5; // Divide into 4 equal parts for 5 stops
+    final alignedStep = (step / 100).round() * 100; // Snap to nearest 100g
+    return [
+      0,
+      alignedStep,
+      alignedStep * 2,
+      alignedStep * 3,
+      alignedStep * 4,
+      totalWeight,
+    ];
   }
 
-  // Get 4-5 relevant stops around current position
-  List<int> _getRelevantStops(
-    List<int> allStops,
-    int currentWeight,
-    int totalWeight,
-  ) {
-    // Always include 0 and totalWeight
-    final result = <int>{0};
-
-    // Find stops around current weight
-    final filteredStops = allStops
-        .where((stop) => stop <= totalWeight)
-        .toList();
-
-    // Find the position of current weight in the stops
-    int insertIndex = 0;
-    for (int i = 0; i < filteredStops.length; i++) {
-      if (filteredStops[i] <= currentWeight) {
-        insertIndex = i + 1;
-      } else {
-        break;
-      }
-    }
-
-    // Add current weight if it's not already in the list
-    if (!filteredStops.contains(currentWeight) && currentWeight > 0) {
-      result.add(currentWeight);
-    }
-
-    // Add 1-2 stops before and after current position
-    for (
-      int i = math.max(0, insertIndex - 2);
-      i < math.min(filteredStops.length, insertIndex + 2);
-      i++
-    ) {
-      result.add(filteredStops[i]);
-    }
-
-    // Always include total weight
-    result.add(totalWeight);
-
-    // Convert to sorted list and limit to 5 items max
-    final sortedList = result.toList()..sort();
-    if (sortedList.length > 5) {
-      // Keep first, last, current, and 2 others
-      final List<int> finalList = [sortedList.first];
-      if (sortedList.contains(currentWeight) &&
-          currentWeight != sortedList.first &&
-          currentWeight != sortedList.last) {
-        finalList.add(currentWeight);
-      }
-      // Add one or two middle values
-      final middleIndex = sortedList.length ~/ 2;
-      if (middleIndex != 0 && middleIndex != sortedList.length - 1) {
-        finalList.add(sortedList[middleIndex]);
-      }
-      if (sortedList.last != sortedList.first) {
-        finalList.add(sortedList.last);
-      }
-      return finalList.toSet().toList()..sort();
-    }
-
-    return sortedList;
+  // Check if current weight matches any stop (within 25g tolerance for 100g steps)
+  bool _isCurrentWeightAtStop(int stopWeight, int currentWeight) {
+    return (currentWeight - stopWeight).abs() <= 25;
   }
 
   String _weightLabel(int grams) {
     if (grams >= 1000) {
       final kg = (grams / 1000).toStringAsFixed(grams % 1000 == 0 ? 0 : 1);
-      return grams == widget.totalWeight ? '${kg} kg' : '${kg} kg';
+      return grams == widget.totalWeight ? '${kg}kg' : '${kg}kg';
     }
-    return '$grams g';
+    return '${grams}g';
   }
 
   @override
@@ -197,7 +108,7 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                   child: Image.asset(
                     'assets/images/${widget.ingredient.name.toLowerCase()}.png',
                     height: 90,
-                    errorBuilder: (_, __, ___) => Icon(
+                    errorBuilder: (_, _, _) => Icon(
                       widget.ingredient.icon,
                       size: 90,
                       color: const Color(0xFFB0792E),
@@ -209,23 +120,25 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                 _SliderWithTicks(
                   percentage: _percentage,
                   divisions: divisions,
+                  totalWeight: widget.totalWeight,
                   onChanged: (p) => setState(() => _percentage = p),
                 ),
                 const SizedBox(height: 12),
-                // Dynamic weight labels based on current position
+                // Constant weight labels with highlighting
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: _getDynamicLabelStops()
+                    children: _getConstantStops()
                         .map(
                           (g) => Text(
                             _weightLabel(g),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: g == currentWeight
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: _isCurrentWeightAtStop(g, currentWeight)
                                   ? const Color(0xFFE59A3B)
                                   : Colors.black54,
-                              fontWeight: g == currentWeight
+                              fontWeight:
+                                  _isCurrentWeightAtStop(g, currentWeight)
                                   ? FontWeight.w700
                                   : FontWeight.w500,
                             ),
@@ -319,17 +232,30 @@ class _SliderWithTicks extends StatelessWidget {
   final double percentage; // 0-1
   final int divisions; // number of 100g steps
   final ValueChanged<double> onChanged;
+  final int totalWeight;
 
   const _SliderWithTicks({
     required this.percentage,
     required this.divisions,
     required this.onChanged,
+    required this.totalWeight,
   });
 
   @override
   Widget build(BuildContext context) {
+    final step = totalWeight ~/ 5; // Divide into 5 equal parts for 5 stops
+    final alignedStep = (step / 100).round(); // Snap to nearest 100g
+    final stops = [
+      0,
+      alignedStep,
+      alignedStep * 2,
+      alignedStep * 3,
+      alignedStep * 4,
+      totalWeight ~/ 100,
+    ];
+    final theme = Theme.of(context);
     final trackColor = const Color(0xFFF1E7DA);
-    final activeColor = const Color(0xFFE59A3B);
+    final activeColor = theme.colorScheme.primary;
     return LayoutBuilder(
       builder: (context, constraints) {
         final tickCount = divisions + 1;
@@ -339,6 +265,7 @@ class _SliderWithTicks extends StatelessWidget {
             // Track background with corner radius
             Container(
               height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 color: trackColor,
                 borderRadius: BorderRadius.circular(24),
@@ -348,6 +275,8 @@ class _SliderWithTicks extends StatelessWidget {
             Positioned.fill(
               top: 10,
               bottom: 10,
+              left: 10,
+              right: 10,
               child: IgnorePointer(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -355,10 +284,10 @@ class _SliderWithTicks extends StatelessWidget {
                     tickCount,
                     (i) => Container(
                       width: 2,
-                      height: 18,
+                      height: stops.contains(i) ? 36 : 18,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(1),
+                        color: Colors.black.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ),

@@ -25,9 +25,6 @@ class CustomizerRemoteDataSourceImpl implements CustomizerRemoteDataSource {
       // Get token for  authentication
       final token = await authLocalDataSource.getToken();
 
-      
-      
-
       // Add authorization header if token is available
       if (token == null) {
         throw UnauthorizedFailure('No authentication token found');

@@ -154,11 +154,11 @@ class _CustomizerPageState extends State<CustomizerPage> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Tap an ingredient to fine‑tune its amount',
+                    'Tap an ingredient to fine tune its amount',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

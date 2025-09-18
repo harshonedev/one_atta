@@ -595,7 +595,7 @@ class _CharacteristicRow extends StatelessWidget {
                 return Icon(
                   index < ratingOutOf5 ? Icons.star : Icons.star_border,
                   color: Colors.amber,
-                  size: 20,
+                  size: 16,
                 );
               }),
               const SizedBox(width: 6),
@@ -603,7 +603,7 @@ class _CharacteristicRow extends StatelessWidget {
                 '$ratingOutOf5/5',
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
