@@ -15,93 +15,91 @@ class CartItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Theme.of(context).colorScheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12.0),
-              child: Image.network(
-                item.imageUrl ?? 'https://i.imgur.com/J4aP3Jc.png',
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 60,
-                    height: 60,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    child: const Icon(Icons.image_not_supported),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          item.productName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '₹${item.price.toStringAsFixed(0)}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '5 kg', // Hardcoded for now
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+    final theme = Theme.of(context);
+    final productImageSize = 50.0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4.0),
+                child: Image.network(
+                  item.imageUrl ?? 'https://i.imgur.com/J4aP3Jc.png',
+                  width: productImageSize,
+                  height: productImageSize,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: productImageSize,
+                      height: productImageSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: onRemove,
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          alignment: Alignment.centerLeft,
+                      child: const Icon(Icons.image_not_supported),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.3,
+                              child: Expanded(
+                                child: Text(
+                                  item.productName,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.start,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '5 kg', // Hardcoded for now
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          'Remove',
-                          style: Theme.of(context).textTheme.bodyMedium
+                        const SizedBox(width: 8),
+                        _buildQuantityControl(context),
+                        const Spacer(),
+                        Text(
+                          '₹${item.price.toStringAsFixed(0)}',
+                          style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
+                                fontWeight: FontWeight.w600,
                                 color: Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.normal,
                               ),
                         ),
-                      ),
-                      _buildQuantityControl(context),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Divider(),
+        ],
       ),
     );
   }
@@ -109,20 +107,24 @@ class CartItemWidget extends StatelessWidget {
   Widget _buildQuantityControl(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).colorScheme.primary),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            icon: Icon(Icons.remove, size: 12, fontWeight: FontWeight.bold),
-            onPressed: item.quantity > 1
-                ? () => onQuantityChanged(item.quantity - 1)
-                : null,
-            color: Theme.of(context).colorScheme.onSurface,
-            padding: EdgeInsets.zero,
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: IconButton(
+              onPressed: item.quantity > 1
+                  ? () => onQuantityChanged(item.quantity - 1)
+                  : onRemove,
+              icon: Icon(Icons.remove_rounded, size: 16),
+              padding: EdgeInsets.zero,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -134,11 +136,18 @@ class CartItemWidget extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.add, size: 12, fontWeight: FontWeight.bold),
-            onPressed: () => onQuantityChanged(item.quantity + 1),
-            color: Theme.of(context).colorScheme.onSurface,
-            padding: EdgeInsets.zero,
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: IconButton(
+              onPressed: () => onQuantityChanged(item.quantity + 1),
+              icon: Icon(
+                Icons.add_rounded,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              padding: EdgeInsets.zero,
+            ),
           ),
         ],
       ),

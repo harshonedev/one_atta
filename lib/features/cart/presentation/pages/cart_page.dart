@@ -59,10 +59,14 @@ class _CartPageState extends State<CartPage> {
 
             return Column(
               children: [
+                const SizedBox(height: 32),
                 _buildDeliveryEstimate(context),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     children: [
                       ListView.builder(
                         shrinkWrap: true,
@@ -70,24 +74,21 @@ class _CartPageState extends State<CartPage> {
                         itemCount: state.cart.items.length,
                         itemBuilder: (context, index) {
                           final item = state.cart.items[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: CartItemWidget(
-                              item: item,
-                              onQuantityChanged: (quantity) {
-                                context.read<CartBloc>().add(
-                                  UpdateItemQuantity(
-                                    productId: item.productId,
-                                    quantity: quantity,
-                                  ),
-                                );
-                              },
-                              onRemove: () {
-                                context.read<CartBloc>().add(
-                                  RemoveItemFromCart(productId: item.productId),
-                                );
-                              },
-                            ),
+                          return CartItemWidget(
+                            item: item,
+                            onQuantityChanged: (quantity) {
+                              context.read<CartBloc>().add(
+                                UpdateItemQuantity(
+                                  productId: item.productId,
+                                  quantity: quantity,
+                                ),
+                              );
+                            },
+                            onRemove: () {
+                              context.read<CartBloc>().add(
+                                RemoveItemFromCart(productId: item.productId),
+                              );
+                            },
                           );
                         },
                       ),
@@ -126,7 +127,11 @@ class _CartPageState extends State<CartPage> {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Row(
         children: [
-          const Icon(Icons.local_shipping_rounded, size: 20),
+          Icon(
+            Icons.local_shipping_rounded,
+            size: 32,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(width: 8),
           Text(
             'Get it by Tuesday, 14 Sept',
