@@ -134,7 +134,11 @@ class ProductModel extends DailyEssentialEntity {
 
       nutritionalInfo.forEach((key, value) {
         if (value != null) {
-          result[_formatNutritionalKey(key)] = '${value}g per 100g';
+          if (key == 'calories') {
+            result[_formatNutritionalKey(key)] = '${value}cal';
+            return;
+          }
+          result[_formatNutritionalKey(key)] = '${value}g';
         }
       });
 

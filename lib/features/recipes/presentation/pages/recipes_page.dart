@@ -83,20 +83,23 @@ class _RecipesViewState extends State<RecipesView> {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(32),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.all(16),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
+                ),
                 filled: true,
                 fillColor: Theme.of(
                   context,
                 ).colorScheme.inverseSurface.withValues(alpha: 0.1),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(32),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(32),
                   borderSide: BorderSide.none,
                 ),
               ),

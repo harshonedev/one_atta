@@ -462,7 +462,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                               width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(32),
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
@@ -530,12 +530,12 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   radius: 15,
                   child: Text(
                     '${index + 1}',
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSecondary,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

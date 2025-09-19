@@ -117,7 +117,7 @@ class RecipeCard extends StatelessWidget {
                           context,
                         ).colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(32),
                         ),
                       ),
                     ),

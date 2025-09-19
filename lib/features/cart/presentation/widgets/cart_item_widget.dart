@@ -35,7 +35,7 @@ class CartItemWidget extends StatelessWidget {
                   return Container(
                     width: 60,
                     height: 60,
-                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     child: const Icon(Icons.image_not_supported),
                   );
                 },
@@ -64,6 +64,7 @@ class CartItemWidget extends StatelessWidget {
                     '₹${item.price.toStringAsFixed(0)}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -109,34 +110,35 @@ class CartItemWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(32),
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.remove, size: 16),
+            icon: Icon(Icons.remove, size: 12, fontWeight: FontWeight.bold),
             onPressed: item.quantity > 1
                 ? () => onQuantityChanged(item.quantity - 1)
                 : null,
-            splashRadius: 20,
-            constraints: const BoxConstraints(),
             color: Theme.of(context).colorScheme.onSurface,
+            padding: EdgeInsets.zero,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               '${item.quantity}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.add, size: 16),
+            icon: Icon(Icons.add, size: 12, fontWeight: FontWeight.bold),
             onPressed: () => onQuantityChanged(item.quantity + 1),
-            splashRadius: 20,
-            constraints: const BoxConstraints(),
             color: Theme.of(context).colorScheme.onSurface,
+            padding: EdgeInsets.zero,
           ),
         ],
       ),

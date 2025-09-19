@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/daily_essentials/domain/entities/daily_essential_entity.dart';
@@ -128,9 +127,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
+                            color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -139,7 +136,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                                 ?.copyWith(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.onPrimaryContainer,
+                                  ).colorScheme.onPrimary,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
@@ -310,7 +307,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
 
                     // Stock status
                     Row(
@@ -320,11 +317,9 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                           size: 16,
                           color: product.isInStock ? Colors.green : Colors.red,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 4),
                         Text(
-                          product.isInStock
-                              ? 'In Stock (${product.stockQuantity} available)'
-                              : 'Out of Stock',
+                          product.isInStock ? 'In Stock' : 'Out of Stock',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: product.isInStock
@@ -398,19 +393,24 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
 
               // Nutritional Information
               _buildSection(
+                subtitle: 'Per 100g',
                 context,
                 'Nutritional Information',
+
                 Column(
                   children: product.nutritionalInfo.entries.map((entry) {
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 4,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             entry.key,
                             style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
                             entry.value,
@@ -453,7 +453,12 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
     );
   }
 
-  Widget _buildSection(BuildContext context, String title, Widget content) {
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    Widget content, {
+    String? subtitle,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
@@ -465,6 +470,14 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
+          if (subtitle != null && subtitle.isNotEmpty)
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           const SizedBox(height: 16),
           content,
         ],
@@ -536,9 +549,11 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
             Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.3),
                 ),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(32),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -552,13 +567,13 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                           }
                         : null,
                     icon: const Icon(Icons.remove),
-                    iconSize: 20,
+                    iconSize: 16,
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       '$_quantity',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -572,7 +587,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                           }
                         : null,
                     icon: const Icon(Icons.add),
-                    iconSize: 20,
+                    iconSize: 16,
                   ),
                 ],
               ),
@@ -587,15 +602,11 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                     ? () => _addToCart(context, product)
                     : null,
                 icon: const Icon(Icons.add_shopping_cart),
-                label: Text(
-                  product.isInStock
-                      ? 'Add to Cart - ₹${(product.price * _quantity).toStringAsFixed(0)}'
-                      : 'Out of Stock',
-                ),
+                label: Text(product.isInStock ? 'Add to Cart' : 'Out of Stock'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(32),
                   ),
                 ),
               ),

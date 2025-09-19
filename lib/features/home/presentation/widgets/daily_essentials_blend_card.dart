@@ -335,7 +335,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                         ),
                         child: Text(
