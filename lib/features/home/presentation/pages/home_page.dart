@@ -154,9 +154,8 @@ class _HomePageState extends State<HomePage> {
                         isCompact: true,
                         onTap: () {
                           // Navigate to daily essential details
-                          String productId = _mapBlendToProductId(
-                            state.readyToSellBlends[index].id,
-                          );
+                          String productId = state.readyToSellBlends[index].id;
+
                           context.push('/daily-essential-details/$productId');
                         },
                       );
@@ -362,9 +361,18 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Create Your Perfect Atta',
+                        'Create Your One Atta',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '100% Chemical Free',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.tertiary.withValues(alpha: 0.8),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -780,9 +788,8 @@ class _HomePageState extends State<HomePage> {
                   isCompact: true,
                   onTap: () {
                     // Navigate to daily essential details
-                    String productId = _mapBlendToProductId(
-                      readyToSellBlends[index].id,
-                    );
+                    String productId = readyToSellBlends[index].id;
+
                     context.push('/daily-essential-details/$productId');
                   },
                 );
@@ -858,20 +865,5 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  // Helper method to map blend IDs to daily essential product IDs
-  String _mapBlendToProductId(String blendId) {
-    // Map existing blend IDs to our daily essential product IDs
-    switch (blendId) {
-      case 'ready_1':
-        return 'atta_classic_wheat';
-      case 'ready_2':
-        return 'bedmi_flour';
-      case 'ready_3':
-        return 'missi_flour';
-      default:
-        return 'atta_classic_wheat'; // Default fallback
-    }
   }
 }

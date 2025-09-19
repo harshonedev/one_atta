@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/auth/domain/repositories/auth_repository.dart';
@@ -7,6 +8,7 @@ import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/domain/repositories/blends_repository.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 import 'package:one_atta/features/recipes/domain/repositories/recipes_repository.dart';
+import 'package:one_atta/features/daily_essentials/domain/repositories/daily_essentials_repository.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -14,11 +16,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final BlendsRepository blendsRepository;
   final RecipesRepository recipesRepository;
   final AuthRepository authRepository;
+  final DailyEssentialsRepository dailyEssentialsRepository;
+  final Logger logger = Logger();
 
   HomeBloc({
     required this.blendsRepository,
     required this.recipesRepository,
     required this.authRepository,
+    required this.dailyEssentialsRepository,
   }) : super(const HomeInitial()) {
     on<LoadHomeData>(_onLoadHomeData);
     on<SearchBlends>(_onSearchBlends);
@@ -46,8 +51,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final trendingBlends = results[1] as List<PublicBlendEntity>;
       final featuredRecipes = results[2] as List<RecipeEntity>;
 
-      // Generate ready-to-sell blends (static for now)
-      final readyToSellBlends = _getReadyToSellBlends();
+      // Generate ready-to-sell blends (can use daily essentials API if available)
+      final readyToSellBlends = await _getReadyToSellBlends();
 
       emit(
         HomeLoaded(
@@ -61,7 +66,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       emit(
         HomeError(
           message: 'Failed to load home data: ${e.toString()}',
-          readyToSellBlends: _getReadyToSellBlends(),
+          readyToSellBlends: await _getReadyToSellBlends(),
         ),
       );
     }
@@ -276,7 +281,45 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     });
   }
 
-  List<BlendItem> _getReadyToSellBlends() {
+  Future<List<BlendItem>> _getReadyToSellBlends() async {
+    // Try to load from daily essentials API if available
+    try {
+      final result = await dailyEssentialsRepository.getAllProducts();
+      return result.fold(
+        // If API fails, fall back to static data
+        (failure) => _getStaticReadyToSellBlends(),
+
+        // Convert daily essentials to blend items
+        (products) {
+          //log porducts ids
+          logger.i(
+            'Daily essentials products: ${products.map((p) => p.id).toList()}',
+          );
+          return products
+              .map(
+                (product) => BlendItem(
+                  id: product.id,
+                  name: product.name,
+                  description: product.description,
+                  imageUrl: product.imageUrls.isNotEmpty
+                      ? product.imageUrls.first
+                      : AppAssets.attaImage,
+                  category: product.category,
+                  pricePerKg: product.price,
+                  tags: product.tags,
+                ),
+              )
+              .toList();
+        },
+      );
+    } catch (e) {
+      // If any error, fall back to static data
+      logger.e('Error loading ready-to-sell blends: $e');
+      return _getStaticReadyToSellBlends();
+    }
+  }
+
+  List<BlendItem> _getStaticReadyToSellBlends() {
     return [
       const BlendItem(
         id: 'ready_1',

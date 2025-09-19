@@ -9,6 +9,7 @@ import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
 import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_impl.dart';
 
 void main() async {
@@ -39,6 +40,7 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => di.sl<RecipeDetailsBloc>()),
         BlocProvider(create: (context) => di.sl<CustomizerBloc>()),
         BlocProvider(create: (context) => di.sl<CartBloc>()),
+        BlocProvider(create: (context) => di.sl<DailyEssentialsBloc>()),
       ],
       child: MaterialApp.router(
         title: 'One Atta',

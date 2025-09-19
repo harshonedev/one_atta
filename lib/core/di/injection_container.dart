@@ -17,6 +17,7 @@ import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.da
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
 
 // Data sources
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
@@ -52,6 +53,12 @@ import 'package:one_atta/features/cart/domain/usecases/get_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/remove_from_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/update_cart_item_quantity_usecase.dart';
 
+// Daily Essentials
+import 'package:one_atta/features/daily_essentials/data/datasources/daily_essentials_remote_data_source.dart';
+import 'package:one_atta/features/daily_essentials/data/datasources/daily_essentials_remote_data_source_impl.dart';
+import 'package:one_atta/features/daily_essentials/data/repositories/daily_essentials_repository_impl.dart';
+import 'package:one_atta/features/daily_essentials/domain/repositories/daily_essentials_repository.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -80,6 +87,7 @@ Future<void> init() async {
       blendsRepository: sl(),
       recipesRepository: sl(),
       authRepository: sl(),
+      dailyEssentialsRepository: sl(),
     ),
   );
 
@@ -141,6 +149,20 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<CartLocalDataSource>(() => CartHiveDataSourceImpl());
+
+  //! Features - Daily Essentials
+  // BLoC
+  sl.registerFactory(() => DailyEssentialsBloc(repository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<DailyEssentialsRepository>(
+    () => DailyEssentialsRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<DailyEssentialsRemoteDataSource>(
+    () => DailyEssentialsRemoteDataSourceImpl(dio: sl()),
+  );
 
   //! Core
   sl.registerLazySingleton(() => http.Client());

@@ -21,7 +21,7 @@ import 'package:one_atta/features/recipes/presentation/pages/recipes_page.dart';
 import 'package:one_atta/features/more/presentation/pages/more_page.dart';
 import 'package:one_atta/features/cart/presentation/pages/cart_page.dart';
 import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essential_details_page.dart';
-import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essentials_demo_page.dart';
+import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essentials_list_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -172,7 +172,12 @@ class AppRouter {
         GoRoute(
           path: '/daily-essentials-demo',
           name: 'daily-essentials-demo',
-          builder: (context, state) => const DailyEssentialsDemoPage(),
+          builder: (context, state) => const DailyEssentialsListPage(),
+        ),
+        GoRoute(
+          path: '/daily-essentials-list',
+          name: 'daily-essentials-list',
+          builder: (context, state) => const DailyEssentialsListPage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
