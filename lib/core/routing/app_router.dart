@@ -18,6 +18,7 @@ import 'package:one_atta/features/home/presentation/pages/home_page.dart';
 import 'package:one_atta/features/orders/presentation/pages/orders_page.dart';
 import 'package:one_atta/features/reels/presentation/pages/reels_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipes_page.dart';
+import 'package:one_atta/features/recipes/presentation/pages/liked_recipes_page.dart';
 import 'package:one_atta/features/more/presentation/pages/more_page.dart';
 import 'package:one_atta/features/cart/presentation/pages/cart_page.dart';
 import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essential_details_page.dart';
@@ -178,6 +179,11 @@ class AppRouter {
           path: '/daily-essentials-list',
           name: 'daily-essentials-list',
           builder: (context, state) => const DailyEssentialsListPage(),
+        ),
+        GoRoute(
+          path: '/liked-recipes',
+          name: 'liked-recipes',
+          builder: (context, state) => const LikedRecipesPage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

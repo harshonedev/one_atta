@@ -107,7 +107,7 @@ class CompactAddToCartButton extends StatelessWidget {
           onPressed!();
         }
       },
-      icon: const Icon(Icons.add_shopping_cart),
+      icon: const Icon(Icons.add_shopping_cart, size: 20),
       style: IconButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
