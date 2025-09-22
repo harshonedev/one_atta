@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:logger/logger.dart';
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/address/data/datasources/address_remote_data_source.dart';
@@ -8,11 +9,13 @@ import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   final Dio dio;
   static const String baseUrl = ApiEndpoints.addresses;
+  final Logger logger = Logger();
 
   AddressRemoteDataSourceImpl({required this.dio});
 
   @override
   Future<AddressModel> createAddress({
+    required String token,
     required String label,
     required String addressLine1,
     String? addressLine2,
@@ -29,34 +32,34 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     String? instructions,
   }) async {
     try {
-      // Create a temporary model to use toCreateJson method
-      final tempModel = AddressModel(
-        id: '',
-        userId: '',
-        label: label,
-        addressLine1: addressLine1,
-        addressLine2: addressLine2,
-        landmark: landmark,
-        city: city,
-        state: state,
-        postalCode: postalCode,
-        country: country ?? 'India',
-        recipientName: recipientName,
-        primaryPhone: primaryPhone,
-        secondaryPhone: secondaryPhone,
-        geo: geo,
-        isDefault: isDefault ?? false,
-        instructions: instructions,
-        deleted: false,
-        fullAddress: '',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      // Get authentication token
+      dio.options.headers['Authorization'] = "Bearer $token";
 
-      final response = await dio.post(baseUrl, data: tempModel.toCreateJson());
+      final requestData = {
+        'label': label,
+        'address_line1': addressLine1,
+        if (addressLine2 != null) 'address_line2': addressLine2,
+        if (landmark != null) 'landmark': landmark,
+        'city': city,
+        'state': state,
+        'postal_code': postalCode,
+        if (country != null) 'country': country,
+        'recipient_name': recipientName,
+        'primary_phone': primaryPhone,
+        if (secondaryPhone != null) 'secondary_phone': secondaryPhone,
+        if (geo != null)
+          'geo': {'type': geo.type, 'coordinates': geo.coordinates},
+        if (isDefault != null) 'is_default': isDefault,
+        if (instructions != null) 'instructions': instructions,
+      };
+
+      // Debug log to understand what data is being sent
+      logger.i('🐛 DEBUG: Creating address with data: $requestData');
+
+      final response = await dio.post(baseUrl, data: requestData);
 
       if (response.statusCode == 201 && response.data['success'] == true) {
-        return AddressModel.fromJson(response.data['data']);
+        return AddressModel.fromJson(response.data['data']['address']);
       } else {
         throw ServerFailure(
           response.data['message'] ?? 'Failed to create address',
@@ -72,14 +75,19 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
       final message =
           e.response?.data?['message'] ?? 'Failed to create address';
       throw ServerFailure(message);
+    } on Failure {
+      rethrow;
     } catch (e) {
       throw ServerFailure('An unexpected error occurred: $e');
     }
   }
 
   @override
-  Future<List<AddressModel>> getAllAddresses() async {
+  Future<List<AddressModel>> getAllAddresses({required String token}) async {
     try {
+      // Get authentication token
+      dio.options.headers['Authorization'] = "Bearer $token";
+
       final response = await dio.get(baseUrl);
 
       if (response.statusCode == 200 && response.data['success'] == true) {
@@ -108,8 +116,15 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   }
 
   @override
-  Future<AddressModel> getAddressById(String addressId) async {
+  Future<AddressModel> getAddressById(
+    String addressId, {
+    required String token,
+  }) async {
     try {
+      // Get authentication token
+
+      dio.options.headers['Authorization'] = "Bearer $token";
+
       final response = await dio.get('$baseUrl/$addressId');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
@@ -135,6 +150,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
 
   @override
   Future<AddressModel> updateAddress({
+    required String token,
     required String addressId,
     String? label,
     String? addressLine1,
@@ -152,6 +168,9 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     String? instructions,
   }) async {
     try {
+      // Get authentication token
+      dio.options.headers['Authorization'] = "Bearer $token";
+
       final Map<String, dynamic> updateData = {};
 
       // Add only non-null fields to the update data
@@ -165,8 +184,9 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
       if (country != null) updateData['country'] = country;
       if (recipientName != null) updateData['recipient_name'] = recipientName;
       if (primaryPhone != null) updateData['primary_phone'] = primaryPhone;
-      if (secondaryPhone != null)
+      if (secondaryPhone != null) {
         updateData['secondary_phone'] = secondaryPhone;
+      }
       if (geo != null) {
         updateData['geo'] = {'type': geo.type, 'coordinates': geo.coordinates};
       }
@@ -198,8 +218,14 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   }
 
   @override
-  Future<AddressModel> deleteAddress(String addressId) async {
+  Future<AddressModel> deleteAddress(
+    String addressId, {
+    required String token,
+  }) async {
     try {
+      // Get authentication token
+      dio.options.headers['Authorization'] = "Bearer $token";
+
       final response = await dio.delete('$baseUrl/$addressId');
 
       if (response.statusCode == 200 && response.data['success'] == true) {

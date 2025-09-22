@@ -42,7 +42,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
       return _buildSingleImage(widget.imageUrls.first);
     }
 
-    return Container(
+    return SizedBox(
       height: widget.height,
       child: Stack(
         children: [
@@ -119,7 +119,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
   Widget _buildSingleImage(String imageUrl) {
     return ClipRRect(
       borderRadius: widget.borderRadius ?? BorderRadius.zero,
-      child: Container(height: widget.height, child: _buildImage(imageUrl)),
+      child: SizedBox(height: widget.height, child: _buildImage(imageUrl)),
     );
   }
 

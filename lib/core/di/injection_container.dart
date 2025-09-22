@@ -59,6 +59,13 @@ import 'package:one_atta/features/daily_essentials/data/datasources/daily_essent
 import 'package:one_atta/features/daily_essentials/data/repositories/daily_essentials_repository_impl.dart';
 import 'package:one_atta/features/daily_essentials/domain/repositories/daily_essentials_repository.dart';
 
+// Address
+import 'package:one_atta/features/address/data/datasources/address_remote_data_source.dart';
+import 'package:one_atta/features/address/data/datasources/address_remote_data_source_impl.dart';
+import 'package:one_atta/features/address/data/repositories/address_repository_impl.dart';
+import 'package:one_atta/features/address/domain/repositories/address_repository.dart';
+import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -162,6 +169,25 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<DailyEssentialsRemoteDataSource>(
     () => DailyEssentialsRemoteDataSourceImpl(dio: sl()),
+  );
+
+  //! Features - Address
+  // BLoC
+  sl.registerFactory(
+    () => AddressBloc(
+      repository: sl<AddressRepository>(),
+      authRepository: sl<AuthRepository>(),
+    ),
+  );
+
+  // Repository
+  sl.registerLazySingleton<AddressRepository>(
+    () => AddressRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<AddressRemoteDataSource>(
+    () => AddressRemoteDataSourceImpl(dio: sl()),
   );
 
   //! Core

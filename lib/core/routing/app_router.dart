@@ -23,6 +23,8 @@ import 'package:one_atta/features/more/presentation/pages/more_page.dart';
 import 'package:one_atta/features/cart/presentation/pages/cart_page.dart';
 import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essential_details_page.dart';
 import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essentials_list_page.dart';
+import 'package:one_atta/features/address/presentation/pages/addresses_list_page.dart';
+import 'package:one_atta/features/address/presentation/pages/add_edit_address_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -184,6 +186,24 @@ class AppRouter {
           path: '/liked-recipes',
           name: 'liked-recipes',
           builder: (context, state) => const LikedRecipesPage(),
+        ),
+        GoRoute(
+          path: '/addresses',
+          name: 'addresses',
+          builder: (context, state) => const AddressesListPage(),
+        ),
+        GoRoute(
+          path: '/address/add',
+          name: 'add-address',
+          builder: (context, state) => const AddEditAddressPage(),
+        ),
+        GoRoute(
+          path: '/address/edit/:addressId',
+          name: 'edit-address',
+          builder: (context, state) {
+            final addressId = state.pathParameters['addressId']!;
+            return AddEditAddressPage(addressId: addressId);
+          },
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

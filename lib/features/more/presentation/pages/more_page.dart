@@ -335,7 +335,7 @@ class MorePage extends StatelessWidget {
                 context,
                 'Address Book',
                 Icons.location_on_outlined,
-                () => _showComingSoon(context, 'Address Book'),
+                () => context.push('/addresses'),
               ),
             ],
           ),

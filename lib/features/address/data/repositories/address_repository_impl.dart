@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:logger/logger.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/address/data/datasources/address_remote_data_source.dart';
 import 'package:one_atta/features/address/domain/entities/address_entity.dart';
@@ -6,11 +7,13 @@ import 'package:one_atta/features/address/domain/repositories/address_repository
 
 class AddressRepositoryImpl implements AddressRepository {
   final AddressRemoteDataSource remoteDataSource;
+  final Logger logger = Logger();
 
   AddressRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, AddressEntity>> createAddress({
+    required String token,
     required String label,
     required String addressLine1,
     String? addressLine2,
@@ -28,6 +31,7 @@ class AddressRepositoryImpl implements AddressRepository {
   }) async {
     try {
       final result = await remoteDataSource.createAddress(
+        token: token,
         label: label,
         addressLine1: addressLine1,
         addressLine2: addressLine2,
@@ -45,16 +49,20 @@ class AddressRepositoryImpl implements AddressRepository {
       );
       return Right(result.toEntity());
     } on Failure catch (failure) {
+      logger.e('Error in createAddress: ${failure.message}');
       return Left(failure);
     } catch (e) {
+      logger.e('Unexpected error in createAddress: $e');
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
 
   @override
-  Future<Either<Failure, List<AddressEntity>>> getAllAddresses() async {
+  Future<Either<Failure, List<AddressEntity>>> getAllAddresses({
+    required String token,
+  }) async {
     try {
-      final result = await remoteDataSource.getAllAddresses();
+      final result = await remoteDataSource.getAllAddresses(token: token);
       final entities = result.map((model) => model.toEntity()).toList();
       return Right(entities);
     } on Failure catch (failure) {
@@ -66,10 +74,14 @@ class AddressRepositoryImpl implements AddressRepository {
 
   @override
   Future<Either<Failure, AddressEntity>> getAddressById(
-    String addressId,
-  ) async {
+    String addressId, {
+    required String token,
+  }) async {
     try {
-      final result = await remoteDataSource.getAddressById(addressId);
+      final result = await remoteDataSource.getAddressById(
+        addressId,
+        token: token,
+      );
       return Right(result.toEntity());
     } on Failure catch (failure) {
       return Left(failure);
@@ -80,6 +92,7 @@ class AddressRepositoryImpl implements AddressRepository {
 
   @override
   Future<Either<Failure, AddressEntity>> updateAddress({
+    required String token,
     required String addressId,
     String? label,
     String? addressLine1,
@@ -98,6 +111,7 @@ class AddressRepositoryImpl implements AddressRepository {
   }) async {
     try {
       final result = await remoteDataSource.updateAddress(
+        token: token,
         addressId: addressId,
         label: label,
         addressLine1: addressLine1,
@@ -123,9 +137,15 @@ class AddressRepositoryImpl implements AddressRepository {
   }
 
   @override
-  Future<Either<Failure, AddressEntity>> deleteAddress(String addressId) async {
+  Future<Either<Failure, AddressEntity>> deleteAddress(
+    String addressId, {
+    required String token,
+  }) async {
     try {
-      final result = await remoteDataSource.deleteAddress(addressId);
+      final result = await remoteDataSource.deleteAddress(
+        addressId,
+        token: token,
+      );
       return Right(result.toEntity());
     } on Failure catch (failure) {
       return Left(failure);

@@ -4,6 +4,7 @@ import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 abstract class AddressRemoteDataSource {
   /// Creates a new address for the authenticated user
   Future<AddressModel> createAddress({
+    required String token,
     required String label,
     required String addressLine1,
     String? addressLine2,
@@ -21,13 +22,16 @@ abstract class AddressRemoteDataSource {
   });
 
   /// Fetches all non-deleted addresses for the authenticated user
-  Future<List<AddressModel>> getAllAddresses();
+  Future<List<AddressModel>> getAllAddresses({
+    required String token
+  });
 
   /// Fetches a specific address by its ID for the authenticated user
-  Future<AddressModel> getAddressById(String addressId);
+  Future<AddressModel> getAddressById(String addressId, {required String token});
 
   /// Updates an existing address for the authenticated user
   Future<AddressModel> updateAddress({
+    required String token,
     required String addressId,
     String? label,
     String? addressLine1,
@@ -46,5 +50,5 @@ abstract class AddressRemoteDataSource {
   });
 
   /// Soft deletes an address (marks as deleted) for the authenticated user
-  Future<AddressModel> deleteAddress(String addressId);
+  Future<AddressModel> deleteAddress(String addressId, {required String token});
 }

@@ -47,7 +47,7 @@ class TotalProgressCard extends StatelessWidget {
           ],
         ),
         circularStrokeCap: CircularStrokeCap.round,
-        backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         progressColor: Theme.of(context).colorScheme.primary,
         animation: true,
         animationDuration: 800,
