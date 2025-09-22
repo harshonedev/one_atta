@@ -66,6 +66,18 @@ import 'package:one_atta/features/address/data/repositories/address_repository_i
 import 'package:one_atta/features/address/domain/repositories/address_repository.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
 
+// Profile
+import 'package:one_atta/features/profile/data/datasources/profile_local_data_source.dart';
+import 'package:one_atta/features/profile/data/datasources/profile_local_data_source_impl.dart';
+import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source.dart';
+import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source_impl.dart';
+import 'package:one_atta/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:one_atta/features/profile/domain/repositories/profile_repository.dart';
+// Profile - Updated BLoCs
+import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_bloc.dart';
+import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyalty_points_bloc.dart';
+import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -188,6 +200,30 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<AddressRemoteDataSource>(
     () => AddressRemoteDataSourceImpl(dio: sl()),
+  );
+
+  //! Features - Profile
+  // BLoCs - Specialized for better separation of concerns
+  sl.registerFactory(() => UserProfileBloc(profileRepository: sl()));
+  sl.registerFactory(() => LoyaltyPointsBloc(profileRepository: sl()));
+  sl.registerFactory(() => LoyaltyHistoryBloc(profileRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+      authLocalDataSource: sl(),
+    ),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(dio: sl()),
+  );
+
+  sl.registerLazySingleton<ProfileLocalDataSource>(
+    () => ProfileLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
   //! Core
