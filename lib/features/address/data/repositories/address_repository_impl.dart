@@ -153,4 +153,22 @@ class AddressRepositoryImpl implements AddressRepository {
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, AddressEntity>> setDefaultAddress(
+    String addressId, {
+    required String token,
+  }) async {
+    try {
+      final result = await remoteDataSource.setDefaultAddress(
+        addressId,
+        token: token,
+      );
+      return Right(result.toEntity());
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error occurred: $e'));
+    }
+  }
 }

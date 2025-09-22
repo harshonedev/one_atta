@@ -57,13 +57,35 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
       logger.i('🐛 DEBUG: Creating address with data: $requestData');
 
       final response = await dio.post(baseUrl, data: requestData);
+      logger.i(
+        '🐛 DEBUG: Response status: ${response.statusCode}, data: ${response.data}',
+      );
 
-      if (response.statusCode == 201 && response.data['success'] == true) {
-        return AddressModel.fromJson(response.data['data']['address']);
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          response.data != null &&
+          response.data['success'] == true) {
+        // Check if the response structure is as expected
+        final addressData = response.data['data'];
+        if (addressData == null) {
+          logger.e('Response data is null');
+          throw ServerFailure('Invalid response structure: missing data field');
+        }
+
+        // The address data is directly in the 'data' field, not nested under 'address'
+        if (addressData is! Map<String, dynamic>) {
+          logger.e('Invalid address data structure: $addressData');
+          throw ServerFailure('Invalid response structure: data is not a Map');
+        }
+
+        logger.i('🐛 DEBUG: Parsing address from: $addressData');
+        return AddressModel.fromJson(addressData);
       } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to create address',
+        final errorMessage =
+            response.data?['message'] ?? 'Failed to create address';
+        logger.e(
+          'Server error: $errorMessage (Status: ${response.statusCode})',
         );
+        throw ServerFailure(errorMessage);
       }
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
@@ -244,6 +266,44 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
 
       final message =
           e.response?.data?['message'] ?? 'Failed to delete address';
+      throw ServerFailure(message);
+    } catch (e) {
+      throw ServerFailure('An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<AddressModel> setDefaultAddress(
+    String addressId, {
+    required String token,
+  }) async {
+    try {
+      // Get authentication token
+      dio.options.headers['Authorization'] = "Bearer $token";
+      final Map<String, dynamic> updateData = {'is_default': true};
+
+      logger.i('Setting address as default: $addressId');
+
+      final response = await dio.put('$baseUrl/$addressId', data: updateData);
+
+      logger.i('Set default address response: ${response.data}');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return AddressModel.fromJson(response.data['data']);
+      } else {
+        throw ServerFailure(
+          response.data['message'] ?? 'Failed to update address',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        throw const NetworkFailure('Network connection failed');
+      }
+
+      final message =
+          e.response?.data?['message'] ?? 'Failed to set default address';
       throw ServerFailure(message);
     } catch (e) {
       throw ServerFailure('An unexpected error occurred: $e');

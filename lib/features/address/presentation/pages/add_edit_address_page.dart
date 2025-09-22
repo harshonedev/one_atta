@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -48,6 +49,7 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
   bool _isDefault = false;
   bool _isLoadingLocation = false;
   Set<Marker> _markers = {};
+  bool _hasOtherDefaultAddress = false;
 
   final List<String> _addressLabels = [
     'Home',
@@ -61,6 +63,16 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+
+    // Load all addresses to check default status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AddressBloc>().add(const LoadAddresses());
+
+      // Load address data if editing
+      if (widget.addressId != null) {
+        context.read<AddressBloc>().add(LoadAddressById(widget.addressId!));
+      }
+    });
   }
 
   @override
@@ -79,12 +91,13 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
   }
 
   Future<void> _getCurrentLocation() async {
+    if (!mounted) return;
     setState(() => _isLoadingLocation = true);
 
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        setState(() => _isLoadingLocation = false);
+        if (mounted) setState(() => _isLoadingLocation = false);
         return;
       }
 
@@ -92,46 +105,51 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          setState(() => _isLoadingLocation = false);
+          if (mounted) setState(() => _isLoadingLocation = false);
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        setState(() => _isLoadingLocation = false);
+        if (mounted) setState(() => _isLoadingLocation = false);
         return;
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
-      setState(() {
-        _currentLocation = LatLng(position.latitude, position.longitude);
-        _markers = {
-          Marker(
-            markerId: const MarkerId('current_location'),
-            position: _currentLocation,
-            draggable: true,
-            onDragEnd: (LatLng position) {
-              _onLocationChanged(position);
-            },
-          ),
-        };
-        _isLoadingLocation = false;
-      });
+      if (mounted) {
+        setState(() {
+          _currentLocation = LatLng(position.latitude, position.longitude);
+          _markers = {
+            Marker(
+              markerId: const MarkerId('current_location'),
+              position: _currentLocation,
+              draggable: true,
+              onDragEnd: (LatLng position) {
+                _onLocationChanged(position);
+              },
+            ),
+          };
+          _isLoadingLocation = false;
+        });
 
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(_currentLocation, 15),
-      );
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_currentLocation, 15),
+        );
 
-      _getAddressFromCoordinates(_currentLocation);
+        _getAddressFromCoordinates(_currentLocation);
+      }
     } catch (e) {
-      setState(() => _isLoadingLocation = false);
+      if (mounted) setState(() => _isLoadingLocation = false);
     }
   }
 
   void _onLocationChanged(LatLng position) {
+    if (!mounted) return;
     setState(() {
       _currentLocation = position;
       _markers = {
@@ -153,7 +171,7 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
         position.longitude,
       );
 
-      if (placemarks.isNotEmpty) {
+      if (placemarks.isNotEmpty && mounted) {
         final place = placemarks.first;
         setState(() {
           _addressLine1Controller.text =
@@ -181,6 +199,7 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
     _postalCodeController.text = address.postalCode;
     _instructionsController.text = address.instructions ?? '';
 
+    if (!mounted) return;
     setState(() {
       _selectedLabel = address.label;
       _isDefault = address.isDefault;
@@ -198,11 +217,79 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
             onDragEnd: _onLocationChanged,
           ),
         };
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLngZoom(_currentLocation, 15),
-        );
+
+        // Update map camera position after a short delay to ensure map controller is ready
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _mapController?.animateCamera(
+              CameraUpdate.newLatLngZoom(_currentLocation, 15),
+            );
+          }
+        });
       }
     });
+  }
+
+  void _updateExistingAddresses(List<AddressEntity> addresses) {
+    if (!mounted) return;
+    setState(() {
+      // Check if any other address (not the current one being edited) is default
+      _hasOtherDefaultAddress = addresses.any(
+        (address) => address.isDefault && address.id != widget.addressId,
+      );
+    });
+  }
+
+  void _onDefaultToggleChanged(bool value) {
+    if (value && _hasOtherDefaultAddress) {
+      _showDefaultAddressWarning();
+    } else {
+      if (!mounted) return;
+      setState(() => _isDefault = value);
+    }
+  }
+
+  void _showDefaultAddressWarning() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Default Address',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        content: Text(
+          'Another address is already set as default. Setting this address as default will remove the default status from the other address. Do you want to continue?',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              if (mounted) setState(() => _isDefault = true);
+            },
+            child: Text(
+              'Continue',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _submitForm() {
@@ -225,12 +312,14 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
     );
 
     // Debug log to understand what data is being sent
-    print(
-      '🐛 DEBUG: Submitting address with geo: ${geo.coordinates}, addressLine1: ${_addressLine1Controller.text.trim()}',
-    );
+    if (kDebugMode) {
+      print(
+        '🐛 DEBUG: Submitting address with geo: ${geo.coordinates}, addressLine1: ${_addressLine1Controller.text.trim()}',
+      );
+    }
 
     if (widget.addressId == null) {
-      // Create new address
+      // Create new address (without setting as default initially)
       context.read<AddressBloc>().add(
         CreateAddress(
           label: _selectedLabel,
@@ -250,14 +339,14 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
               ? null
               : _secondaryPhoneController.text.trim(),
           geo: geo,
-          isDefault: _isDefault,
+          isDefault: false, // Always set as false initially
           instructions: _instructionsController.text.trim().isEmpty
               ? null
               : _instructionsController.text.trim(),
         ),
       );
     } else {
-      // Update existing address
+      // Update existing address (without changing default status)
       context.read<AddressBloc>().add(
         UpdateAddress(
           addressId: widget.addressId!,
@@ -278,7 +367,7 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
               ? null
               : _secondaryPhoneController.text.trim(),
           geo: geo,
-          isDefault: _isDefault,
+          isDefault: null, // Don't change default status in update
           instructions: _instructionsController.text.trim().isEmpty
               ? null
               : _instructionsController.text.trim(),
@@ -306,17 +395,73 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
       ),
       body: BlocConsumer<AddressBloc, AddressState>(
         listener: (context, state) {
+          if (state is AddressesLoaded) {
+            _updateExistingAddresses(state.addresses);
+          }
+
           if (state is AddressLoaded && widget.addressId != null) {
             _populateFormWithAddress(state.address);
           }
 
-          if (state is AddressCreated || state is AddressUpdated) {
+          if (state is AddressCreated) {
+            // If user wanted this address to be default, set it after creation
+            if (_isDefault) {
+              context.read<AddressBloc>().add(
+                SetDefaultAddress(state.address.id),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Address added successfully'),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              context.pop();
+            }
+          }
+
+          if (state is AddressUpdated) {
+            // Check if default status needs to be changed
+            final currentAddress = state.address;
+            final shouldBeDefault = _isDefault;
+            final isCurrentlyDefault = currentAddress.isDefault;
+
+            if (shouldBeDefault && !isCurrentlyDefault) {
+              // User wants to set as default but it's not currently default
+              context.read<AddressBloc>().add(
+                SetDefaultAddress(currentAddress.id),
+              );
+            } else if (!shouldBeDefault && isCurrentlyDefault) {
+              // This case should not happen in normal flow, but handle it
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Address updated successfully'),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              context.pop();
+            } else {
+              // No default status change needed
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Address updated successfully'),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              context.pop();
+            }
+          }
+
+          if (state is DefaultAddressSet) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
                   widget.addressId == null
-                      ? 'Address added successfully'
-                      : 'Address updated successfully',
+                      ? 'Address added and set as default successfully'
+                      : 'Address updated and set as default successfully',
                 ),
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 behavior: SnackBarBehavior.floating,
@@ -430,8 +575,10 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
                                 padding: const EdgeInsets.only(right: 12),
                                 child: FilterChip(
                                   selected: isSelected,
-                                  onSelected: (_) =>
-                                      setState(() => _selectedLabel = label),
+                                  onSelected: (_) {
+                                    if (mounted)
+                                      setState(() => _selectedLabel = label);
+                                  },
                                   label: Text(label),
                                   selectedColor: Theme.of(
                                     context,
@@ -588,13 +735,31 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(fontWeight: FontWeight.w500),
                           ),
-                          subtitle: Text(
-                            'This address will be selected by default',
-                            style: Theme.of(context).textTheme.bodySmall,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'This address will be selected by default',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              if (_hasOtherDefaultAddress && !_isDefault)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'Another address is currently set as default',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                ),
+                            ],
                           ),
                           value: _isDefault,
-                          onChanged: (value) =>
-                              setState(() => _isDefault = value),
+                          onChanged: _onDefaultToggleChanged,
                           activeThumbColor: Theme.of(
                             context,
                           ).colorScheme.primary,
@@ -630,7 +795,8 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
                 final isLoading =
                     state is AddressCreating ||
                     state is AddressUpdating ||
-                    state is AddressLoading;
+                    state is AddressLoading ||
+                    state is DefaultAddressSetting;
 
                 return ElevatedButton(
                   onPressed: isLoading ? null : _submitForm,
@@ -638,7 +804,7 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(32),
                     ),
                     elevation: 0,
                   ),

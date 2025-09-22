@@ -73,6 +73,19 @@ class AddressDeleted extends AddressState {
   List<Object?> get props => [address];
 }
 
+class DefaultAddressSetting extends AddressState {
+  const DefaultAddressSetting();
+}
+
+class DefaultAddressSet extends AddressState {
+  final AddressEntity address;
+
+  const DefaultAddressSet(this.address);
+
+  @override
+  List<Object?> get props => [address];
+}
+
 class AddressError extends AddressState {
   final String message;
 

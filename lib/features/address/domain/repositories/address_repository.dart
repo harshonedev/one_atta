@@ -24,11 +24,14 @@ abstract class AddressRepository {
 
   /// Fetches all non-deleted addresses for the authenticated user
   Future<Either<Failure, List<AddressEntity>>> getAllAddresses({
-    required String token
+    required String token,
   });
 
   /// Fetches a specific address by its ID for the authenticated user
-  Future<Either<Failure, AddressEntity>> getAddressById(String addressId, {required String token});
+  Future<Either<Failure, AddressEntity>> getAddressById(
+    String addressId, {
+    required String token,
+  });
 
   /// Updates an existing address for the authenticated user
   Future<Either<Failure, AddressEntity>> updateAddress({
@@ -51,7 +54,14 @@ abstract class AddressRepository {
   });
 
   /// Soft deletes an address (marks as deleted) for the authenticated user
-  Future<Either<Failure, AddressEntity>> deleteAddress(String addressId, {
-    required String token
+  Future<Either<Failure, AddressEntity>> deleteAddress(
+    String addressId, {
+    required String token,
+  });
+
+  /// Sets an address as default and removes default from all other addresses
+  Future<Either<Failure, AddressEntity>> setDefaultAddress(
+    String addressId, {
+    required String token,
   });
 }

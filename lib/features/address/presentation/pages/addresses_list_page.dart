@@ -71,6 +71,12 @@ class AddressesListView extends StatelessWidget {
             );
           }
         },
+        buildWhen: (previous, current) {
+          // Rebuild only for specific states
+          return current is AddressLoading ||
+              current is AddressesLoaded ||
+              current is AddressError;
+        },
         builder: (context, state) {
           if (state is AddressLoading) {
             return _buildLoadingState(context);

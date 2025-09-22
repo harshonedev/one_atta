@@ -140,3 +140,12 @@ class DeleteAddress extends AddressEvent {
   @override
   List<Object?> get props => [addressId];
 }
+
+class SetDefaultAddress extends AddressEvent {
+  final String addressId;
+
+  const SetDefaultAddress(this.addressId);
+
+  @override
+  List<Object?> get props => [addressId];
+}

@@ -22,12 +22,13 @@ abstract class AddressRemoteDataSource {
   });
 
   /// Fetches all non-deleted addresses for the authenticated user
-  Future<List<AddressModel>> getAllAddresses({
-    required String token
-  });
+  Future<List<AddressModel>> getAllAddresses({required String token});
 
   /// Fetches a specific address by its ID for the authenticated user
-  Future<AddressModel> getAddressById(String addressId, {required String token});
+  Future<AddressModel> getAddressById(
+    String addressId, {
+    required String token,
+  });
 
   /// Updates an existing address for the authenticated user
   Future<AddressModel> updateAddress({
@@ -51,4 +52,10 @@ abstract class AddressRemoteDataSource {
 
   /// Soft deletes an address (marks as deleted) for the authenticated user
   Future<AddressModel> deleteAddress(String addressId, {required String token});
+
+  /// Sets an address as default and removes default from all other addresses
+  Future<AddressModel> setDefaultAddress(
+    String addressId, {
+    required String token,
+  });
 }

@@ -18,6 +18,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     on<CreateAddress>(_onCreateAddress);
     on<UpdateAddress>(_onUpdateAddress);
     on<DeleteAddress>(_onDeleteAddress);
+    on<SetDefaultAddress>(_onSetDefaultAddress);
   }
 
   Future<void> _onLoadAddresses(
@@ -266,6 +267,41 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
       (address) {
         logger.i('Deleted address: ${address.id}');
         emit(AddressDeleted(address));
+        // Automatically refresh addresses list
+        add(const LoadAddresses());
+      },
+    );
+  }
+
+  Future<void> _onSetDefaultAddress(
+    SetDefaultAddress event,
+    Emitter<AddressState> emit,
+  ) async {
+    emit(const DefaultAddressSetting());
+    String? tokenS;
+    final tokenResult = await authRepository.getToken();
+    tokenResult.fold(
+      (failure) => emit(AddressError(failure.message)),
+      (token) => tokenS = token,
+    );
+
+    if (tokenS == null) {
+      return emit(AddressError("User not authenticated"));
+    }
+
+    final result = await repository.setDefaultAddress(
+      event.addressId,
+      token: tokenS!,
+    );
+
+    result.fold(
+      (failure) {
+        logger.e('Failed to set default address: ${failure.message}');
+        emit(AddressError(failure.message));
+      },
+      (address) {
+        logger.i('Set default address: ${address.id}');
+        emit(DefaultAddressSet(address));
         // Automatically refresh addresses list
         add(const LoadAddresses());
       },
