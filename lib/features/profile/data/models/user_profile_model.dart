@@ -44,6 +44,24 @@ class UserProfileModel extends UserProfileEntity {
     );
   }
 
+  factory UserProfileModel.fromEntity(UserProfileEntity entity) {
+    return UserProfileModel(
+      id: entity.id,
+      name: entity.name,
+      email: entity.email,
+      mobile: entity.mobile,
+      isVerified: entity.isVerified,
+      isProfileComplete: entity.isProfileComplete,
+      role: entity.role,
+      loyaltyPoints: entity.loyaltyPoints,
+      profilePicture: entity.profilePicture,
+      likedRecipes: entity.likedRecipes,
+      addresses: entity.addresses,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       '_id': id,

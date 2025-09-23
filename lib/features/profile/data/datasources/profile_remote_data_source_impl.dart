@@ -1,15 +1,18 @@
 import 'package:dio/dio.dart';
-import 'package:one_atta/core/constants/constants.dart';
+import 'package:one_atta/core/constants/api_endpoints.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source.dart';
-import 'package:one_atta/features/profile/data/models/loyalty_transaction_model.dart';
+import 'package:one_atta/features/profile/data/models/loyalty_points_response_model.dart';
+import 'package:one_atta/features/profile/data/models/loyalty_transaction_model.dart'
+    hide LoyaltyPointsResponseModel, RedemptionResponseModel;
+import 'package:one_atta/features/profile/data/models/profile_update_model.dart';
+import 'package:one_atta/features/profile/data/models/redemption_response_model.dart';
 import 'package:one_atta/features/profile/data/models/user_profile_model.dart';
-import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   final Dio dio;
-  static const String baseUrl = ApiEndpoints.auth;
-  static const String loyaltyBaseUrl = '${ApiEndpoints.baseUrl}/loyalty';
+  static final String baseUrl = ApiEndpoints.auth;
+  static final String loyaltyBaseUrl = '${ApiEndpoints.baseUrl}/loyalty';
 
   ProfileRemoteDataSourceImpl({required this.dio});
 
@@ -57,12 +60,12 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<UserProfileModel> updateProfile(
     String token,
-    ProfileUpdateEntity profileUpdate,
+    ProfileUpdateModel profileUpdate,
   ) async {
     try {
       final response = await dio.put(
         '$baseUrl/profile',
-        data: profileUpdate.toMap(),
+        data: profileUpdate.toJson(),
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -79,16 +82,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        // Handle validation errors
-        final message = e.response?.data?['message'] ?? 'Invalid data provided';
-        throw ValidationFailure(message);
-      }
       if (e.response?.statusCode == 401) {
         throw UnauthorizedFailure('Authentication failed');
       }
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('User not found');
+      if (e.response?.statusCode == 400) {
+        throw ValidationFailure(
+          e.response?.data?['errors'] ?? 'Invalid data provided',
+        );
       }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
@@ -130,10 +130,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        final message = e.response?.data?['message'] ?? 'Invalid order data';
-        throw ValidationFailure(message);
-      }
       if (e.response?.statusCode == 401) {
         throw UnauthorizedFailure('Authentication failed');
       }
@@ -142,7 +138,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           e.type == DioExceptionType.connectionError) {
         throw const NetworkFailure('Network connection failed');
       }
-
       final message =
           e.response?.data?['message'] ?? 'Failed to earn points from order';
       throw ServerFailure(message);
@@ -172,14 +167,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return LoyaltyPointsResponseModel.fromJson(response.data);
       } else {
         throw ServerFailure(
-          response.data['message'] ?? 'Failed to earn points from sharing',
+          response.data['message'] ?? 'Failed to earn points from share',
         );
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        final message = e.response?.data?['message'] ?? 'Invalid blend data';
-        throw ValidationFailure(message);
-      }
       if (e.response?.statusCode == 401) {
         throw UnauthorizedFailure('Authentication failed');
       }
@@ -188,9 +179,8 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           e.type == DioExceptionType.connectionError) {
         throw const NetworkFailure('Network connection failed');
       }
-
       final message =
-          e.response?.data?['message'] ?? 'Failed to earn points from sharing';
+          e.response?.data?['message'] ?? 'Failed to earn points from share';
       throw ServerFailure(message);
     } catch (e) {
       throw ServerFailure('An unexpected error occurred: $e');
@@ -222,10 +212,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        final message = e.response?.data?['message'] ?? 'Invalid review data';
-        throw ValidationFailure(message);
-      }
       if (e.response?.statusCode == 401) {
         throw UnauthorizedFailure('Authentication failed');
       }
@@ -234,7 +220,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           e.type == DioExceptionType.connectionError) {
         throw const NetworkFailure('Network connection failed');
       }
-
       final message =
           e.response?.data?['message'] ?? 'Failed to earn points from review';
       throw ServerFailure(message);
@@ -252,7 +237,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     try {
       final response = await dio.post(
         '$loyaltyBaseUrl/redeem',
-        data: {'orderId': orderId, 'pointsToRedeem': pointsToRedeem},
+        data: {'orderId': orderId, 'points': pointsToRedeem},
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -269,20 +254,19 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         );
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        final message =
-            e.response?.data?['message'] ?? 'Invalid redemption data';
-        throw ValidationFailure(message);
-      }
       if (e.response?.statusCode == 401) {
         throw UnauthorizedFailure('Authentication failed');
+      }
+      if (e.response?.statusCode == 400) {
+        throw ValidationFailure(
+          e.response?.data?['errors'] ?? 'Invalid data for redemption',
+        );
       }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.connectionError) {
         throw const NetworkFailure('Network connection failed');
       }
-
       final message = e.response?.data?['message'] ?? 'Failed to redeem points';
       throw ServerFailure(message);
     } catch (e) {
@@ -307,32 +291,26 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (response.statusCode == 200 && response.data['success'] == true) {
-        final historyResponse = LoyaltyHistoryResponseModel.fromJson(
-          response.data,
-        );
-        return historyResponse.history;
+        final List<dynamic> transactionsJson = response.data['data'];
+        return transactionsJson
+            .map((json) => LoyaltyTransactionModel.fromJson(json))
+            .toList();
       } else {
         throw ServerFailure(
-          response.data['message'] ??
-              'Failed to get loyalty transaction history',
+          response.data['message'] ?? 'Failed to get loyalty history',
         );
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw UnauthorizedFailure('Authentication failed');
       }
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('User not found');
-      }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.connectionError) {
         throw const NetworkFailure('Network connection failed');
       }
-
       final message =
-          e.response?.data?['message'] ??
-          'Failed to get loyalty transaction history';
+          e.response?.data?['message'] ?? 'Failed to get loyalty history';
       throw ServerFailure(message);
     } catch (e) {
       throw ServerFailure('An unexpected error occurred: $e');

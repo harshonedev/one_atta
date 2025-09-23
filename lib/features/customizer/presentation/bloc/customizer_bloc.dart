@@ -1,10 +1,13 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:logger/logger.dart';
 import 'package:one_atta/features/customizer/presentation/models/ingredient.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_analysis_entity.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_request_entity.dart';
+import 'package:one_atta/features/customizer/domain/entities/ingredient_entity.dart';
 import 'package:one_atta/features/customizer/domain/repositories/customizer_repository.dart';
+import 'package:one_atta/features/customizer/domain/usecases/get_ingredients.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Events
@@ -16,6 +19,8 @@ abstract class CustomizerEvent extends Equatable {
 }
 
 class InitializeCustomizer extends CustomizerEvent {}
+
+class LoadIngredients extends CustomizerEvent {}
 
 class SelectPacketSize extends CustomizerEvent {
   final PacketSize packetSize;
@@ -85,6 +90,7 @@ class CustomizerState extends Equatable {
   final bool isMaxCapacityReached;
   final bool isAnalyzing;
   final bool isSaving;
+  final bool isLoadingIngredients;
   final BlendAnalysisEntity? analysisResult;
   final SavedBlendEntity? savedBlend;
   final String? error;
@@ -97,6 +103,7 @@ class CustomizerState extends Equatable {
     required this.isMaxCapacityReached,
     this.isAnalyzing = false,
     this.isSaving = false,
+    this.isLoadingIngredients = false,
     this.analysisResult,
     this.savedBlend,
     this.error,
@@ -143,6 +150,7 @@ class CustomizerState extends Equatable {
     bool? isMaxCapacityReached,
     bool? isAnalyzing,
     bool? isSaving,
+    bool? isLoadingIngredients,
     BlendAnalysisEntity? analysisResult,
     SavedBlendEntity? savedBlend,
     String? error,
@@ -158,6 +166,7 @@ class CustomizerState extends Equatable {
       isMaxCapacityReached: isMaxCapacityReached ?? this.isMaxCapacityReached,
       isAnalyzing: isAnalyzing ?? this.isAnalyzing,
       isSaving: isSaving ?? this.isSaving,
+      isLoadingIngredients: isLoadingIngredients ?? this.isLoadingIngredients,
       analysisResult: clearAnalysisResult
           ? null
           : (analysisResult ?? this.analysisResult),
@@ -175,6 +184,7 @@ class CustomizerState extends Equatable {
     isMaxCapacityReached,
     isAnalyzing,
     isSaving,
+    isLoadingIngredients,
     analysisResult,
     savedBlend,
     error,
@@ -186,11 +196,15 @@ enum PacketSize { kg1, kg3, kg5 }
 // Bloc
 class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
   final CustomizerRepository customizerRepository;
+  final GetIngredientsUseCase getIngredientsUseCase;
   final Logger logger = Logger();
 
-  CustomizerBloc({required this.customizerRepository})
-    : super(CustomizerState.initial()) {
+  CustomizerBloc({
+    required this.customizerRepository,
+    required this.getIngredientsUseCase,
+  }) : super(CustomizerState.initial()) {
     on<InitializeCustomizer>(_onInitializeCustomizer);
+    on<LoadIngredients>(_onLoadIngredients);
     on<SelectPacketSize>(_onSelectPacketSize);
     on<UpdateWheatPercentage>(_onUpdateWheatPercentage);
     on<AddIngredient>(_onAddIngredient);
@@ -206,6 +220,51 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     Emitter<CustomizerState> emit,
   ) {
     // Already initialized in initial state
+  }
+
+  void _onLoadIngredients(
+    LoadIngredients event,
+    Emitter<CustomizerState> emit,
+  ) async {
+    emit(state.copyWith(isLoadingIngredients: true));
+
+    final result = await getIngredientsUseCase();
+
+    result.fold(
+      (failure) {
+        logger.e('Failed to load ingredients: ${failure.toString()}');
+        emit(
+          state.copyWith(
+            isLoadingIngredients: false,
+            error: failure.toString(),
+          ),
+        );
+      },
+      (ingredientEntities) {
+        logger.i(
+          'Successfully loaded ${ingredientEntities.length} ingredients',
+        );
+
+        // Convert entities to presentation models
+        final ingredients = ingredientEntities.map((entity) {
+          return Ingredient(
+            name: entity.name,
+            percentage: 0,
+            icon: _getIconForIngredient(
+              entity.name,
+            ), // Helper method to get icon
+          );
+        }).toList();
+
+        emit(
+          state.copyWith(
+            isLoadingIngredients: false,
+            availableIngredients: ingredients,
+            clearError: true,
+          ),
+        );
+      },
+    );
   }
 
   void _onSelectPacketSize(
@@ -559,5 +618,36 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     }
 
     return adjustedIngredients;
+  }
+
+  /// Helper method to get appropriate icon for ingredient name
+  IconData _getIconForIngredient(String ingredientName) {
+    final name = ingredientName.toLowerCase();
+
+    if (name.contains('wheat') || name.contains('atta')) {
+      return MdiIcons.grain;
+    } else if (name.contains('chana') || name.contains('gram')) {
+      return MdiIcons.seed;
+    } else if (name.contains('makka') || name.contains('corn')) {
+      return MdiIcons.corn;
+    } else if (name.contains('bajra') || name.contains('millet')) {
+      return MdiIcons.barley;
+    } else if (name.contains('malt')) {
+      return MdiIcons.grain;
+    } else if (name.contains('ragi') || name.contains('finger')) {
+      return MdiIcons.seedOutline;
+    } else if (name.contains('rice')) {
+      return MdiIcons.rice;
+    } else if (name.contains('oat')) {
+      return MdiIcons.grain;
+    } else if (name.contains('barley')) {
+      return MdiIcons.barley;
+    } else if (name.contains('quinoa')) {
+      return MdiIcons.seed;
+    } else if (name.contains('almond')) {
+      return MdiIcons.peanut;
+    } else {
+      return MdiIcons.grain; // Default fallback icon
+    }
   }
 }

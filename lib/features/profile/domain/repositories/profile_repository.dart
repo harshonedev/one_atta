@@ -1,7 +1,11 @@
 import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/failures.dart';
+import 'package:one_atta/features/profile/domain/entities/loyalty_points_response_entity.dart';
 import 'package:one_atta/features/profile/domain/entities/loyalty_transaction_entity.dart';
-import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/profile_update_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/redemption_response_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart'
+    hide ProfileUpdateEntity;
 
 abstract class ProfileRepository {
   /// Get the current user's complete profile information
@@ -28,26 +32,26 @@ abstract class ProfileRepository {
 
   /// Earn points from an order
   /// Awards points based on order amount and current loyalty settings
-  Future<Either<Failure, LoyaltyPointsResponse>> earnPointsFromOrder({
+  Future<Either<Failure, LoyaltyPointsResponseEntity>> earnPointsFromOrder({
     required double amount,
     required String orderId,
   });
 
   /// Earn points from sharing a blend
   /// Awards fixed points when users share their custom blends
-  Future<Either<Failure, LoyaltyPointsResponse>> earnPointsFromShare({
+  Future<Either<Failure, LoyaltyPointsResponseEntity>> earnPointsFromShare({
     required String blendId,
   });
 
   /// Earn points from submitting a review
   /// Awards fixed points when users submit product/recipe reviews
-  Future<Either<Failure, LoyaltyPointsResponse>> earnPointsFromReview({
+  Future<Either<Failure, LoyaltyPointsResponseEntity>> earnPointsFromReview({
     required String reviewId,
   });
 
   /// Redeem loyalty points on an order
   /// Allows users to redeem accumulated points for discounts
-  Future<Either<Failure, RedemptionResponse>> redeemPoints({
+  Future<Either<Failure, RedemptionResponseEntity>> redeemPoints({
     required String orderId,
     required int pointsToRedeem,
   });

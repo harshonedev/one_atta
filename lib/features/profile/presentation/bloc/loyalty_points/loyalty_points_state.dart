@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/features/profile/domain/entities/loyalty_points_response_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/redemption_response_entity.dart';
 import 'package:one_atta/features/profile/domain/entities/loyalty_transaction_entity.dart';
 
 abstract class LoyaltyPointsState extends Equatable {
@@ -25,7 +27,7 @@ class LoyaltyPointsLoading extends LoyaltyPointsState {
 
 // Success States
 class PointsEarned extends LoyaltyPointsState {
-  final LoyaltyPointsResponse response;
+  final LoyaltyPointsResponseEntity response;
   final LoyaltyTransactionReason reason;
 
   const PointsEarned({required this.response, required this.reason});
@@ -35,7 +37,7 @@ class PointsEarned extends LoyaltyPointsState {
 
   /// Get a user-friendly success message
   String get successMessage {
-    if (!response.success || response.points <= 0) {
+    if (response.points <= 0) {
       return response.message;
     }
 
@@ -53,7 +55,7 @@ class PointsEarned extends LoyaltyPointsState {
 }
 
 class PointsRedeemed extends LoyaltyPointsState {
-  final RedemptionResponse response;
+  final RedemptionResponseEntity response;
 
   const PointsRedeemed({required this.response});
 

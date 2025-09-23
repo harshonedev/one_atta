@@ -1,6 +1,9 @@
-import 'package:one_atta/features/profile/data/models/loyalty_transaction_model.dart';
+import 'package:one_atta/features/profile/data/models/loyalty_points_response_model.dart';
+import 'package:one_atta/features/profile/data/models/loyalty_transaction_model.dart'
+    hide LoyaltyPointsResponseModel, RedemptionResponseModel;
+import 'package:one_atta/features/profile/data/models/profile_update_model.dart';
+import 'package:one_atta/features/profile/data/models/redemption_response_model.dart';
 import 'package:one_atta/features/profile/data/models/user_profile_model.dart';
-import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
 
 abstract class ProfileRemoteDataSource {
   /// Get user profile from the API
@@ -9,7 +12,7 @@ abstract class ProfileRemoteDataSource {
   /// Update user profile
   Future<UserProfileModel> updateProfile(
     String token,
-    ProfileUpdateEntity profileUpdate,
+    ProfileUpdateModel profileUpdate,
   );
 
   /// Earn points from order

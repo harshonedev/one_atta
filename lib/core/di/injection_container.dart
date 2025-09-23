@@ -15,6 +15,9 @@ import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
+import 'package:one_atta/features/customizer/domain/repositories/ingredient_repository.dart';
+import 'package:one_atta/features/customizer/domain/usecases/get_ingredients.dart';
+import 'package:one_atta/features/customizer/data/repositories/ingredient_repository_impl.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
@@ -128,11 +131,21 @@ Future<void> init() async {
 
   //! Features - Customizer
   // BLoC
-  sl.registerFactory(() => CustomizerBloc(customizerRepository: sl()));
+  sl.registerFactory(
+    () =>
+        CustomizerBloc(customizerRepository: sl(), getIngredientsUseCase: sl()),
+  );
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetIngredientsUseCase(sl()));
 
   // Repository
   sl.registerLazySingleton<CustomizerRepository>(
     () => CustomizerRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<IngredientRepository>(
+    () => IngredientRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Data sources

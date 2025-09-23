@@ -54,6 +54,19 @@ class LoyaltyTransactionModel extends LoyaltyTransactionEntity {
       redeemedAt: redeemedAt,
     );
   }
+
+  factory LoyaltyTransactionModel.fromEntity(LoyaltyTransactionEntity entity) {
+    return LoyaltyTransactionModel(
+      id: entity.id,
+      userId: entity.userId,
+      reason: entity.reason,
+      referenceId: entity.referenceId,
+      points: entity.points,
+      description: entity.description,
+      earnedAt: entity.earnedAt,
+      redeemedAt: entity.redeemedAt,
+    );
+  }
 }
 
 class LoyaltyHistoryResponseModel {

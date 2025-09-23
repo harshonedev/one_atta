@@ -4,10 +4,15 @@ import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:one_atta/features/profile/data/datasources/profile_local_data_source.dart';
 import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source.dart';
-import 'package:one_atta/features/profile/data/models/loyalty_transaction_model.dart';
+import 'package:one_atta/features/profile/data/models/profile_update_model.dart';
 import 'package:one_atta/features/profile/data/models/user_profile_model.dart';
+import 'package:one_atta/features/profile/data/models/loyalty_transaction_model.dart';
+import 'package:one_atta/features/profile/domain/entities/loyalty_points_response_entity.dart';
 import 'package:one_atta/features/profile/domain/entities/loyalty_transaction_entity.dart';
-import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/profile_update_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/redemption_response_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart'
+    hide ProfileUpdateEntity;
 import 'package:one_atta/features/profile/domain/repositories/profile_repository.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -48,11 +53,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
       await localDataSource.cacheUserProfile(result);
 
       return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
+    } on Failure catch (e) {
+      logger.e('Error getting user profile: ${e.message}');
+      return Left(e);
     } catch (e) {
       logger.e('Unexpected error getting user profile: $e');
-      return Left(ServerFailure('Unexpected error occurred: $e'));
+      return Left(ServerFailure('An unexpected error occurred'));
     }
   }
 
@@ -66,77 +72,24 @@ class ProfileRepositoryImpl implements ProfileRepository {
         return Left(UnauthorizedFailure('User is not authenticated'));
       }
 
-      logger.i('Updating user profile');
-      final result = await remoteDataSource.updateProfile(token, profileUpdate);
+      final updateModel = ProfileUpdateModel.fromEntity(profileUpdate);
+      final result = await remoteDataSource.updateProfile(token, updateModel);
 
-      // Cache the updated profile
+      // Invalidate and re-cache the updated profile
       await localDataSource.cacheUserProfile(result);
 
       return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
+    } on Failure catch (e) {
+      logger.e('Error updating profile: ${e.message}');
+      return Left(e);
     } catch (e) {
-      logger.e('Unexpected error updating user profile: $e');
-      return Left(ServerFailure('Unexpected error occurred: $e'));
+      logger.e('Unexpected error updating profile: $e');
+      return Left(ServerFailure('An unexpected error occurred'));
     }
   }
 
   @override
-  Future<Either<Failure, void>> cacheUserProfile(
-    UserProfileEntity profile,
-  ) async {
-    try {
-      // Create model from entity for caching
-      final profileModel = UserProfileModel(
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        mobile: profile.mobile,
-        isVerified: profile.isVerified,
-        isProfileComplete: profile.isProfileComplete,
-        role: profile.role,
-        loyaltyPoints: profile.loyaltyPoints,
-        profilePicture: profile.profilePicture,
-        likedRecipes: profile.likedRecipes,
-        addresses: profile.addresses,
-        createdAt: profile.createdAt,
-        updatedAt: profile.updatedAt,
-      );
-      await localDataSource.cacheUserProfile(profileModel);
-      return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(CacheFailure('Failed to cache user profile: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, UserProfileEntity?>> getCachedUserProfile() async {
-    try {
-      final cachedProfile = await localDataSource.getCachedUserProfile();
-      return Right(cachedProfile?.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(CacheFailure('Failed to get cached user profile: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> clearCachedProfile() async {
-    try {
-      await localDataSource.clearCachedProfile();
-      return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(CacheFailure('Failed to clear cached profile: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, LoyaltyPointsResponse>> earnPointsFromOrder({
+  Future<Either<Failure, LoyaltyPointsResponseEntity>> earnPointsFromOrder({
     required double amount,
     required String orderId,
   }) async {
@@ -152,50 +105,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
         amount: amount,
         orderId: orderId,
       );
-
-      // Clear cached profile to force refresh with new points
-      await localDataSource.clearCachedProfile();
-
       return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
+    } on Failure catch (e) {
+      logger.e('Error earning points from order: ${e.message}');
+      return Left(e);
     } catch (e) {
       logger.e('Unexpected error earning points from order: $e');
-      return Left(ServerFailure('Unexpected error occurred: $e'));
+      return Left(ServerFailure('An unexpected error occurred'));
     }
   }
 
   @override
-  Future<Either<Failure, LoyaltyPointsResponse>> earnPointsFromShare({
-    required String blendId,
-  }) async {
-    try {
-      final token = await authLocalDataSource.getToken();
-      if (token == null) {
-        return Left(UnauthorizedFailure('User is not authenticated'));
-      }
-
-      logger.i('Earning points from sharing blend: $blendId');
-      final result = await remoteDataSource.earnPointsFromShare(
-        token: token,
-        blendId: blendId,
-      );
-
-      // Clear cached profile and loyalty history to force refresh
-      await localDataSource.clearCachedProfile();
-      await localDataSource.clearCachedLoyaltyHistory();
-
-      return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      logger.e('Unexpected error earning points from share: $e');
-      return Left(ServerFailure('Unexpected error occurred: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, LoyaltyPointsResponse>> earnPointsFromReview({
+  Future<Either<Failure, LoyaltyPointsResponseEntity>> earnPointsFromReview({
     required String reviewId,
   }) async {
     try {
@@ -209,22 +130,43 @@ class ProfileRepositoryImpl implements ProfileRepository {
         token: token,
         reviewId: reviewId,
       );
-
-      // Clear cached profile and loyalty history to force refresh
-      await localDataSource.clearCachedProfile();
-      await localDataSource.clearCachedLoyaltyHistory();
-
       return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
+    } on Failure catch (e) {
+      logger.e('Error earning points from review: ${e.message}');
+      return Left(e);
     } catch (e) {
       logger.e('Unexpected error earning points from review: $e');
-      return Left(ServerFailure('Unexpected error occurred: $e'));
+      return Left(ServerFailure('An unexpected error occurred'));
     }
   }
 
   @override
-  Future<Either<Failure, RedemptionResponse>> redeemPoints({
+  Future<Either<Failure, LoyaltyPointsResponseEntity>> earnPointsFromShare({
+    required String blendId,
+  }) async {
+    try {
+      final token = await authLocalDataSource.getToken();
+      if (token == null) {
+        return Left(UnauthorizedFailure('User is not authenticated'));
+      }
+
+      logger.i('Earning points from share: $blendId');
+      final result = await remoteDataSource.earnPointsFromShare(
+        token: token,
+        blendId: blendId,
+      );
+      return Right(result.toEntity());
+    } on Failure catch (e) {
+      logger.e('Error earning points from share: ${e.message}');
+      return Left(e);
+    } catch (e) {
+      logger.e('Unexpected error earning points from share: $e');
+      return Left(ServerFailure('An unexpected error occurred'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, RedemptionResponseEntity>> redeemPoints({
     required String orderId,
     required int pointsToRedeem,
   }) async {
@@ -234,23 +176,19 @@ class ProfileRepositoryImpl implements ProfileRepository {
         return Left(UnauthorizedFailure('User is not authenticated'));
       }
 
-      logger.i('Redeeming points: $pointsToRedeem for order: $orderId');
+      logger.i('Redeeming $pointsToRedeem points for order: $orderId');
       final result = await remoteDataSource.redeemPoints(
         token: token,
         orderId: orderId,
         pointsToRedeem: pointsToRedeem,
       );
-
-      // Clear cached profile and loyalty history to force refresh
-      await localDataSource.clearCachedProfile();
-      await localDataSource.clearCachedLoyaltyHistory();
-
       return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
+    } on Failure catch (e) {
+      logger.e('Error redeeming points: ${e.message}');
+      return Left(e);
     } catch (e) {
       logger.e('Unexpected error redeeming points: $e');
-      return Left(ServerFailure('Unexpected error occurred: $e'));
+      return Left(ServerFailure('An unexpected error occurred'));
     }
   }
 
@@ -263,41 +201,65 @@ class ProfileRepositoryImpl implements ProfileRepository {
         return Left(UnauthorizedFailure('User is not authenticated'));
       }
 
-      final user = await authLocalDataSource.getUser();
-      if (user == null) {
-        return Left(UnauthorizedFailure('User data not found'));
-      }
-
-      // Check if cached loyalty history is fresh
       final isCacheFresh = await localDataSource.isLoyaltyHistoryCacheFresh();
       if (isCacheFresh) {
         final cachedHistory = await localDataSource.getCachedLoyaltyHistory();
-        if (cachedHistory != null && cachedHistory.isNotEmpty) {
-          logger.i('Returning cached loyalty transaction history');
-          return Right(
-            cachedHistory.map((transaction) => transaction.toEntity()).toList(),
-          );
+        if (cachedHistory != null) {
+          logger.i('Returning cached loyalty history');
+          return Right(cachedHistory.map((e) => e.toEntity()).toList());
         }
       }
 
-      // Fetch from remote if cache is not fresh or doesn't exist
-      logger.i('Fetching loyalty transaction history from remote');
-      final result = await remoteDataSource.getLoyaltyTransactionHistory(
-        token: token,
-        userId: user.id,
-      );
-
-      // Cache the result
-      await localDataSource.cacheLoyaltyHistory(result);
-
-      return Right(
-        result.map((transaction) => transaction.toEntity()).toList(),
-      );
-    } on Failure catch (failure) {
-      return Left(failure);
+      logger.i('Fetching loyalty history from remote');
+      final user = await getUserProfile();
+      return user.fold((failure) => Left(failure), (userProfile) async {
+        final result = await remoteDataSource.getLoyaltyTransactionHistory(
+          token: token,
+          userId: userProfile.id,
+        );
+        await localDataSource.cacheLoyaltyHistory(result);
+        return Right(result.map((e) => e.toEntity()).toList());
+      });
+    } on Failure catch (e) {
+      logger.e('Error getting loyalty history: ${e.message}');
+      return Left(e);
     } catch (e) {
-      logger.e('Unexpected error getting loyalty transaction history: $e');
-      return Left(ServerFailure('Unexpected error occurred: $e'));
+      logger.e('Unexpected error getting loyalty history: $e');
+      return Left(ServerFailure('An unexpected error occurred'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> cacheUserProfile(
+    UserProfileEntity profile,
+  ) async {
+    try {
+      await localDataSource.cacheUserProfile(
+        UserProfileModel.fromEntity(profile),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to cache user profile'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserProfileEntity?>> getCachedUserProfile() async {
+    try {
+      final cachedProfile = await localDataSource.getCachedUserProfile();
+      return Right(cachedProfile?.toEntity());
+    } catch (e) {
+      return Left(CacheFailure('Failed to get cached user profile'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> clearCachedProfile() async {
+    try {
+      await localDataSource.clearCachedProfile();
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to clear cached profile'));
     }
   }
 
@@ -306,26 +268,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
     List<LoyaltyTransactionEntity> transactions,
   ) async {
     try {
-      // Convert entities to models for caching
-      final transactionModels = transactions.map((transaction) {
-        return LoyaltyTransactionModel(
-          id: transaction.id,
-          userId: transaction.userId,
-          reason: transaction.reason,
-          referenceId: transaction.referenceId,
-          points: transaction.points,
-          description: transaction.description,
-          earnedAt: transaction.earnedAt,
-          redeemedAt: transaction.redeemedAt,
-        );
-      }).toList();
-
-      await localDataSource.cacheLoyaltyHistory(transactionModels);
+      final models = transactions
+          .map((e) => LoyaltyTransactionModel.fromEntity(e))
+          .toList();
+      await localDataSource.cacheLoyaltyHistory(models);
       return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
     } catch (e) {
-      return Left(CacheFailure('Failed to cache loyalty history: $e'));
+      return Left(CacheFailure('Failed to cache loyalty history'));
     }
   }
 
@@ -334,13 +283,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
   getCachedLoyaltyHistory() async {
     try {
       final cachedHistory = await localDataSource.getCachedLoyaltyHistory();
-      return Right(
-        cachedHistory?.map((transaction) => transaction.toEntity()).toList(),
-      );
-    } on Failure catch (failure) {
-      return Left(failure);
+      return Right(cachedHistory?.map((e) => e.toEntity()).toList());
     } catch (e) {
-      return Left(CacheFailure('Failed to get cached loyalty history: $e'));
+      return Left(CacheFailure('Failed to get cached loyalty history'));
     }
   }
 
@@ -349,10 +294,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await localDataSource.clearCachedLoyaltyHistory();
       return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
     } catch (e) {
-      return Left(CacheFailure('Failed to clear cached loyalty history: $e'));
+      return Left(CacheFailure('Failed to clear cached loyalty history'));
     }
   }
 }

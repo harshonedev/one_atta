@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:one_atta/core/constants/constants.dart';
+import 'package:one_atta/core/constants/constants.dart' as constants;
+import 'package:one_atta/core/constants/api_endpoints.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:one_atta/features/customizer/data/datasources/customizer_remote_data_source.dart';
 import 'package:one_atta/features/customizer/data/models/blend_analysis_model.dart';
 import 'package:one_atta/features/customizer/data/models/blend_request_model.dart';
+import 'package:one_atta/features/customizer/data/models/ingredient_model.dart';
 import 'package:logger/logger.dart';
 
 class CustomizerRemoteDataSourceImpl implements CustomizerRemoteDataSource {
@@ -32,7 +34,7 @@ class CustomizerRemoteDataSourceImpl implements CustomizerRemoteDataSource {
 
       final headers = <String, dynamic>{
         'Content-Type': 'application/json',
-        'x-api-key': AppConstants.appAPIKey,
+        'x-api-key': constants.AppConstants.appAPIKey,
         'Authorization': 'Bearer $token',
       };
 
@@ -113,7 +115,7 @@ class CustomizerRemoteDataSourceImpl implements CustomizerRemoteDataSource {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
-            'x-api-key': AppConstants.appAPIKey,
+            'x-api-key': constants.AppConstants.appAPIKey,
           },
         ),
       );
@@ -166,6 +168,84 @@ class CustomizerRemoteDataSourceImpl implements CustomizerRemoteDataSource {
       }
     } catch (e) {
       logger.e('Unexpected error in saveBlend: $e');
+      if (e is Failure) rethrow;
+      throw ServerFailure('Unexpected error: $e');
+    }
+  }
+
+  @override
+  Future<List<IngredientModel>> getIngredients() async {
+    final logger = Logger();
+    try {
+      logger.i('Fetching ingredients from API');
+
+      // Note: According to the API docs, ingredients endpoint doesn't require authentication
+      final headers = <String, dynamic>{
+        'Content-Type': 'application/json',
+        'x-api-key': constants.AppConstants.appAPIKey,
+      };
+
+      final response = await dio.get(
+        '${ApiEndpoints.ingredients}',
+        options: Options(headers: headers),
+      );
+
+      if (response.statusCode == 200) {
+        logger.i('Successfully received ingredients response');
+        logger.d('Response data structure: ${response.data}');
+
+        // Parse the API response
+        final apiResponse = IngredientsApiResponse.fromJson(response.data);
+
+        if (apiResponse.success) {
+          logger.i(
+            'Successfully parsed ${apiResponse.data.length} ingredients',
+          );
+          return apiResponse.data;
+        } else {
+          logger.e(
+            'API returned success: false with message: ${apiResponse.message}',
+          );
+          throw ServerFailure(apiResponse.message);
+        }
+      } else {
+        logger.e('Failed to fetch ingredients: ${response.statusCode}');
+        throw ServerFailure(
+          'Failed to fetch ingredients: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      logger.e('DioException in getIngredients: ${e.message}');
+
+      if (e.response != null) {
+        switch (e.response!.statusCode) {
+          case 400:
+            logger.e('Bad request: ${e.response!.data}');
+            throw ValidationFailure(
+              e.response!.data['message'] ?? 'Invalid request',
+            );
+          case 500:
+            logger.e('Server error: ${e.response!.data}');
+            throw ServerFailure(
+              e.response!.data['message'] ?? 'Internal server error',
+            );
+          default:
+            logger.e('Server error: ${e.response!.statusCode}');
+            throw ServerFailure('Server error: ${e.response!.statusCode}');
+        }
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        logger.e('Connection timeout');
+        throw NetworkFailure('Connection timeout');
+      } else if (e.type == DioExceptionType.connectionError) {
+        logger.e('No internet connection');
+        throw NetworkFailure('No internet connection');
+      } else {
+        logger.e('Network error: ${e.message}');
+        throw ServerFailure('Network error: ${e.message}');
+      }
+    } catch (e) {
+      logger.e('Unexpected error in getIngredients: $e');
       if (e is Failure) rethrow;
       throw ServerFailure('Unexpected error: $e');
     }

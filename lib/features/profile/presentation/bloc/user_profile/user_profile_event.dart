@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/profile_update_entity.dart';
 
 abstract class UserProfileEvent extends Equatable {
   const UserProfileEvent();
@@ -9,7 +9,11 @@ abstract class UserProfileEvent extends Equatable {
 }
 
 class GetUserProfileRequested extends UserProfileEvent {
-  const GetUserProfileRequested();
+  final bool forceRefresh;
+  const GetUserProfileRequested({this.forceRefresh = false});
+
+  @override
+  List<Object> get props => [forceRefresh];
 }
 
 class UpdateProfileRequested extends UserProfileEvent {

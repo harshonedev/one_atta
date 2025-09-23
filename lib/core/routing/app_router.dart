@@ -25,6 +25,8 @@ import 'package:one_atta/features/daily_essentials/presentation/pages/daily_esse
 import 'package:one_atta/features/daily_essentials/presentation/pages/daily_essentials_list_page.dart';
 import 'package:one_atta/features/address/presentation/pages/addresses_list_page.dart';
 import 'package:one_atta/features/address/presentation/pages/add_edit_address_page.dart';
+import 'package:one_atta/features/profile/presentation/pages/profile_page.dart';
+import 'package:one_atta/features/profile/presentation/pages/edit_profile_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -204,6 +206,16 @@ class AppRouter {
             final addressId = state.pathParameters['addressId']!;
             return AddEditAddressPage(addressId: addressId);
           },
+        ),
+        GoRoute(
+          path: '/profile',
+          name: 'profile',
+          builder: (context, state) => const ProfilePage(),
+        ),
+        GoRoute(
+          path: '/profile/edit',
+          name: 'edit-profile',
+          builder: (context, state) => const EditProfilePage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
