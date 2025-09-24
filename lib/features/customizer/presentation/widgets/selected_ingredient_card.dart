@@ -113,7 +113,7 @@ class SelectedIngredientCard extends StatelessWidget {
     final int displayWeight = weightInGrams;
     final double displayPercentage = ingredient.percentage * 100;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => _showIngredientDetails(context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),

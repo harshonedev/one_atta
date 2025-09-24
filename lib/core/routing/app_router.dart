@@ -12,6 +12,7 @@ import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blends_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blend_details_page.dart';
+import 'package:one_atta/features/blends/presentation/pages/saved_blends_page.dart';
 import 'package:one_atta/features/customizer/presentation/pages/customizer_page.dart';
 import 'package:one_atta/features/customizer/presentation/pages/analysis_page.dart';
 import 'package:one_atta/features/home/presentation/pages/home_page.dart';
@@ -150,6 +151,11 @@ class AppRouter {
             final blendId = state.pathParameters['blendId']!;
             return BlendDetailsPage(blendId: blendId);
           },
+        ),
+        GoRoute(
+          path: '/saved-blends',
+          name: 'saved-blends',
+          builder: (context, state) => const SavedBlendsPage(),
         ),
         GoRoute(
           path: '/customizer',

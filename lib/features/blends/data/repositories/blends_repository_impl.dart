@@ -113,4 +113,21 @@ class BlendsRepositoryImpl implements BlendsRepository {
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<BlendEntity>>> getUserBlends() async {
+    try {
+      final token = await authLocalDataSource.getToken();
+      if (token == null) {
+        return Left(UnauthorizedFailure('User is not authenticated'));
+      }
+
+      final result = await remoteDataSource.getUserBlends(token);
+      return Right(result.map((blend) => blend.toEntity()).toList());
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error occurred: $e'));
+    }
+  }
 }

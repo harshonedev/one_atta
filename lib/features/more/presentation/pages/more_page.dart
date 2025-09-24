@@ -177,7 +177,7 @@ class MorePage extends StatelessWidget {
               'Saved\nBlends',
               Icons.blender_outlined,
               Colors.blue,
-              () => _showComingSoon(context, 'Saved Blends'),
+              () => context.push('/saved-blends'),
             ),
           ),
           const SizedBox(width: 12),

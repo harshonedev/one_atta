@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:one_atta/core/constants/constants.dart';
+import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source_impl.dart';
 import 'package:one_atta/features/recipes/data/repositories/recipes_repository_impl.dart';
@@ -14,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
+import 'package:one_atta/features/blends/presentation/bloc/saved_blends_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/customizer/domain/repositories/ingredient_repository.dart';
 import 'package:one_atta/features/customizer/domain/usecases/get_ingredients.dart';
@@ -95,7 +97,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(dio: sl()),
+    () => AuthRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   sl.registerLazySingleton<AuthLocalDataSource>(
@@ -117,6 +119,7 @@ Future<void> init() async {
   // BLoC
   sl.registerFactory(() => BlendsBloc(repository: sl()));
   sl.registerFactory(() => BlendDetailsBloc(repository: sl()));
+  sl.registerFactory(() => SavedBlendsBloc(repository: sl()));
 
   // Repository
   sl.registerLazySingleton<BlendsRepository>(
@@ -126,14 +129,18 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<BlendsRemoteDataSource>(
-    () => BlendsRemoteDataSourceImpl(dio: sl()),
+    () => BlendsRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Features - Customizer
   // BLoC
   sl.registerFactory(
-    () =>
-        CustomizerBloc(customizerRepository: sl(), getIngredientsUseCase: sl()),
+    () => CustomizerBloc(
+      customizerRepository: sl(),
+      getIngredientsUseCase: sl(),
+      blendsRepository: sl(),
+      authRepository: sl(),
+    ),
   );
 
   // Use Cases
@@ -150,7 +157,10 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<CustomizerRemoteDataSource>(
-    () => CustomizerRemoteDataSourceImpl(dio: sl(), authLocalDataSource: sl()),
+    () => CustomizerRemoteDataSourceImpl(
+      apiRequest: sl(),
+      authLocalDataSource: sl(),
+    ),
   );
 
   //! Features - Cart
@@ -193,7 +203,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<DailyEssentialsRemoteDataSource>(
-    () => DailyEssentialsRemoteDataSourceImpl(dio: sl()),
+    () => DailyEssentialsRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Features - Address
@@ -212,7 +222,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<AddressRemoteDataSource>(
-    () => AddressRemoteDataSourceImpl(dio: sl()),
+    () => AddressRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Features - Profile
@@ -232,7 +242,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSourceImpl(dio: sl()),
+    () => ProfileRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   sl.registerLazySingleton<ProfileLocalDataSource>(
@@ -269,8 +279,11 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<RecipesRemoteDataSource>(
-    () => RecipesRemoteDataSourceImpl(dio: sl()),
+    () => RecipesRemoteDataSourceImpl(apiRequest: sl()),
   );
+
+  // API Request
+  sl.registerLazySingleton(() => ApiRequest(dio: sl()));
 
   //! External
   final sharedPreferences = await SharedPreferences.getInstance();

@@ -1,6 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:one_atta/core/constants/api_endpoints.dart';
-import 'package:one_atta/core/error/failures.dart';
+import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source.dart';
 import 'package:one_atta/features/profile/data/models/loyalty_points_response_model.dart';
 import 'package:one_atta/features/profile/data/models/loyalty_transaction_model.dart'
@@ -10,51 +9,29 @@ import 'package:one_atta/features/profile/data/models/redemption_response_model.
 import 'package:one_atta/features/profile/data/models/user_profile_model.dart';
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
-  final Dio dio;
+  final ApiRequest apiRequest;
   static final String baseUrl = ApiEndpoints.auth;
   static final String loyaltyBaseUrl = '${ApiEndpoints.baseUrl}/loyalty';
 
-  ProfileRemoteDataSourceImpl({required this.dio});
+  ProfileRemoteDataSourceImpl({required this.apiRequest});
 
   @override
   Future<UserProfileModel> getUserProfile(String token) async {
-    try {
-      final response = await dio.get(
-        '$baseUrl/profile',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/profile',
+      token: token,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return UserProfileModel.fromJson(response.data);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to get user profile',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedFailure('Authentication failed');
-      }
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('User not found');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message =
-          e.response?.data?['message'] ?? 'Failed to get user profile';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? UserProfileModel.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to get user profile',
+              ),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
@@ -62,46 +39,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     String token,
     ProfileUpdateModel profileUpdate,
   ) async {
-    try {
-      final response = await dio.put(
-        '$baseUrl/profile',
-        data: profileUpdate.toJson(),
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.put,
+      url: '$baseUrl/profile',
+      data: profileUpdate.toJson(),
+      token: token,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return UserProfileModel.fromJson(response.data);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to update profile',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedFailure('Authentication failed');
-      }
-      if (e.response?.statusCode == 400) {
-        throw ValidationFailure(
-          e.response?.data?['errors'] ?? 'Invalid data provided',
-        );
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message =
-          e.response?.data?['message'] ?? 'Failed to update profile';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? UserProfileModel.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to update profile',
+              ),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
@@ -110,40 +63,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     required double amount,
     required String orderId,
   }) async {
-    try {
-      final response = await dio.post(
-        '$loyaltyBaseUrl/earn/order',
-        data: {'amount': amount, 'orderId': orderId},
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '$loyaltyBaseUrl/earn/order',
+      data: {'amount': amount, 'orderId': orderId},
+      token: token,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return LoyaltyPointsResponseModel.fromJson(response.data);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to earn points from order',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedFailure('Authentication failed');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-      final message =
-          e.response?.data?['message'] ?? 'Failed to earn points from order';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? LoyaltyPointsResponseModel.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to earn points from order',
+              ),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
@@ -151,40 +86,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     required String token,
     required String blendId,
   }) async {
-    try {
-      final response = await dio.post(
-        '$loyaltyBaseUrl/earn/share',
-        data: {'blendId': blendId},
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '$loyaltyBaseUrl/earn/share',
+      data: {'blendId': blendId},
+      token: token,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return LoyaltyPointsResponseModel.fromJson(response.data);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to earn points from share',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedFailure('Authentication failed');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-      final message =
-          e.response?.data?['message'] ?? 'Failed to earn points from share';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? LoyaltyPointsResponseModel.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to earn points from share',
+              ),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
@@ -192,40 +109,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     required String token,
     required String reviewId,
   }) async {
-    try {
-      final response = await dio.post(
-        '$loyaltyBaseUrl/earn/review',
-        data: {'reviewId': reviewId},
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '$loyaltyBaseUrl/earn/review',
+      data: {'reviewId': reviewId},
+      token: token,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return LoyaltyPointsResponseModel.fromJson(response.data);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to earn points from review',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedFailure('Authentication failed');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-      final message =
-          e.response?.data?['message'] ?? 'Failed to earn points from review';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? LoyaltyPointsResponseModel.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to earn points from review',
+              ),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
@@ -234,44 +133,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     required String orderId,
     required int pointsToRedeem,
   }) async {
-    try {
-      final response = await dio.post(
-        '$loyaltyBaseUrl/redeem',
-        data: {'orderId': orderId, 'points': pointsToRedeem},
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '$loyaltyBaseUrl/redeem',
+      data: {'orderId': orderId, 'pointsToRedeem': pointsToRedeem},
+      token: token,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return RedemptionResponseModel.fromJson(response.data);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to redeem points',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedFailure('Authentication failed');
-      }
-      if (e.response?.statusCode == 400) {
-        throw ValidationFailure(
-          e.response?.data?['errors'] ?? 'Invalid data for redemption',
-        );
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-      final message = e.response?.data?['message'] ?? 'Failed to redeem points';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? RedemptionResponseModel.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to redeem points',
+              ),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
@@ -279,41 +156,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     required String token,
     required String userId,
   }) async {
-    try {
-      final response = await dio.get(
-        '$loyaltyBaseUrl/history/$userId',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$loyaltyBaseUrl/history/$userId',
+      token: token,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final List<dynamic> transactionsJson = response.data['data'];
-        return transactionsJson
-            .map((json) => LoyaltyTransactionModel.fromJson(json))
-            .toList();
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to get loyalty history',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedFailure('Authentication failed');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-      final message =
-          e.response?.data?['message'] ?? 'Failed to get loyalty history';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data'] as List<dynamic>)
+                  .map((json) => LoyaltyTransactionModel.fromJson(json))
+                  .toList()
+            : throw Exception(
+                response.data['message'] ?? 'Failed to get loyalty history',
+              ),
+      ApiError() => throw response.failure,
+    };
   }
 }

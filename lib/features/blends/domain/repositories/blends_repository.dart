@@ -29,4 +29,7 @@ abstract class BlendsRepository {
   Future<Either<Failure, PublicBlendEntity>> getBlendByShareCode(
     String shareCode,
   );
+
+  /// Get user's own blends
+  Future<Either<Failure, List<BlendEntity>>> getUserBlends();
 }

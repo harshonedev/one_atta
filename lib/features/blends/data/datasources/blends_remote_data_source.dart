@@ -22,4 +22,7 @@ abstract class BlendsRemoteDataSource {
 
   /// Get blend by share code
   Future<PublicBlendModel> getBlendByShareCode(String shareCode);
+
+  /// Get user's own blends
+  Future<List<BlendModel>> getUserBlends(String token);
 }

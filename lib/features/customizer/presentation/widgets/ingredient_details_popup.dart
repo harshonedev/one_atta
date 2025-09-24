@@ -214,7 +214,7 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'This adds +2.1 g protein / 100 g',
+                  'This adds +${widget.ingredient.nutritionalInfo?.protein?.toStringAsFixed(1) ?? '2.1'} g protein / 100 g',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Colors.black54,
                     fontWeight: FontWeight.w500,

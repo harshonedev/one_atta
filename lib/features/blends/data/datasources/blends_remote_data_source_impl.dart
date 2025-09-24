@@ -1,204 +1,141 @@
-import 'package:dio/dio.dart';
 import 'package:one_atta/core/constants/constants.dart';
-import 'package:one_atta/core/error/failures.dart';
+import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/blends/data/datasources/blends_remote_data_source.dart';
 import 'package:one_atta/features/blends/data/models/blend_model.dart';
 import 'package:one_atta/features/blends/data/models/blend_request_model.dart';
 
 class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
-  final Dio dio;
+  final ApiRequest apiRequest;
   static const String baseUrl = '${ApiEndpoints.baseUrl}/blends';
 
-  BlendsRemoteDataSourceImpl({required this.dio});
+  BlendsRemoteDataSourceImpl({required this.apiRequest});
 
   @override
   Future<List<PublicBlendModel>> getAllPublicBlends() async {
-    try {
-      final response = await dio.get(baseUrl);
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: baseUrl,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final List<dynamic> blendsData = response.data['data']['blends'];
-        return blendsData
-            .map((blend) => PublicBlendModel.fromJson(blend))
-            .toList();
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to fetch public blends',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message =
-          e.response?.data?['message'] ?? 'Failed to fetch public blends';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? (response.data['data']['blends'] as List<dynamic>)
+              .map((blend) => PublicBlendModel.fromJson(blend))
+              .toList()
+          : throw Exception(response.data['message'] ?? 'Failed to fetch public blends'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<BlendModel> createBlend(CreateBlendModel blend) async {
-    try {
-      final response = await dio.post(baseUrl, data: blend.toJson());
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: baseUrl,
+      data: blend.toJson(),
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return BlendModel.fromJson(response.data['data']['blend']);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to create blend',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to create blend';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? BlendModel.fromJson(response.data['data']['blend'])
+          : throw Exception(response.data['message'] ?? 'Failed to create blend'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<BlendDetailsModel> getBlendDetails(String id, String token) async {
-    try {
-      // add bearer token to headerr
-      dio.options.headers['Authorization'] = "Bearer $token";
-      final response = await dio.get('$baseUrl/$id');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/$id',
+      token: token,
+    );
 
-      if (response.statusCode == 200) {
-        return BlendDetailsModel.fromJson(response.data);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to fetch blend details',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message =
-          e.response?.data?['message'] ?? 'Failed to fetch blend details';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => BlendDetailsModel.fromJson(response.data),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<String> shareBlend(String id) async {
-    try {
-      final response = await dio.post('$baseUrl/$id/share');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '$baseUrl/$id/share',
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return response.data['data']['share_code'];
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to share blend',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to share blend';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? response.data['data']['shareCode'] as String
+          : throw Exception(response.data['message'] ?? 'Failed to share blend'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<void> subscribeToBlend(String id) async {
-    try {
-      final response = await dio.post('$baseUrl/$id/subscribe');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '$baseUrl/$id/subscribe',
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return;
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to subscribe to blend',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message =
-          e.response?.data?['message'] ?? 'Failed to subscribe to blend';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
+    switch (response) {
+      case ApiSuccess():
+        if (response.data['success'] != true) {
+          throw Exception(response.data['message'] ?? 'Failed to subscribe to blend');
+        }
+        break;
+      case ApiError():
+        throw response.failure;
     }
   }
 
   @override
   Future<BlendModel> updateBlend(String id, UpdateBlendModel blend) async {
-    try {
-      final response = await dio.put('$baseUrl/$id', data: blend.toJson());
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.put,
+      url: '$baseUrl/$id',
+      data: blend.toJson(),
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return BlendModel.fromJson(response.data['data']['blend']);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to update blend',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to update blend';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? BlendModel.fromJson(response.data['data']['blend'])
+          : throw Exception(response.data['message'] ?? 'Failed to update blend'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<PublicBlendModel> getBlendByShareCode(String shareCode) async {
-    try {
-      final response = await dio.get('$baseUrl/by-share-code/$shareCode');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/share/$shareCode',
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return PublicBlendModel.fromJson(response.data['data']['blend']);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to fetch blend by share code',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? PublicBlendModel.fromJson(response.data['data']['blend'])
+          : throw Exception(response.data['message'] ?? 'Failed to get blend by share code'),
+      ApiError() => throw response.failure,
+    };
+  }
 
-      final message =
-          e.response?.data?['message'] ?? 'Failed to fetch blend by share code';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+  @override
+  Future<List<BlendModel>> getUserBlends(String token) async {
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/user',
+      token: token,
+    );
+
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? (response.data['data']['blends'] as List<dynamic>)
+              .map((blend) => BlendModel.fromJson(blend))
+              .toList()
+          : throw Exception(response.data['message'] ?? 'Failed to get user blends'),
+      ApiError() => throw response.failure,
+    };
   }
 }

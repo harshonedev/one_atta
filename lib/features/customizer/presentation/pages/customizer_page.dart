@@ -21,7 +21,10 @@ class _CustomizerPageState extends State<CustomizerPage> {
   void initState() {
     super.initState();
     // Initialize the customizer
-    context.read<CustomizerBloc>().add(InitializeCustomizer());
+    context.read<CustomizerBloc>()
+      ..add(InitializeCustomizer())
+      ..add(LoadIngredients())
+      ..add(LoadUserBlends());
   }
 
   @override
@@ -126,16 +129,24 @@ class _CustomizerPageState extends State<CustomizerPage> {
 
           const SizedBox(height: 16),
 
-          // Available Ingredients Section
-          AvailableIngredientsSection(
-            availableIngredients: state.availableIngredients,
-            selectedIngredients: state.selectedIngredients,
-            isMaxCapacityReached: state.isMaxCapacityReached,
-            scrollController: _horizontalScrollController,
-            onIngredientAdded: (ingredient) {
-              context.read<CustomizerBloc>().add(AddIngredient(ingredient));
-            },
-          ),
+          if (state.availableIngredients.isEmpty)
+            Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            )
+          else ...[
+            // Available Ingredients Section
+            AvailableIngredientsSection(
+              availableIngredients: state.availableIngredients,
+              selectedIngredients: state.selectedIngredients,
+              isMaxCapacityReached: state.isMaxCapacityReached,
+              scrollController: _horizontalScrollController,
+              onIngredientAdded: (ingredient) {
+                context.read<CustomizerBloc>().add(AddIngredient(ingredient));
+              },
+            ),
+          ],
 
           const SizedBox(height: 24),
 

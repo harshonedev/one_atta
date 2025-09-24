@@ -101,7 +101,105 @@ GET /api/blends
 
 ---
 
-### 2. Create Blend
+### 2. Get User's Own Blends
+```http
+GET /api/blends/my-blends
+```
+
+**Description:** Retrieve all blends created by the authenticated user, including both public and private blends. Results are sorted by creation date (newest first).
+
+**Authentication:** Required (Bearer token)
+
+**Request Parameters:** None
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Fetched user blends",
+  "data": {
+    "blends": [
+      {
+        "id": "64a7b8c9d1e2f3a4b5c6d7e8",
+        "name": "My Custom Blend",
+        "additives": [
+          {
+            "ingredient": "64a7b8c9d1e2f3a4b5c6d7e8",
+            "percentage": 50,
+            "original_details": {
+              "sku": "ING-WHE-1234",
+              "name": "Wheat Flour",
+              "price_per_kg": 45.00
+            }
+          },
+          {
+            "ingredient": "64a7b8c9d1e2f3a4b5c6d7e9",
+            "percentage": 30,
+            "original_details": {
+              "sku": "ING-BAJ-5678",
+              "name": "Bajra Flour",
+              "price_per_kg": 55.00
+            }
+          },
+          {
+            "ingredient": "64a7b8c9d1e2f3a4b5c6d7ea",
+            "percentage": 20,
+            "original_details": {
+              "sku": "ING-RAG-9012",
+              "name": "Ragi Flour",
+              "price_per_kg": 75.00
+            }
+          }
+        ],
+        "created_by": {
+          "id": "64a7b8c9d1e2f3a4b5c6d7e9",
+          "name": "John Doe"
+        },
+        "share_code": "JOH5678",
+        "share_count": 0,
+        "is_public": false,
+        "price_per_kg": 55.50,
+        "total_price": null,
+        "expiry_days": 30,
+        "deleted": false,
+        "createdAt": "2023-07-07T12:30:00.000Z",
+        "updatedAt": "2023-07-07T12:30:00.000Z"
+      },
+      {
+        "id": "64a7b8c9d1e2f3a4b5c6d7eb",
+        "name": "Public Protein Blend",
+        "additives": [...],
+        "created_by": {
+          "id": "64a7b8c9d1e2f3a4b5c6d7e9",
+          "name": "John Doe"
+        },
+        "share_code": "JOH9876",
+        "share_count": 15,
+        "is_public": true,
+        "price_per_kg": 68.75,
+        "expiry_days": 30,
+        "deleted": false,
+        "createdAt": "2023-07-07T10:30:00.000Z",
+        "updatedAt": "2023-07-07T10:30:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+**Error Responses:**
+- `401` - Unauthorized (invalid or missing token)
+- `500` - Internal server error
+
+**Notes:**
+- Returns all blends created by the authenticated user (both public and private)
+- Excludes deleted blends (`deleted: false`)
+- Results are sorted by creation date in descending order (newest first)
+- Includes full blend details with populated creator information
+
+---
+
+### 3. Create Blend
 ```http
 POST /api/blends
 ```
@@ -186,7 +284,7 @@ POST /api/blends
 
 ---
 
-### 3. Get Blend Details with Price Analysis
+### 4. Get Blend Details with Price Analysis
 ```http
 GET /api/blends/:id
 ```
@@ -256,7 +354,7 @@ GET /api/blends/:id
 
 ---
 
-### 4. Share Blend
+### 5. Share Blend
 ```http
 POST /api/blends/:id/share
 ```
@@ -288,7 +386,7 @@ POST /api/blends/:id/share
 
 ---
 
-### 5. Subscribe to Blend
+### 6. Subscribe to Blend
 ```http
 POST /api/blends/:id/subscribe
 ```
@@ -320,7 +418,7 @@ POST /api/blends/:id/subscribe
 
 ---
 
-### 6. Update Blend
+### 7. Update Blend
 ```http
 PUT /api/blends/:id
 ```
@@ -391,14 +489,14 @@ PUT /api/blends/:id
 
 ---
 
-### 7. Analyze Custom Blend
+### 8. Analyze Custom Blend
 ```http
 POST /api/blends/custom/analyze
 ```
 
 **Description:** Analyze a custom blend using AI to get nutritional insights and characteristics. This endpoint uses Azure OpenAI to analyze the ingredients and their proportions to provide detailed information about the blend.
 
-**Authentication:** 
+**Authentication:** None required
 
 **Request Body:**
 ```json
@@ -419,6 +517,10 @@ POST /api/blends/custom/analyze
 - `ingredients` (object): Ingredient names and their weights in grams
 - `total_weight_g` (number): Total weight of the blend in grams
 
+**Alternative Request (Query Parameters):**
+```http
+POST /api/blends/analyzecustomblend?total_weight_g=5000&ingredients[wheat]=2800&ingredients[bajra]=1000
+```
 
 **Response:**
 ```json
@@ -477,7 +579,7 @@ POST /api/blends/custom/analyze
 
 ---
 
-### 8. Get Blend by Share Code
+### 9. Get Blend by Share Code
 ```http
 GET /api/blends/by-share-code/:share_code
 ```

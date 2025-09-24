@@ -14,6 +14,15 @@ class AnalysisPage extends StatefulWidget {
 
 class _AnalysisPageState extends State<AnalysisPage> {
   @override
+  void initState() {
+    super.initState();
+    // Load user blends when the page initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CustomizerBloc>().add(LoadUserBlends());
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -408,9 +417,33 @@ class _ActionButtonsSection extends StatelessWidget {
 
   void _showSaveBlendDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
-    // Generate default name - you can customize this logic
-    nameController.text =
-        "My Custom Blend"; // TODO: Get actual username and increment number
+
+    // Generate smart default name based on current user and blends
+    final customizerBloc = context.read<CustomizerBloc>();
+    final state = customizerBloc.state;
+
+    if (state.currentUser != null && state.userBlends.isNotEmpty) {
+      final userName = state.currentUser!.name;
+      final basePattern = "${userName}'s Blend";
+
+      // Count existing blends with similar pattern
+      int maxNumber = 0;
+      final regExp = RegExp(r"^" + RegExp.escape(basePattern) + r" (\d+)$");
+
+      for (final blend in state.userBlends) {
+        final match = regExp.firstMatch(blend.name);
+        if (match != null) {
+          final number = int.tryParse(match.group(1) ?? '') ?? 0;
+          if (number > maxNumber) {
+            maxNumber = number;
+          }
+        }
+      }
+
+      nameController.text = "$basePattern ${maxNumber + 1}";
+    } else {
+      nameController.text = "My Custom Blend";
+    }
 
     showDialog(
       context: context,

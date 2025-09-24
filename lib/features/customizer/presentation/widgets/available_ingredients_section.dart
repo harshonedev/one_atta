@@ -16,7 +16,6 @@ class AvailableIngredientsSection extends StatelessWidget {
     required this.isMaxCapacityReached,
     required this.onIngredientAdded,
     this.scrollController,
-
   });
 
   @override
@@ -46,32 +45,9 @@ class AvailableIngredientsSection extends StatelessWidget {
             ingredient: ingredient,
             isSelected: false,
             onTap: () {
-              if (!isMaxCapacityReached) {
-                onIngredientAdded(
-                  Ingredient(
-                    name: ingredient.name,
-                    percentage: 0.1, // Start with 10%
-                    icon: ingredient.icon,
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Maximum capacity reached. Remove some ingredients to add more.',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onError,
-                      ),
-                    ),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                );
-              }
+              // Always try to add with the default percentage
+              // The BLoC will handle capacity checks and adjustments
+              onIngredientAdded(ingredient.copyWith(percentage: 0.1));
             },
           );
         },

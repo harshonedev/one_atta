@@ -1,246 +1,123 @@
-import 'package:dio/dio.dart';
-import 'package:logger/logger.dart';
 import 'package:one_atta/core/constants/constants.dart';
-import 'package:one_atta/core/error/failures.dart';
+import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
 import 'package:one_atta/features/recipes/data/models/recipe.dart';
 import 'package:one_atta/features/recipes/data/models/recipe_request_model.dart';
 
 class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
-  final Dio dio;
+  final ApiRequest apiRequest;
   static const String baseUrl = '${ApiEndpoints.baseUrl}/recipes';
-  final Logger logger = Logger();
 
-  RecipesRemoteDataSourceImpl({required this.dio});
+  RecipesRemoteDataSourceImpl({required this.apiRequest});
 
   @override
   Future<List<RecipeModel>> getAllRecipes() async {
-    try {
-      final response = await dio.get(baseUrl);
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: baseUrl,
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final List<dynamic> recipesData = response.data['data'];
-        return recipesData
-            .map((recipe) => RecipeModel.fromJson(recipe))
-            .toList();
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to fetch recipes',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to fetch recipes';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? (response.data['data'] as List<dynamic>)
+              .map((recipe) => RecipeModel.fromJson(recipe))
+              .toList()
+          : throw Exception(response.data['message'] ?? 'Failed to fetch recipes'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<RecipeModel> getRecipeById(String id) async {
-    try {
-      final response = await dio.get('$baseUrl/$id');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/$id',
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return RecipeModel.fromJson(response.data['data']);
-      } else {
-        throw ServerFailure(response.data['message'] ?? 'Recipe not found');
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('Recipe not found');
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to fetch recipe';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? RecipeModel.fromJson(response.data['data'])
+          : throw Exception(response.data['message'] ?? 'Recipe not found'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<RecipeModel> createRecipe(CreateRecipeModel recipe) async {
-    try {
-      final response = await dio.post(baseUrl, data: recipe.toJson());
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: baseUrl,
+      data: recipe.toJson(),
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return RecipeModel.fromJson(response.data['data']);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to create recipe',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      if (e.response?.statusCode == 400) {
-        final message = e.response?.data?['message'] ?? 'Validation error';
-        throw ValidationFailure(message);
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to create recipe';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? RecipeModel.fromJson(response.data['data'])
+          : throw Exception(response.data['message'] ?? 'Failed to create recipe'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<RecipeModel> updateRecipe(String id, UpdateRecipeModel recipe) async {
-    try {
-      // Set authorization header if available
-      final response = await dio.put('$baseUrl/$id', data: recipe.toJson());
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.put,
+      url: '$baseUrl/$id',
+      data: recipe.toJson(),
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return RecipeModel.fromJson(response.data['data']);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to update recipe',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      if (e.response?.statusCode == 401) {
-        throw const UnauthorizedFailure('Not authorized, token failed');
-      }
-
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('Recipe not found');
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to update recipe';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? RecipeModel.fromJson(response.data['data'])
+          : throw Exception(response.data['message'] ?? 'Failed to update recipe'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<RecipeModel> deleteRecipe(String id) async {
-    try {
-      final response = await dio.delete('$baseUrl/$id');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.delete,
+      url: '$baseUrl/$id',
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return RecipeModel.fromJson(response.data['data']);
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to delete recipe',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      if (e.response?.statusCode == 401) {
-        throw const UnauthorizedFailure('No token provided');
-      }
-
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('Recipe not found');
-      }
-
-      final message = e.response?.data?['message'] ?? 'Failed to delete recipe';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? RecipeModel.fromJson(response.data['data'])
+          : throw Exception(response.data['message'] ?? 'Failed to delete recipe'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<Map<String, dynamic>> toggleRecipeLike(String id) async {
-    try {
-      final response = await dio.post('$baseUrl/$id/like');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '$baseUrl/$id/like',
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        logger.i('Toggle like response: ${response.data}');
-        return response.data['data'];
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to toggle recipe like',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      if (e.response?.statusCode == 401) {
-        throw const UnauthorizedFailure('Not authorized, token failed');
-      }
-
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('Recipe not found');
-      }
-
-      final message =
-          e.response?.data?['message'] ?? 'Failed to toggle recipe like';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? response.data
+          : throw Exception(response.data['message'] ?? 'Failed to toggle recipe like'),
+      ApiError() => throw response.failure,
+    };
   }
 
   @override
   Future<List<RecipeModel>> getLikedRecipes() async {
-    try {
-      final response = await dio.get('$baseUrl/liked');
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/liked',
+    );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final List<dynamic> recipesData = response.data['data'];
-        return recipesData
-            .map((recipe) => RecipeModel.fromJson(recipe))
-            .toList();
-      } else {
-        throw ServerFailure(
-          response.data['message'] ?? 'Failed to fetch liked recipes',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        throw const NetworkFailure('Network connection failed');
-      }
-
-      if (e.response?.statusCode == 401) {
-        throw const UnauthorizedFailure('Not authorized, token failed');
-      }
-
-      if (e.response?.statusCode == 404) {
-        throw ServerFailure('User not found');
-      }
-
-      final message =
-          e.response?.data?['message'] ?? 'Failed to fetch liked recipes';
-      throw ServerFailure(message);
-    } catch (e) {
-      throw ServerFailure('An unexpected error occurred: $e');
-    }
+    return switch (response) {
+      ApiSuccess() => response.data['success'] == true
+          ? (response.data['data'] as List<dynamic>)
+              .map((recipe) => RecipeModel.fromJson(recipe))
+              .toList()
+          : throw Exception(response.data['message'] ?? 'Failed to fetch liked recipes'),
+      ApiError() => throw response.failure,
+    };
   }
 }

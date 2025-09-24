@@ -1,5 +1,5 @@
 class ApiEndpoints {
-  static const String baseUrl = 'https://api.oneatta.com/api';
+  static const String baseUrl = 'https://api.oneatta.com/api/app';
   static const String auth = '$baseUrl/auth';
   static const String products = '$baseUrl/products';
   static const String cart = '$baseUrl/cart';
