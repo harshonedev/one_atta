@@ -1,4 +1,4 @@
-import 'package:one_atta/core/constants/api_endpoints.dart';
+import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';

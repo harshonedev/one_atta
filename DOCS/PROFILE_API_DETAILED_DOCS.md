@@ -4,7 +4,7 @@
 This API provides comprehensive user profile management functionality with integrated loyalty points system. Users can view and update their personal information, manage profile pictures, and track loyalty rewards.
 
 ## 🌐 Base Information
-- **Base URL**: `/api/auth`
+- **Base URL**: `/api/app/auth`
 - **Authentication**: JWT Bearer Token required
 - **Content-Type**: `application/json`
 - **Version**: 1.0

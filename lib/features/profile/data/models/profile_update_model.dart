@@ -1,8 +1,7 @@
 import 'package:one_atta/features/profile/domain/entities/profile_update_entity.dart';
 
 class ProfileUpdateModel extends ProfileUpdateEntity {
-  const ProfileUpdateModel({String? fullName, String? email})
-    : super(fullName: fullName, email: email);
+  const ProfileUpdateModel({super.fullName, super.email});
 
   factory ProfileUpdateModel.fromEntity(ProfileUpdateEntity entity) {
     return ProfileUpdateModel(fullName: entity.fullName, email: entity.email);

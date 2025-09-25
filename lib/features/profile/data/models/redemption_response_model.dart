@@ -2,14 +2,10 @@ import 'package:one_atta/features/profile/domain/entities/redemption_response_en
 
 class RedemptionResponseModel extends RedemptionResponseEntity {
   const RedemptionResponseModel({
-    required String message,
-    required int redeemed,
-    required int remainingPoints,
-  }) : super(
-         message: message,
-         redeemed: redeemed,
-         remainingPoints: remainingPoints,
-       );
+    required super.message,
+    required super.redeemed,
+    required super.remainingPoints,
+  });
 
   factory RedemptionResponseModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>?;

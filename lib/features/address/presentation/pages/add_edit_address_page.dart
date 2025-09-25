@@ -576,8 +576,9 @@ class _AddEditAddressViewState extends State<AddEditAddressView> {
                                 child: FilterChip(
                                   selected: isSelected,
                                   onSelected: (_) {
-                                    if (mounted)
+                                    if (mounted) {
                                       setState(() => _selectedLabel = label);
+                                    }
                                   },
                                   label: Text(label),
                                   selectedColor: Theme.of(

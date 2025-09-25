@@ -452,7 +452,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     List<BlendEntity> userBlends,
   ) {
     final userName = user.name;
-    final basePattern = "${userName}'s Blend";
+    final basePattern = "$userName's Blend";
 
     // Count existing blends with similar pattern
     int maxNumber = 0;

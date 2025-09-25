@@ -424,7 +424,7 @@ class _ActionButtonsSection extends StatelessWidget {
 
     if (state.currentUser != null && state.userBlends.isNotEmpty) {
       final userName = state.currentUser!.name;
-      final basePattern = "${userName}'s Blend";
+      final basePattern = "$userName's Blend";
 
       // Count existing blends with similar pattern
       int maxNumber = 0;

@@ -4,6 +4,12 @@ class ApiEndpoints {
   static const String blends = '$baseUrl/blends';
   static const String addresses = '$baseUrl/addresses';
   static const String loyalty = '$baseUrl/loyalty';
+  static const String reels = '$baseUrl/reels';
+  static const String products = '$baseUrl/products';
+  static const String cart = '$baseUrl/cart';
+  static const String orders = '$baseUrl/orders';
+  static const String recipes = '$baseUrl/recipes';
+  static const String ingredients = '$baseUrl/ingredients';
 }
 
 class AppConstants {
@@ -13,6 +19,7 @@ class AppConstants {
   static const String refreshTokenKey = 'refresh_token';
   static const String isLoggedInKey = 'is_logged_in';
   static const String appAPIKey = "Q8vjsTrlKX12bFNw3VHAyqGZ4Ch9xRpUWoaMfdPziE";
+  static const String shareBaseUrl = "https://oneatta.com/share";
 }
 
 class AppStrings {

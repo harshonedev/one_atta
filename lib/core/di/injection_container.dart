@@ -83,6 +83,13 @@ import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_pr
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyalty_points_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 
+// Reels
+import 'package:one_atta/features/reels/data/datasources/reels_remote_data_source.dart';
+import 'package:one_atta/features/reels/data/datasources/reels_remote_data_source_impl.dart';
+import 'package:one_atta/features/reels/data/repositories/reels_repository_impl.dart';
+import 'package:one_atta/features/reels/domain/repositories/reels_repository.dart';
+import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -247,6 +254,21 @@ Future<void> init() async {
 
   sl.registerLazySingleton<ProfileLocalDataSource>(
     () => ProfileLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
+  //! Features - Reels
+  // BLoC
+  sl.registerFactory(() => ReelsBloc(reelsRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<ReelsRepository>(
+    () =>
+        ReelsRepositoryImpl(remoteDataSource: sl(), authLocalDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<ReelsRemoteDataSource>(
+    () => ReelsRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Core

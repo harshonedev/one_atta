@@ -1,4 +1,4 @@
-import 'package:one_atta/core/constants/api_endpoints.dart';
+import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source.dart';
 import 'package:one_atta/features/profile/data/models/loyalty_points_response_model.dart';

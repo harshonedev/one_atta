@@ -16,6 +16,7 @@ import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_im
 import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyalty_points_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
+import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,7 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => di.sl<UserProfileBloc>()),
         BlocProvider(create: (context) => di.sl<LoyaltyPointsBloc>()),
         BlocProvider(create: (context) => di.sl<LoyaltyHistoryBloc>()),
+        BlocProvider(create: (context) => di.sl<ReelsBloc>()),
       ],
       child: MaterialApp.router(
         title: 'One Atta',
