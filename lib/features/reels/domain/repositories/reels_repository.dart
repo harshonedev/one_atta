@@ -7,6 +7,7 @@ abstract class ReelsRepository {
   Future<Either<Failure, ReelsFeedEntity>> getReelsFeed({
     int? limit,
     String? cursor,
+    bool forceRefresh = false,
   });
 
   /// Increment view count for a reel

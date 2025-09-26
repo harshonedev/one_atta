@@ -119,6 +119,7 @@ class _ReelItemState extends State<ReelItem> {
           // Video Player
           ReelVideoPlayer(
             videoUrl: widget.reel.videoUrl,
+            reelId: widget.reel.id,
             posterUrl: widget.reel.posterUrl,
             isPlaying: _isPlaying,
             isMuted: _isMuted,

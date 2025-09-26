@@ -84,11 +84,14 @@ import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyal
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 
 // Reels
+import 'package:one_atta/features/reels/data/datasources/reels_local_data_source.dart';
+import 'package:one_atta/features/reels/data/datasources/reels_local_data_source_impl.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_remote_data_source.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_remote_data_source_impl.dart';
 import 'package:one_atta/features/reels/data/repositories/reels_repository_impl.dart';
 import 'package:one_atta/features/reels/domain/repositories/reels_repository.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
+import 'package:one_atta/core/services/video_cache_manager.dart';
 
 final sl = GetIt.instance;
 
@@ -262,14 +265,29 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<ReelsRepository>(
-    () =>
-        ReelsRepositoryImpl(remoteDataSource: sl(), authLocalDataSource: sl()),
+    () => ReelsRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+      authLocalDataSource: sl(),
+      videoCacheManager: sl(),
+    ),
   );
 
   // Data sources
   sl.registerLazySingleton<ReelsRemoteDataSource>(
     () => ReelsRemoteDataSourceImpl(apiRequest: sl()),
   );
+
+  sl.registerLazySingleton<ReelsLocalDataSource>(
+    () => ReelsLocalDataSourceImpl(),
+  );
+
+  // Services
+  sl.registerLazySingleton<VideoCacheManager>(() {
+    final cacheManager = VideoCacheManager.instance;
+    cacheManager.init(); // Initialize the cache manager
+    return cacheManager;
+  });
 
   //! Core
   sl.registerLazySingleton(() => http.Client());

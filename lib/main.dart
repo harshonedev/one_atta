@@ -13,16 +13,19 @@ import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
 import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_impl.dart';
+import 'package:one_atta/features/reels/data/datasources/reels_local_data_source_impl.dart';
 import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyalty_points_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
+import 'package:one_atta/features/reels/presentation/bloc/reels_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive
   await CartHiveDataSourceImpl.initHive();
+  await ReelsLocalDataSourceImpl.initHive();
 
   // Initialize dependency injection
   await di.init();
@@ -52,7 +55,9 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => di.sl<UserProfileBloc>()),
         BlocProvider(create: (context) => di.sl<LoyaltyPointsBloc>()),
         BlocProvider(create: (context) => di.sl<LoyaltyHistoryBloc>()),
-        BlocProvider(create: (context) => di.sl<ReelsBloc>()),
+        BlocProvider(
+          create: (context) => di.sl<ReelsBloc>()..add(const LoadReelsFeed()),
+        ),
       ],
       child: MaterialApp.router(
         title: 'One Atta',

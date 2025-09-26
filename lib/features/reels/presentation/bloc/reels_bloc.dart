@@ -8,6 +8,10 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
   final ReelsRepository reelsRepository;
   final Logger logger = Logger();
 
+  // Timer to track user inactivity
+  DateTime? _lastInteractionTime;
+  static const Duration _inactivityThreshold = Duration(minutes: 30);
+
   ReelsBloc({required this.reelsRepository}) : super(const ReelsInitial()) {
     on<LoadReelsFeed>(_onLoadReelsFeed);
     on<LoadMoreReels>(_onLoadMoreReels);
@@ -16,19 +20,32 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
     on<ShareReel>(_onShareReel);
     on<ReelLikedStatusRequested>(_onReelLikedStatusRequested);
     on<ClearErrorMessage>(_onClearErrorMessage);
+    on<RefreshReelsFromServer>(_onRefreshReelsFromServer);
+    on<ClearReelsCache>(_onClearReelsCache);
+
+    // Update interaction time on any event
+    _updateLastInteractionTime();
   }
 
   Future<void> _onLoadReelsFeed(
     LoadReelsFeed event,
     Emitter<ReelsState> emit,
   ) async {
+    _updateLastInteractionTime();
+
     if (event.refresh || state is! ReelsFeedLoaded) {
       emit(const ReelsLoading());
     }
 
     logger.i('Loading reels feed${event.refresh ? ' (refresh)' : ''}');
 
-    final result = await reelsRepository.getReelsFeed(limit: 20);
+    // Check if we need to refresh due to inactivity
+    final shouldForceRefresh = event.refresh || _shouldRefreshDueToInactivity();
+
+    final result = await reelsRepository.getReelsFeed(
+      limit: 20,
+      forceRefresh: shouldForceRefresh,
+    );
 
     result.fold(
       (failure) {
@@ -48,6 +65,63 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
     );
   }
 
+  void _updateLastInteractionTime() {
+    _lastInteractionTime = DateTime.now();
+  }
+
+  bool _shouldRefreshDueToInactivity() {
+    if (_lastInteractionTime == null) return true;
+
+    final timeSinceLastInteraction = DateTime.now().difference(
+      _lastInteractionTime!,
+    );
+    return timeSinceLastInteraction >= _inactivityThreshold;
+  }
+
+  Future<void> _onRefreshReelsFromServer(
+    RefreshReelsFromServer event,
+    Emitter<ReelsState> emit,
+  ) async {
+    _updateLastInteractionTime();
+
+    emit(const ReelsLoading());
+    logger.i('Force refreshing reels from server');
+
+    final result = await reelsRepository.getReelsFeed(
+      limit: 20,
+      forceRefresh: true,
+    );
+
+    result.fold(
+      (failure) {
+        logger.e('Failed to refresh reels from server: ${failure.message}');
+        emit(ReelsError(message: failure.message));
+      },
+      (feedData) {
+        logger.i('Refreshed ${feedData.reels.length} reels from server');
+        emit(
+          ReelsFeedLoaded(
+            reels: feedData.reels,
+            nextCursor: feedData.nextCursor,
+            hasMore: feedData.hasMore,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onClearReelsCache(
+    ClearReelsCache event,
+    Emitter<ReelsState> emit,
+  ) async {
+    _updateLastInteractionTime();
+    logger.i('Clearing reels cache');
+
+    // This would clear the cache - implementation depends on the cache layer
+    // For now, just trigger a fresh load
+    add(const RefreshReelsFromServer());
+  }
+
   void _onClearErrorMessage(ClearErrorMessage event, Emitter<ReelsState> emit) {
     if (state is ReelsFeedLoaded) {
       final currentState = state as ReelsFeedLoaded;
@@ -59,6 +133,8 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
     LoadMoreReels event,
     Emitter<ReelsState> emit,
   ) async {
+    _updateLastInteractionTime();
+
     if (state is ReelsFeedLoaded) {
       final currentState = state as ReelsFeedLoaded;
 
@@ -100,26 +176,29 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
     IncrementReelView event,
     Emitter<ReelsState> emit,
   ) async {
-    logger.i('Incrementing view count for reel: ${event.reelId}');
+    _updateLastInteractionTime();
+
+    logger.i('Incrementing view for reel: ${event.reelId}');
 
     final result = await reelsRepository.incrementViewCount(event.reelId);
 
     result.fold(
       (failure) {
         logger.e('Failed to increment view count: ${failure.message}');
-        // Don't emit error state for view count failures as it's not critical
+        // Don't emit error state for view count failures
       },
-      (newViewCount) {
-        logger.i('View count updated to: $newViewCount');
-        // Optionally emit a specific state if needed for UI updates
-        final currentState = state;
-        if (currentState is ReelsFeedLoaded) {
+      (viewCount) {
+        logger.d('View count incremented to: $viewCount');
+        // Update the reel in current state if needed
+        if (state is ReelsFeedLoaded) {
+          final currentState = state as ReelsFeedLoaded;
           final updatedReels = currentState.reels.map((reel) {
             if (reel.id == event.reelId) {
-              return reel.copyWith(views: newViewCount);
+              return reel.copyWith(views: viewCount);
             }
             return reel;
           }).toList();
+
           emit(currentState.copyWith(reels: updatedReels));
         }
       },

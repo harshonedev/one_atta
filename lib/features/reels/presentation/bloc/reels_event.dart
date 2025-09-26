@@ -63,3 +63,17 @@ class ClearErrorMessage extends ReelsEvent {
   @override
   List<Object?> get props => [];
 }
+
+class RefreshReelsFromServer extends ReelsEvent {
+  const RefreshReelsFromServer();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class ClearReelsCache extends ReelsEvent {
+  const ClearReelsCache();
+
+  @override
+  List<Object?> get props => [];
+}

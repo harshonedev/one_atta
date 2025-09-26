@@ -29,8 +29,8 @@ class ReelModel extends ReelEntity {
       formattedDuration: json['formatted_duration'] ?? '0:00',
       tags: List<String>.from(json['tags'] ?? []),
       views: json['views'] ?? 0,
-      likes: json['likes'] ?? 0,
-      shares: json['shares'] ?? 0,
+      likes: json['likesCount'] ?? 0,
+      shares: json['sharesCount'] ?? 0,
       isLiked: json['isLiked'] ?? false,
       createdAt: DateTime.parse(
         json['createdAt'] ?? DateTime.now().toIso8601String(),
@@ -65,6 +65,43 @@ class ReelModel extends ReelEntity {
           ? (blendSnapshot! as BlendSnapshotModel).toJson()
           : null,
     };
+  }
+
+  @override
+  ReelModel copyWith({
+    String? id,
+    String? caption,
+    String? posterUrl,
+    String? videoUrl,
+    int? duration,
+    String? formattedDuration,
+    List<String>? tags,
+    int? views,
+    int? likes,
+    int? shares,
+    bool? isLiked,
+    DateTime? createdAt,
+    ReelCreatorEntity? createdBy,
+    ReelBlendEntity? blend,
+    BlendSnapshotEntity? blendSnapshot,
+  }) {
+    return ReelModel(
+      id: id ?? this.id,
+      caption: caption ?? this.caption,
+      posterUrl: posterUrl ?? this.posterUrl,
+      videoUrl: videoUrl ?? this.videoUrl,
+      duration: duration ?? this.duration,
+      formattedDuration: formattedDuration ?? this.formattedDuration,
+      tags: tags ?? this.tags,
+      views: views ?? this.views,
+      likes: likes ?? this.likes,
+      shares: shares ?? this.shares,
+      isLiked: isLiked ?? this.isLiked,
+      createdAt: createdAt ?? this.createdAt,
+      createdBy: createdBy ?? this.createdBy,
+      blend: blend ?? this.blend,
+      blendSnapshot: blendSnapshot ?? this.blendSnapshot,
+    );
   }
 }
 

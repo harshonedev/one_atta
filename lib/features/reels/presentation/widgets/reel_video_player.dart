@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:video_player/video_player.dart';
+import 'package:one_atta/core/services/video_cache_manager.dart';
+import 'package:one_atta/core/di/injection_container.dart' as di;
 
 class ReelVideoPlayer extends StatefulWidget {
   final String videoUrl;
+  final String reelId;
   final String posterUrl;
   final bool isPlaying;
   final bool isMuted;
@@ -13,6 +17,7 @@ class ReelVideoPlayer extends StatefulWidget {
   const ReelVideoPlayer({
     super.key,
     required this.videoUrl,
+    required this.reelId,
     required this.posterUrl,
     this.isPlaying = false,
     this.isMuted = true,
@@ -29,6 +34,8 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
   VideoPlayerController? _controller;
   bool _isLoading = true;
   bool _hasError = false;
+  final VideoCacheManager _cacheManager = di.sl<VideoCacheManager>();
+  final Logger _logger = Logger();
 
   @override
   void initState() {
@@ -68,9 +75,21 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
       });
 
       _controller?.dispose();
-      _controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.videoUrl),
-      );
+
+      // Try to get cached video file first
+      try {
+        final fileInfo = await _cacheManager.getVideoFile(
+          widget.videoUrl,
+          widget.reelId,
+        );
+        _controller = VideoPlayerController.file(fileInfo.file);
+      } catch (cacheError) {
+        // Fall back to network if cache fails
+        _logger.w('Cache failed, using network: $cacheError');
+        _controller = VideoPlayerController.networkUrl(
+          Uri.parse(widget.videoUrl),
+        );
+      }
 
       await _controller!.initialize();
 
@@ -87,6 +106,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
         });
       }
     } catch (e) {
+      _logger.e('Video initialization failed: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;

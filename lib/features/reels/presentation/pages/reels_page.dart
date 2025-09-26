@@ -23,7 +23,7 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     // Load initial reels
-    context.read<ReelsBloc>().add(const LoadReelsFeed());
+    context.read<ReelsBloc>().add(RefreshReelsFromServer());
 
     // Set up scroll listener for infinite loading
     _scrollController.addListener(_onScroll);
@@ -65,6 +65,15 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
     });
   }
 
+  Future<void> _onRefresh() async {
+    context.read<ReelsBloc>().add(const RefreshReelsFromServer());
+
+    // Wait for the refresh to complete
+    await context.read<ReelsBloc>().stream.firstWhere(
+      (state) => state is! ReelsLoading,
+    );
+  }
+
   Widget _buildAppBar() {
     return Container(
       height: kToolbarHeight + MediaQuery.of(context).padding.top,
@@ -101,104 +110,127 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
       return _buildEmptyState();
     }
 
-    return PageView.builder(
-      controller: _pageController,
-      scrollDirection: Axis.vertical,
-      onPageChanged: _onPageChanged,
-      itemCount: reels.length,
-      itemBuilder: (context, index) {
-        final reel = reels[index];
-        final isCurrentReel = index == _currentIndex;
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      backgroundColor: Colors.black87,
+      color: Colors.white,
+      child: PageView.builder(
+        controller: _pageController,
+        scrollDirection: Axis.vertical,
+        onPageChanged: _onPageChanged,
+        itemCount: reels.length,
+        itemBuilder: (context, index) {
+          final reel = reels[index];
+          final isCurrentReel = index == _currentIndex;
 
-        return ReelItem(
-          reel: reel,
-          isVisible: isCurrentReel,
-          onView: () => _onReelView(reel.id),
-          autoPlay: true,
-        );
-      },
+          return ReelItem(
+            reel: reel,
+            isVisible: isCurrentReel,
+            onView: () => _onReelView(reel.id),
+            autoPlay: true,
+          );
+        },
+      ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Container(
-      color: Colors.black,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'No reels available',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      backgroundColor: Colors.black87,
+      color: Colors.white,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          color: Colors.black,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'No reels available',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Check back later for new content',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () {
+                    context.read<ReelsBloc>().add(
+                      const RefreshReelsFromServer(),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Refresh'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Check back later for new content',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () {
-                context.read<ReelsBloc>().add(
-                  const LoadReelsFeed(refresh: true),
-                );
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Refresh'),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildErrorState(String message) {
-    return Container(
-      color: Colors.black,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Something went wrong',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      backgroundColor: Colors.black87,
+      color: Colors.white,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          color: Colors.black,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Something went wrong',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    message,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    onPressed: () {
+                      context.read<ReelsBloc>().add(
+                        const RefreshReelsFromServer(),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Try Again'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () {
-                  context.read<ReelsBloc>().add(
-                    const LoadReelsFeed(refresh: true),
-                  );
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Try Again'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -216,18 +248,17 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
       extendBodyBehindAppBar: true,
       body: BlocConsumer<ReelsBloc, ReelsState>(
         listener: (context, state) {
-          if (state is ReelsError) {
+          if (state is ReelsFeedLoaded && state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: Text(state.errorMessage!),
                 backgroundColor: Colors.red,
               ),
             );
+            context.read<ReelsBloc>().add(ClearErrorMessage());
           }
         },
-        buildWhen: (previous, current) {
-          return current is! ReelsError;
-        },
+
         builder: (context, state) {
           return Stack(
             children: [
