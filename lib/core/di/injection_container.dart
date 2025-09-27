@@ -314,7 +314,10 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<RecipesRepository>(
-    () => RecipesRepositoryImpl(remoteDataSource: sl()),
+    () => RecipesRepositoryImpl(
+      remoteDataSource: sl(),
+      authLocalDataSource: sl(),
+    ),
   );
 
   // Data sources

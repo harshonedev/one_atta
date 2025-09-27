@@ -90,10 +90,11 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> toggleRecipeLike(String id) async {
+  Future<Map<String, dynamic>> toggleRecipeLike(String token,String id) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.post,
       url: '$baseUrl/$id/like',
+      token: token
     );
 
     return switch (response) {
@@ -105,10 +106,11 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
   }
 
   @override
-  Future<List<RecipeModel>> getLikedRecipes() async {
+  Future<List<RecipeModel>> getLikedRecipes(String token) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.get,
       url: '$baseUrl/liked',
+      token: token
     );
 
     return switch (response) {

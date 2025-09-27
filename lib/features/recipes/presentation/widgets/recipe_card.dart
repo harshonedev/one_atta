@@ -110,6 +110,8 @@ class RecipeCard extends StatelessWidget {
                             ? 'Cook with ${recipe.blendUsed!.name}'
                             : 'View Recipe',
                         style: const TextStyle(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,

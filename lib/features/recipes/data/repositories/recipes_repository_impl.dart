@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/failures.dart';
+import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
 import 'package:one_atta/features/recipes/data/models/recipe_request_model.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
@@ -9,8 +10,12 @@ import 'package:one_atta/features/recipes/domain/repositories/recipes_repository
 
 class RecipesRepositoryImpl implements RecipesRepository {
   final RecipesRemoteDataSource remoteDataSource;
+  final AuthLocalDataSource authLocalDataSource;
 
-  RecipesRepositoryImpl({required this.remoteDataSource});
+  RecipesRepositoryImpl({
+    required this.remoteDataSource,
+    required this.authLocalDataSource,
+  });
 
   @override
   Future<Either<Failure, List<RecipeEntity>>> getAllRecipes() async {
@@ -84,7 +89,11 @@ class RecipesRepositoryImpl implements RecipesRepository {
     String id,
   ) async {
     try {
-      final result = await remoteDataSource.toggleRecipeLike(id);
+      final token = await authLocalDataSource.getToken();
+      if (token == null) {
+        return Left(UnauthorizedFailure('User is not authenticated'));
+      }
+      final result = await remoteDataSource.toggleRecipeLike(id, token);
       return Right(result);
     } on Failure catch (failure) {
       return Left(failure);
@@ -96,7 +105,12 @@ class RecipesRepositoryImpl implements RecipesRepository {
   @override
   Future<Either<Failure, List<RecipeEntity>>> getLikedRecipes() async {
     try {
-      final result = await remoteDataSource.getLikedRecipes();
+      final token = await authLocalDataSource.getToken();
+      if (token == null) {
+        return Left(UnauthorizedFailure('User is not authenticated'));
+      }
+
+      final result = await remoteDataSource.getLikedRecipes(token);
       return Right(result.map((recipe) => recipe.toEntity()).toList());
     } on Failure catch (failure) {
       return Left(failure);
