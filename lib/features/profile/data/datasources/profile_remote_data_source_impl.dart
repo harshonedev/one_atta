@@ -11,7 +11,7 @@ import 'package:one_atta/features/profile/data/models/user_profile_model.dart';
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   final ApiRequest apiRequest;
   static final String baseUrl = ApiEndpoints.auth;
-  static final String loyaltyBaseUrl = '${ApiEndpoints.baseUrl}/loyalty';
+  static final String loyaltyBaseUrl = ApiEndpoints.loyalty;
 
   ProfileRemoteDataSourceImpl({required this.apiRequest});
 
@@ -26,7 +26,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     return switch (response) {
       ApiSuccess() =>
         response.data['success'] == true
-            ? UserProfileModel.fromJson(response.data)
+            ? UserProfileModel.fromJson(response.data['data']['user'])
             : throw Exception(
                 response.data['message'] ?? 'Failed to get user profile',
               ),
@@ -49,7 +49,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     return switch (response) {
       ApiSuccess() =>
         response.data['success'] == true
-            ? UserProfileModel.fromJson(response.data)
+            ? UserProfileModel.fromJson(response.data['data']['user'])
             : throw Exception(
                 response.data['message'] ?? 'Failed to update profile',
               ),
@@ -165,7 +165,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     return switch (response) {
       ApiSuccess() =>
         response.data['success'] == true
-            ? (response.data['data'] as List<dynamic>)
+            ? (response.data['history'] as List<dynamic>)
                   .map((json) => LoyaltyTransactionModel.fromJson(json))
                   .toList()
             : throw Exception(

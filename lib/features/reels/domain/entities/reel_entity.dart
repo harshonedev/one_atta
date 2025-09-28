@@ -279,7 +279,6 @@ class ReelSearchResultEntity extends Equatable {
   List<Object?> get props => [reels, searchQuery, count];
 }
 
-
 class ReelLikeEntity {
   final bool isLiked;
   final int likesCount;

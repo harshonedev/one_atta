@@ -18,11 +18,14 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? (response.data['data'] as List<dynamic>)
-              .map((recipe) => RecipeModel.fromJson(recipe))
-              .toList()
-          : throw Exception(response.data['message'] ?? 'Failed to fetch recipes'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data'] as List<dynamic>)
+                  .map((recipe) => RecipeModel.fromJson(recipe))
+                  .toList()
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch recipes',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -35,9 +38,10 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? RecipeModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Recipe not found'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? RecipeModel.fromJson(response.data['data'])
+            : throw Exception(response.data['message'] ?? 'Recipe not found'),
       ApiError() => throw response.failure,
     };
   }
@@ -51,9 +55,12 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? RecipeModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Failed to create recipe'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? RecipeModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to create recipe',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -67,9 +74,12 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? RecipeModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Failed to update recipe'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? RecipeModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to update recipe',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -82,25 +92,31 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? RecipeModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Failed to delete recipe'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? RecipeModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to delete recipe',
+              ),
       ApiError() => throw response.failure,
     };
   }
 
   @override
-  Future<Map<String, dynamic>> toggleRecipeLike(String token,String id) async {
+  Future<Map<String, dynamic>> toggleRecipeLike(String token, String id) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.post,
       url: '$baseUrl/$id/like',
-      token: token
+      token: token,
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? response.data
-          : throw Exception(response.data['message'] ?? 'Failed to toggle recipe like'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? response.data
+            : throw Exception(
+                response.data['message'] ?? 'Failed to toggle recipe like',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -110,15 +126,18 @@ class RecipesRemoteDataSourceImpl implements RecipesRemoteDataSource {
     final response = await apiRequest.callRequest(
       method: HttpMethod.get,
       url: '$baseUrl/liked',
-      token: token
+      token: token,
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? (response.data['data'] as List<dynamic>)
-              .map((recipe) => RecipeModel.fromJson(recipe))
-              .toList()
-          : throw Exception(response.data['message'] ?? 'Failed to fetch liked recipes'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data'] as List<dynamic>)
+                  .map((recipe) => RecipeModel.fromJson(recipe))
+                  .toList()
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch liked recipes',
+              ),
       ApiError() => throw response.failure,
     };
   }

@@ -170,7 +170,6 @@ class LoyaltyPointsBloc extends Bloc<LoyaltyPointsEvent, LoyaltyPointsState> {
     if (failure is UnauthorizedFailure) return 'unauthorized';
     if (failure is NetworkFailure) return 'network';
     if (failure is ValidationFailure) return 'validation';
-    if (failure is CacheFailure) return 'cache';
     return 'server';
   }
 }

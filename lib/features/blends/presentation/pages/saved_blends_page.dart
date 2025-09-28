@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
+import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/presentation/bloc/saved_blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/saved_blends_event.dart';
 import 'package:one_atta/features/blends/presentation/bloc/saved_blends_state.dart';
+import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
 
 class SavedBlendsPage extends StatelessWidget {
   const SavedBlendsPage({super.key});
@@ -125,37 +127,72 @@ class SavedBlendsView extends StatelessWidget {
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.blender_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.outline,
+            // Large blend icon
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(60),
+              ),
+              child: Icon(
+                Icons.blender_outlined,
+                size: 60,
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               'No Saved Blends',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Create your first custom blend to get started',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
+              'Create your first custom blend to get started.\nYour blends will appear here for easy access.',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             FilledButton.icon(
               onPressed: () {
                 context.push('/customizer');
               },
-              icon: const Icon(Icons.add),
-              label: const Text('Create Blend'),
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text('Create Your First Blend'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                textStyle: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () {
+                context.push('/blends');
+              },
+              icon: const Icon(Icons.explore_outlined, size: 20),
+              label: const Text('Explore Public Blends'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                textStyle: Theme.of(context).textTheme.titleSmall,
+              ),
             ),
           ],
         ),
@@ -177,87 +214,79 @@ class SavedBlendListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image section
+            NetworkImageLoader(
+              imageUrl: BlendImages.getImageForBlend(blend.id),
+              height: 180,
+              width: double.infinity,
+              borderRadius: BorderRadius.circular(12),
+            ),
+
+            // Content section
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          blend.name,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Created: ${_formatDate(blend.createdAt)}',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Ingredients: ${blend.additives.length}',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: blend.isPublic
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(context).colorScheme.secondaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      blend.isPublic ? 'Public' : 'Private',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: blend.isPublic
-                            ? Theme.of(context).colorScheme.onPrimaryContainer
-                            : Theme.of(
-                                context,
-                              ).colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
+                  // Header with name
                   Text(
-                    '₹${blend.pricePerKg.toStringAsFixed(2)}/kg',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    blend.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
                     ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Ingredients count
+                  Text(
+                    'Ingredients: ${blend.additives.length}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Price and creation date
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '₹${blend.pricePerKg.toStringAsFixed(2)}/kg',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                          ),
+                          Text(
+                            'Created: ${_formatDate(blend.createdAt)}',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

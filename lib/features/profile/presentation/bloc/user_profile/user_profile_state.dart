@@ -25,12 +25,11 @@ class UserProfileUpdating extends UserProfileState {
 // Success States
 class UserProfileLoaded extends UserProfileState {
   final UserProfileEntity profile;
-  final bool isFromCache;
 
-  const UserProfileLoaded({required this.profile, this.isFromCache = false});
+  const UserProfileLoaded({required this.profile});
 
   @override
-  List<Object?> get props => [profile, isFromCache];
+  List<Object?> get props => [profile];
 }
 
 class UserProfileUpdated extends UserProfileState {
@@ -41,10 +40,6 @@ class UserProfileUpdated extends UserProfileState {
 
   @override
   List<Object?> get props => [profile, message];
-}
-
-class UserProfileCacheCleared extends UserProfileState {
-  const UserProfileCacheCleared();
 }
 
 // Error States
@@ -65,7 +60,5 @@ class UserProfileError extends UserProfileState {
 
   /// Check if error is due to validation issues
   bool get isValidationError => errorType == 'validation';
-
-  /// Check if error is due to cache issues
-  bool get isCacheError => errorType == 'cache';
 }
+ 

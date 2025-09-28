@@ -15,10 +15,6 @@ class RefreshLoyaltyHistoryRequested extends LoyaltyHistoryEvent {
   const RefreshLoyaltyHistoryRequested();
 }
 
-class ClearLoyaltyHistoryCacheRequested extends LoyaltyHistoryEvent {
-  const ClearLoyaltyHistoryCacheRequested();
-}
-
 class FilterLoyaltyHistoryRequested extends LoyaltyHistoryEvent {
   final String? filterType; // 'earning', 'redemption', null for all
   final DateTime? startDate;

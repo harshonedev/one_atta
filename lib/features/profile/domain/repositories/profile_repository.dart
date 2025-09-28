@@ -19,15 +19,6 @@ abstract class ProfileRepository {
     ProfileUpdateEntity profileUpdate,
   );
 
-  /// Cache user profile data locally
-  Future<Either<Failure, void>> cacheUserProfile(UserProfileEntity profile);
-
-  /// Get cached user profile data
-  Future<Either<Failure, UserProfileEntity?>> getCachedUserProfile();
-
-  /// Clear cached profile data
-  Future<Either<Failure, void>> clearCachedProfile();
-
   /// Loyalty Points Management
 
   /// Earn points from an order
@@ -60,16 +51,4 @@ abstract class ProfileRepository {
   /// Returns all earning and redemption transactions
   Future<Either<Failure, List<LoyaltyTransactionEntity>>>
   getLoyaltyTransactionHistory();
-
-  /// Cache loyalty transaction history locally
-  Future<Either<Failure, void>> cacheLoyaltyHistory(
-    List<LoyaltyTransactionEntity> transactions,
-  );
-
-  /// Get cached loyalty transaction history
-  Future<Either<Failure, List<LoyaltyTransactionEntity>?>>
-  getCachedLoyaltyHistory();
-
-  /// Clear cached loyalty history
-  Future<Either<Failure, void>> clearCachedLoyaltyHistory();
 }

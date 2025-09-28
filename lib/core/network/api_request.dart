@@ -34,10 +34,10 @@ class ApiRequest {
       );
 
       logger.i(
-        '$method Request to $url completed with status code ${response.statusCode}',
+        '✅ ${method.name.toUpperCase()} Request to $url completed with status code ${response.statusCode}',
       );
       // log response data for debugging
-      logger.d('Response data: ${response.data}');
+      logger.d('📥 Response data: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ApiSuccess<Map<String, dynamic>>(response.data);
@@ -48,15 +48,29 @@ class ApiRequest {
         return ApiError(ServerFailure('Server error: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      logger.e('DioException in GetRequest: ${e.message}');
+      logger.e(
+        '❌ DioException in ${method.name.toUpperCase()} Request to $url: ${e.message}',
+      );
 
       if (e.response != null) {
+        logger.e('📥 Error Response Data: ${e.response!.data}');
+        logger.e('🔢 Status Code: ${e.response!.statusCode}');
+
         switch (e.response!.statusCode) {
           case 400:
-            logger.e('Bad request: ${e.response!.data}');
+            logger.e('❌ Bad request to $url: ${e.response!.data}');
             return ApiError(
               ValidationFailure(
                 e.response!.data['message'] ?? 'Invalid request',
+              ),
+            );
+          case 404:
+            logger.e(
+              '❌ Endpoint not found: $url - Response: ${e.response!.data}',
+            );
+            return ApiError(
+              ServerFailure(
+                e.response!.data['message'] ?? 'Resource not found',
               ),
             );
           case 500:

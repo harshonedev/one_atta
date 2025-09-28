@@ -32,7 +32,13 @@ class ReelsFeedLoaded extends ReelsState {
   });
 
   @override
-  List<Object?> get props => [reels, nextCursor, hasMore, isLoadingMore, errorMessage];
+  List<Object?> get props => [
+    reels,
+    nextCursor,
+    hasMore,
+    isLoadingMore,
+    errorMessage,
+  ];
 
   ReelsFeedLoaded copyWith({
     List<ReelEntity>? reels,
@@ -46,7 +52,7 @@ class ReelsFeedLoaded extends ReelsState {
       nextCursor: nextCursor ?? this.nextCursor,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      errorMessage: errorMessage ?? this.errorMessage
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -59,5 +65,3 @@ class ReelsError extends ReelsState {
   @override
   List<Object?> get props => [message];
 }
-
-

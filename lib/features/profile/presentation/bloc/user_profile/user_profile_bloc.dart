@@ -14,7 +14,6 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     on<GetUserProfileRequested>(_onGetUserProfileRequested);
     on<UpdateProfileRequested>(_onUpdateProfileRequested);
     on<RefreshProfileRequested>(_onRefreshProfileRequested);
-    on<ClearProfileCacheRequested>(_onClearProfileCacheRequested);
   }
 
   Future<void> _onGetUserProfileRequested(
@@ -77,10 +76,7 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     Emitter<UserProfileState> emit,
   ) async {
     emit(const UserProfileLoading());
-    logger.i('Refreshing user profile (bypassing cache)');
-
-    // Clear cache first to force fresh data
-    await profileRepository.clearCachedProfile();
+    logger.i('Refreshing user profile');
 
     final result = await profileRepository.getUserProfile();
     result.fold(
@@ -95,31 +91,7 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
       },
       (profile) {
         logger.i('User profile refreshed successfully');
-        emit(UserProfileLoaded(profile: profile, isFromCache: false));
-      },
-    );
-  }
-
-  Future<void> _onClearProfileCacheRequested(
-    ClearProfileCacheRequested event,
-    Emitter<UserProfileState> emit,
-  ) async {
-    logger.i('Clearing profile cache');
-
-    final result = await profileRepository.clearCachedProfile();
-    result.fold(
-      (failure) {
-        logger.e('Failed to clear profile cache: ${failure.message}');
-        emit(
-          UserProfileError(
-            message: failure.message,
-            errorType: _getErrorType(failure),
-          ),
-        );
-      },
-      (_) {
-        logger.i('Profile cache cleared successfully');
-        emit(const UserProfileCacheCleared());
+        emit(UserProfileLoaded(profile: profile));
       },
     );
   }
@@ -128,7 +100,6 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     if (failure is UnauthorizedFailure) return 'unauthorized';
     if (failure is NetworkFailure) return 'network';
     if (failure is ValidationFailure) return 'validation';
-    if (failure is CacheFailure) return 'cache';
     return 'server';
   }
 }

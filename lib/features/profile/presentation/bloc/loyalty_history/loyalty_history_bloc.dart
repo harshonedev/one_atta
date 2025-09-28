@@ -15,7 +15,6 @@ class LoyaltyHistoryBloc
     : super(const LoyaltyHistoryInitial()) {
     on<GetLoyaltyHistoryRequested>(_onGetLoyaltyHistoryRequested);
     on<RefreshLoyaltyHistoryRequested>(_onRefreshLoyaltyHistoryRequested);
-    on<ClearLoyaltyHistoryCacheRequested>(_onClearLoyaltyHistoryCacheRequested);
     on<FilterLoyaltyHistoryRequested>(_onFilterLoyaltyHistoryRequested);
   }
 
@@ -30,12 +29,26 @@ class LoyaltyHistoryBloc
     result.fold(
       (failure) {
         logger.e('Failed to get loyalty history: ${failure.message}');
-        emit(
-          LoyaltyHistoryError(
-            message: failure.message,
-            errorType: _getErrorType(failure),
-          ),
-        );
+
+        // Handle 404 errors gracefully - user might not have any loyalty history yet
+        if (failure is ServerFailure && failure.message.contains('404')) {
+          logger.i(
+            'No loyalty history found for user (404) - treating as empty history',
+          );
+          emit(
+            const LoyaltyHistoryLoaded(
+              transactions: [],
+              filteredTransactions: [],
+            ),
+          );
+        } else {
+          emit(
+            LoyaltyHistoryError(
+              message: failure.message,
+              errorType: _getErrorType(failure),
+            ),
+          );
+        }
       },
       (transactions) {
         logger.i('Loyalty history loaded: ${transactions.length} transactions');
@@ -43,7 +56,6 @@ class LoyaltyHistoryBloc
           LoyaltyHistoryLoaded(
             transactions: transactions,
             filteredTransactions: transactions,
-            isFromCache: true, // Assume cache-first strategy
           ),
         );
       },
@@ -66,21 +78,32 @@ class LoyaltyHistoryBloc
       emit(const LoyaltyHistoryLoading());
     }
 
-    logger.i('Refreshing loyalty transaction history (bypassing cache)');
-
-    // Clear cache first to force fresh data
-    await profileRepository.clearCachedLoyaltyHistory();
+    logger.i('Refreshing loyalty transaction history');
 
     final result = await profileRepository.getLoyaltyTransactionHistory();
     result.fold(
       (failure) {
         logger.e('Failed to refresh loyalty history: ${failure.message}');
-        emit(
-          LoyaltyHistoryError(
-            message: failure.message,
-            errorType: _getErrorType(failure),
-          ),
-        );
+
+        // Handle 404 errors gracefully - user might not have any loyalty history yet
+        if (failure is ServerFailure && failure.message.contains('404')) {
+          logger.i(
+            'No loyalty history found for user (404) - treating as empty history',
+          );
+          emit(
+            const LoyaltyHistoryLoaded(
+              transactions: [],
+              filteredTransactions: [],
+            ),
+          );
+        } else {
+          emit(
+            LoyaltyHistoryError(
+              message: failure.message,
+              errorType: _getErrorType(failure),
+            ),
+          );
+        }
       },
       (transactions) {
         logger.i(
@@ -90,63 +113,79 @@ class LoyaltyHistoryBloc
           LoyaltyHistoryLoaded(
             transactions: transactions,
             filteredTransactions: transactions,
-            isFromCache: false,
           ),
         );
       },
     );
   }
 
-  Future<void> _onClearLoyaltyHistoryCacheRequested(
-    ClearLoyaltyHistoryCacheRequested event,
-    Emitter<LoyaltyHistoryState> emit,
-  ) async {
-    logger.i('Clearing loyalty history cache');
-
-    final result = await profileRepository.clearCachedLoyaltyHistory();
-    result.fold(
-      (failure) {
-        logger.e('Failed to clear loyalty history cache: ${failure.message}');
-        emit(
-          LoyaltyHistoryError(
-            message: failure.message,
-            errorType: _getErrorType(failure),
-          ),
-        );
-      },
-      (_) {
-        logger.i('Loyalty history cache cleared successfully');
-        emit(const LoyaltyHistoryCacheCleared());
-      },
-    );
-  }
-
-  Future<void> _onFilterLoyaltyHistoryRequested(
+  void _onFilterLoyaltyHistoryRequested(
     FilterLoyaltyHistoryRequested event,
     Emitter<LoyaltyHistoryState> emit,
-  ) async {
-    if (state is! LoyaltyHistoryLoaded) {
-      logger.w('Cannot filter loyalty history: no data loaded');
-      return;
-    }
+  ) {
+    if (state is! LoyaltyHistoryLoaded) return;
 
     final currentState = state as LoyaltyHistoryLoaded;
-    logger.i(
-      'Filtering loyalty history with: ${event.filterType}, ${event.startDate}, ${event.endDate}',
+    logger.i('Applying filters to loyalty history: ${event.filterType}');
+
+    List<LoyaltyTransactionEntity> filteredTransactions = List.from(
+      currentState.transactions,
     );
 
-    final filteredTransactions = _applyFilters(
-      transactions: currentState.transactions,
-      filterType: event.filterType,
-      startDate: event.startDate,
-      endDate: event.endDate,
+    // Apply type filter
+    if (event.filterType != null) {
+      switch (event.filterType) {
+        case 'earning':
+          filteredTransactions = filteredTransactions
+              .where((transaction) => transaction.isEarned)
+              .toList();
+          break;
+        case 'redemption':
+          filteredTransactions = filteredTransactions
+              .where((transaction) => transaction.isRedeemed)
+              .toList();
+          break;
+      }
+    }
+
+    // Apply date filters
+    if (event.startDate != null) {
+      filteredTransactions = filteredTransactions
+          .where(
+            (transaction) =>
+                transaction.transactionDate.isAfter(event.startDate!) ||
+                transaction.transactionDate.isAtSameMomentAs(event.startDate!),
+          )
+          .toList();
+    }
+
+    if (event.endDate != null) {
+      // End date should include the entire end day
+      final endOfDay = DateTime(
+        event.endDate!.year,
+        event.endDate!.month,
+        event.endDate!.day,
+        23,
+        59,
+        59,
+      );
+      filteredTransactions = filteredTransactions
+          .where(
+            (transaction) =>
+                transaction.transactionDate.isBefore(endOfDay) ||
+                transaction.transactionDate.isAtSameMomentAs(endOfDay),
+          )
+          .toList();
+    }
+
+    logger.i(
+      'Filtered transactions: ${filteredTransactions.length}/${currentState.transactions.length}',
     );
 
     emit(
       LoyaltyHistoryLoaded(
         transactions: currentState.transactions,
         filteredTransactions: filteredTransactions,
-        isFromCache: currentState.isFromCache,
         appliedFilter: event.filterType,
         filterStartDate: event.startDate,
         filterEndDate: event.endDate,
@@ -154,58 +193,9 @@ class LoyaltyHistoryBloc
     );
   }
 
-  List<LoyaltyTransactionEntity> _applyFilters({
-    required List<LoyaltyTransactionEntity> transactions,
-    String? filterType,
-    DateTime? startDate,
-    DateTime? endDate,
-  }) {
-    var filtered = transactions;
-
-    // Filter by transaction type
-    if (filterType != null) {
-      switch (filterType.toLowerCase()) {
-        case 'earning':
-          filtered = filtered.where((t) => t.isEarned).toList();
-          break;
-        case 'redemption':
-          filtered = filtered.where((t) => t.isRedeemed).toList();
-          break;
-      }
-    }
-
-    // Filter by date range
-    if (startDate != null) {
-      filtered = filtered
-          .where(
-            (t) => t.transactionDate.isAfter(
-              startDate.subtract(const Duration(days: 1)),
-            ),
-          )
-          .toList();
-    }
-
-    if (endDate != null) {
-      filtered = filtered
-          .where(
-            (t) => t.transactionDate.isBefore(
-              endDate.add(const Duration(days: 1)),
-            ),
-          )
-          .toList();
-    }
-
-    // Sort by transaction date (newest first)
-    filtered.sort((a, b) => b.transactionDate.compareTo(a.transactionDate));
-
-    return filtered;
-  }
-
   String _getErrorType(Failure failure) {
     if (failure is UnauthorizedFailure) return 'unauthorized';
     if (failure is NetworkFailure) return 'network';
-    if (failure is ValidationFailure) return 'validation';
-    if (failure is CacheFailure) return 'cache';
     return 'server';
   }
 }

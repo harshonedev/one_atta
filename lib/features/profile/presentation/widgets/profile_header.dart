@@ -59,14 +59,23 @@ class UserProfileHeader extends StatelessWidget {
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: colorScheme.onPrimary.withOpacity(0.2),
-                      child: Text(
-                        profile.name.isNotEmpty
-                            ? profile.name[0].toUpperCase()
-                            : 'U',
-                        style: textTheme.headlineLarge?.copyWith(
-                          color: colorScheme.onPrimary,
-                        ),
-                      ),
+                      backgroundImage:
+                          profile.profilePicture != null &&
+                              profile.profilePicture!.isNotEmpty
+                          ? NetworkImage(profile.profilePicture!)
+                          : null,
+                      child:
+                          profile.profilePicture == null ||
+                              profile.profilePicture!.isEmpty
+                          ? Text(
+                              profile.name.isNotEmpty
+                                  ? profile.name[0].toUpperCase()
+                                  : 'U',
+                              style: textTheme.headlineLarge?.copyWith(
+                                color: colorScheme.onPrimary,
+                              ),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -85,6 +94,13 @@ class UserProfileHeader extends StatelessWidget {
                             profile.email,
                             style: textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onPrimary.withOpacity(0.8),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            profile.mobile,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onPrimary.withOpacity(0.7),
                             ),
                           ),
                         ],

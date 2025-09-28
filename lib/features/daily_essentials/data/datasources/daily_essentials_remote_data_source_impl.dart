@@ -37,16 +37,19 @@ class DailyEssentialsRemoteDataSourceImpl
 
     // Create URL with query parameters
     final uri = Uri.parse(baseUrl).replace(queryParameters: queryParams);
-    
+
     final response = await apiRequest.callRequest(
       method: HttpMethod.get,
       url: uri.toString(),
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? ProductsApiResponse.fromJson(response.data)
-          : throw Exception(response.data['message'] ?? 'Failed to fetch products'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? ProductsApiResponse.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch products',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -59,9 +62,12 @@ class DailyEssentialsRemoteDataSourceImpl
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? SingleProductApiResponse.fromJson(response.data)
-          : throw Exception(response.data['message'] ?? 'Failed to fetch product'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? SingleProductApiResponse.fromJson(response.data)
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch product',
+              ),
       ApiError() => throw response.failure,
     };
   }

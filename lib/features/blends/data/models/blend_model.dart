@@ -21,6 +21,16 @@ class BlendModel extends BlendEntity {
   });
 
   factory BlendModel.fromJson(Map<String, dynamic> json) {
+    // Handle created_by - it can be either a string (ID) or an object
+    String createdBy;
+    if (json['created_by'] is Map<String, dynamic>) {
+      // If it's an object, extract the ID
+      createdBy = json['created_by']['_id'] ?? json['created_by']['id'] ?? '';
+    } else {
+      // If it's already a string, use it directly
+      createdBy = json['created_by'] ?? '';
+    }
+
     return BlendModel(
       id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? '',
@@ -29,7 +39,7 @@ class BlendModel extends BlendEntity {
               ?.map((additive) => AdditiveModel.fromJson(additive))
               .toList() ??
           [],
-      createdBy: json['created_by'] ?? '',
+      createdBy: createdBy,
       shareCode: json['share_code'] ?? '',
       shareCount: json['share_count'] ?? 0,
       isPublic: json['is_public'] ?? false,

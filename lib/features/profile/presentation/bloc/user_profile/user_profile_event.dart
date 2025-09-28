@@ -9,11 +9,10 @@ abstract class UserProfileEvent extends Equatable {
 }
 
 class GetUserProfileRequested extends UserProfileEvent {
-  final bool forceRefresh;
-  const GetUserProfileRequested({this.forceRefresh = false});
+  const GetUserProfileRequested();
 
   @override
-  List<Object> get props => [forceRefresh];
+  List<Object> get props => [];
 }
 
 class UpdateProfileRequested extends UserProfileEvent {
@@ -27,8 +26,4 @@ class UpdateProfileRequested extends UserProfileEvent {
 
 class RefreshProfileRequested extends UserProfileEvent {
   const RefreshProfileRequested();
-}
-
-class ClearProfileCacheRequested extends UserProfileEvent {
-  const ClearProfileCacheRequested();
 }

@@ -54,9 +54,12 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? AddressModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Failed to create address'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? AddressModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to create address',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -70,11 +73,14 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? (response.data['data'] as List<dynamic>)
-              .map((address) => AddressModel.fromJson(address))
-              .toList()
-          : throw Exception(response.data['message'] ?? 'Failed to fetch addresses'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data'] as List<dynamic>)
+                  .map((address) => AddressModel.fromJson(address))
+                  .toList()
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch addresses',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -91,9 +97,10 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? AddressModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Address not found'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? AddressModel.fromJson(response.data['data'])
+            : throw Exception(response.data['message'] ?? 'Address not found'),
       ApiError() => throw response.failure,
     };
   }
@@ -118,7 +125,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     String? instructions,
   }) async {
     final requestData = <String, dynamic>{};
-    
+
     if (label != null) requestData['label'] = label;
     if (addressLine1 != null) requestData['address_line1'] = addressLine1;
     if (addressLine2 != null) requestData['address_line2'] = addressLine2;
@@ -144,15 +151,21 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? AddressModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Failed to update address'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? AddressModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to update address',
+              ),
       ApiError() => throw response.failure,
     };
   }
 
   @override
-  Future<AddressModel> deleteAddress(String addressId, {required String token}) async {
+  Future<AddressModel> deleteAddress(
+    String addressId, {
+    required String token,
+  }) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.delete,
       url: '$baseUrl/$addressId',
@@ -160,9 +173,12 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? AddressModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Failed to delete address'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? AddressModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to delete address',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -179,9 +195,12 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? AddressModel.fromJson(response.data['data'])
-          : throw Exception(response.data['message'] ?? 'Failed to set default address'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? AddressModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to set default address',
+              ),
       ApiError() => throw response.failure,
     };
   }

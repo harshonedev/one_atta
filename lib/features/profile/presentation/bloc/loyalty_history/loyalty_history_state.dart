@@ -31,7 +31,6 @@ class LoyaltyHistoryRefreshing extends LoyaltyHistoryState {
 class LoyaltyHistoryLoaded extends LoyaltyHistoryState {
   final List<LoyaltyTransactionEntity> transactions;
   final List<LoyaltyTransactionEntity> filteredTransactions;
-  final bool isFromCache;
   final String? appliedFilter;
   final DateTime? filterStartDate;
   final DateTime? filterEndDate;
@@ -39,7 +38,6 @@ class LoyaltyHistoryLoaded extends LoyaltyHistoryState {
   const LoyaltyHistoryLoaded({
     required this.transactions,
     required this.filteredTransactions,
-    this.isFromCache = false,
     this.appliedFilter,
     this.filterStartDate,
     this.filterEndDate,
@@ -49,7 +47,6 @@ class LoyaltyHistoryLoaded extends LoyaltyHistoryState {
   List<Object?> get props => [
     transactions,
     filteredTransactions,
-    isFromCache,
     appliedFilter,
     filterStartDate,
     filterEndDate,
@@ -90,10 +87,6 @@ class LoyaltyHistoryLoaded extends LoyaltyHistoryState {
       appliedFilter != null || filterStartDate != null || filterEndDate != null;
 }
 
-class LoyaltyHistoryCacheCleared extends LoyaltyHistoryState {
-  const LoyaltyHistoryCacheCleared();
-}
-
 // Error States
 class LoyaltyHistoryError extends LoyaltyHistoryState {
   final String message;
@@ -109,7 +102,4 @@ class LoyaltyHistoryError extends LoyaltyHistoryState {
 
   /// Check if error is due to network issues
   bool get isNetworkError => errorType == 'network';
-
-  /// Check if error is due to cache issues
-  bool get isCacheError => errorType == 'cache';
 }

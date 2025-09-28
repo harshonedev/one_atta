@@ -42,7 +42,7 @@ class ReelsRemoteDataSourceImpl implements ReelsRemoteDataSource {
     final response = await apiRequest.callRequest(
       method: HttpMethod.post,
       url: '$baseUrl/$id/view',
-      token: token
+      token: token,
     );
 
     return switch (response) {
@@ -61,7 +61,7 @@ class ReelsRemoteDataSourceImpl implements ReelsRemoteDataSource {
     final response = await apiRequest.callRequest(
       method: HttpMethod.post,
       url: '$baseUrl/$reelId/like',
-      token: token
+      token: token,
     );
 
     return switch (response) {
@@ -85,7 +85,7 @@ class ReelsRemoteDataSourceImpl implements ReelsRemoteDataSource {
       method: HttpMethod.post,
       url: '$baseUrl/$reelId/share',
       data: {'shareType': shareType},
-      token: token
+      token: token,
     );
 
     return switch (response) {
@@ -107,7 +107,7 @@ class ReelsRemoteDataSourceImpl implements ReelsRemoteDataSource {
     final response = await apiRequest.callRequest(
       method: HttpMethod.get,
       url: '$baseUrl/$reelId/like-status',
-      token: token
+      token: token,
     );
 
     return switch (response) {

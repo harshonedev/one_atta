@@ -18,11 +18,14 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? (response.data['data']['blends'] as List<dynamic>)
-              .map((blend) => PublicBlendModel.fromJson(blend))
-              .toList()
-          : throw Exception(response.data['message'] ?? 'Failed to fetch public blends'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data']['blends'] as List<dynamic>)
+                  .map((blend) => PublicBlendModel.fromJson(blend))
+                  .toList()
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch public blends',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -36,9 +39,12 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? BlendModel.fromJson(response.data['data']['blend'])
-          : throw Exception(response.data['message'] ?? 'Failed to create blend'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? BlendModel.fromJson(response.data['data']['blend'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to create blend',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -65,9 +71,12 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? response.data['data']['shareCode'] as String
-          : throw Exception(response.data['message'] ?? 'Failed to share blend'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? response.data['data']['shareCode'] as String
+            : throw Exception(
+                response.data['message'] ?? 'Failed to share blend',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -82,7 +91,9 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
     switch (response) {
       case ApiSuccess():
         if (response.data['success'] != true) {
-          throw Exception(response.data['message'] ?? 'Failed to subscribe to blend');
+          throw Exception(
+            response.data['message'] ?? 'Failed to subscribe to blend',
+          );
         }
         break;
       case ApiError():
@@ -99,9 +110,12 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? BlendModel.fromJson(response.data['data']['blend'])
-          : throw Exception(response.data['message'] ?? 'Failed to update blend'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? BlendModel.fromJson(response.data['data']['blend'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to update blend',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -114,9 +128,12 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? PublicBlendModel.fromJson(response.data['data']['blend'])
-          : throw Exception(response.data['message'] ?? 'Failed to get blend by share code'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? PublicBlendModel.fromJson(response.data['data']['blend'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to get blend by share code',
+              ),
       ApiError() => throw response.failure,
     };
   }
@@ -125,16 +142,19 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
   Future<List<BlendModel>> getUserBlends(String token) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.get,
-      url: '$baseUrl/user',
+      url: '$baseUrl/my-blends',
       token: token,
     );
 
     return switch (response) {
-      ApiSuccess() => response.data['success'] == true
-          ? (response.data['data']['blends'] as List<dynamic>)
-              .map((blend) => BlendModel.fromJson(blend))
-              .toList()
-          : throw Exception(response.data['message'] ?? 'Failed to get user blends'),
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data']['blends'] as List<dynamic>)
+                  .map((blend) => BlendModel.fromJson(blend))
+                  .toList()
+            : throw Exception(
+                response.data['message'] ?? 'Failed to get user blends',
+              ),
       ApiError() => throw response.failure,
     };
   }

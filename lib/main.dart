@@ -5,6 +5,7 @@ import 'package:one_atta/core/routing/app_router.dart';
 import 'package:one_atta/core/theme/theme.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
+import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
@@ -52,9 +53,16 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => di.sl<CartBloc>()),
         BlocProvider(create: (context) => di.sl<DailyEssentialsBloc>()),
         BlocProvider(create: (context) => di.sl<AddressBloc>()),
-        BlocProvider(create: (context) => di.sl<UserProfileBloc>()),
+        BlocProvider(
+          create: (context) =>
+              di.sl<UserProfileBloc>()..add(const GetUserProfileRequested()),
+        ),
         BlocProvider(create: (context) => di.sl<LoyaltyPointsBloc>()),
-        BlocProvider(create: (context) => di.sl<LoyaltyHistoryBloc>()),
+        BlocProvider(
+          create: (context) =>
+              di.sl<LoyaltyHistoryBloc>()
+                ..add(const GetLoyaltyHistoryRequested()),
+        ),
         BlocProvider(
           create: (context) => di.sl<ReelsBloc>()..add(const LoadReelsFeed()),
         ),

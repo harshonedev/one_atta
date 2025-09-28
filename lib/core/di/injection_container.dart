@@ -72,8 +72,6 @@ import 'package:one_atta/features/address/domain/repositories/address_repository
 import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
 
 // Profile
-import 'package:one_atta/features/profile/data/datasources/profile_local_data_source.dart';
-import 'package:one_atta/features/profile/data/datasources/profile_local_data_source_impl.dart';
 import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source.dart';
 import 'package:one_atta/features/profile/data/datasources/profile_remote_data_source_impl.dart';
 import 'package:one_atta/features/profile/data/repositories/profile_repository_impl.dart';
@@ -245,7 +243,6 @@ Future<void> init() async {
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(
       remoteDataSource: sl(),
-      localDataSource: sl(),
       authLocalDataSource: sl(),
     ),
   );
@@ -253,10 +250,6 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(apiRequest: sl()),
-  );
-
-  sl.registerLazySingleton<ProfileLocalDataSource>(
-    () => ProfileLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
   //! Features - Reels
