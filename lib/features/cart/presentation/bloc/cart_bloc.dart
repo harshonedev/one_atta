@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/domain/usecases/add_to_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/clear_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/get_cart_item_count_usecase.dart';
@@ -16,6 +17,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final ClearCartUseCase clearCartUseCase;
   final GetCartItemCountUseCase getCartItemCountUseCase;
 
+  // Track current pricing state
+  double _couponDiscount = 0.0;
+  double _loyaltyDiscount = 0.0;
+  String? _appliedCouponCode;
+  int _loyaltyPointsRedeemed = 0;
+
   CartBloc({
     required this.getCartUseCase,
     required this.addToCartUseCase,
@@ -30,6 +37,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<UpdateItemQuantity>(_onUpdateItemQuantity);
     on<ClearCart>(_onClearCart);
     on<LoadCartItemCount>(_onLoadCartItemCount);
+    on<ApplyCoupon>(_onApplyCoupon);
+    on<RemoveCoupon>(_onRemoveCoupon);
+    on<ApplyLoyaltyPoints>(_onApplyLoyaltyPoints);
+    on<RemoveLoyaltyPoints>(_onRemoveLoyaltyPoints);
+    on<UpdateCartPricing>(_onUpdateCartPricing);
   }
 
   Future<void> _onLoadCart(LoadCart event, Emitter<CartState> emit) async {
@@ -43,9 +55,48 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     ) {
       countResult.fold(
         (failure) => emit(CartError(message: failure.message)),
-        (count) => emit(CartLoaded(cart: cart, itemCount: count)),
+        (count) => emit(_calculateCartTotals(cart, count)),
       );
     });
+  }
+
+  // Helper method to calculate all cart totals
+  CartLoaded _calculateCartTotals(cart, count) {
+    final mrpTotal = _calculateMrpTotal(cart.items);
+    final itemTotal = _calculateItemTotal(cart.items);
+    final deliveryFee = _calculateDeliveryFee(itemTotal);
+    final savingsFromMrp = mrpTotal - itemTotal;
+    final totalSavings = savingsFromMrp + _couponDiscount + _loyaltyDiscount;
+    final toPayTotal =
+        itemTotal + deliveryFee - _couponDiscount - _loyaltyDiscount;
+
+    return CartLoaded(
+      cart: cart,
+      itemCount: count,
+      mrpTotal: mrpTotal,
+      itemTotal: itemTotal,
+      deliveryFee: deliveryFee,
+      couponDiscount: _couponDiscount,
+      loyaltyDiscount: _loyaltyDiscount,
+      savingsTotal: totalSavings,
+      toPayTotal: toPayTotal < 0 ? 0 : toPayTotal,
+    );
+  }
+
+  double _calculateMrpTotal(List<CartItemEntity> items) {
+    return items.fold(0.0, (total, item) => total + (item.mrp * item.quantity));
+  }
+
+  double _calculateItemTotal(List<CartItemEntity> items) {
+    return items.fold(
+      0.0,
+      (total, item) => total + (item.price * item.quantity),
+    );
+  }
+
+  double _calculateDeliveryFee(double subtotal) {
+    // Free delivery for orders above ₹299
+    return subtotal >= 299 ? 0.0 : 49.0;
   }
 
   Future<void> _onAddItemToCart(
@@ -107,8 +158,78 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       // If current state is CartLoaded, update only the count
       if (state is CartLoaded) {
         final currentState = state as CartLoaded;
-        emit(CartLoaded(cart: currentState.cart, itemCount: count));
+        emit(_calculateCartTotals(currentState.cart, count));
       }
     });
+  }
+
+  Future<void> _onApplyCoupon(
+    ApplyCoupon event,
+    Emitter<CartState> emit,
+  ) async {
+    _couponDiscount = event.discountAmount;
+    _appliedCouponCode = event.couponCode;
+
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+    }
+  }
+
+  Future<void> _onRemoveCoupon(
+    RemoveCoupon event,
+    Emitter<CartState> emit,
+  ) async {
+    _couponDiscount = 0.0;
+    _appliedCouponCode = null;
+
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+    }
+  }
+
+  Future<void> _onApplyLoyaltyPoints(
+    ApplyLoyaltyPoints event,
+    Emitter<CartState> emit,
+  ) async {
+    _loyaltyDiscount = event.discountAmount;
+    _loyaltyPointsRedeemed = event.points;
+
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+    }
+  }
+
+  Future<void> _onRemoveLoyaltyPoints(
+    RemoveLoyaltyPoints event,
+    Emitter<CartState> emit,
+  ) async {
+    _loyaltyDiscount = 0.0;
+    _loyaltyPointsRedeemed = 0;
+
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+    }
+  }
+
+  Future<void> _onUpdateCartPricing(
+    UpdateCartPricing event,
+    Emitter<CartState> emit,
+  ) async {
+    if (event.couponDiscount != null) {
+      _couponDiscount = event.couponDiscount!;
+    }
+
+    if (event.loyaltyDiscount != null) {
+      _loyaltyDiscount = event.loyaltyDiscount!;
+    }
+
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+    }
   }
 }

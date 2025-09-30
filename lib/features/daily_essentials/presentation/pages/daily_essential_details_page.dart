@@ -622,8 +622,9 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
     final cartItem = CartItemEntity(
       productId: product.id,
       productName: product.name,
-      productType: 'daily_essential',
+      productType: 'product',
       quantity: _quantity,
+      mrp: product.originalPrice,
       price: product.price,
       imageUrl: product.imageUrls.first,
       createdAt: DateTime.now(),

@@ -363,9 +363,10 @@ class DailyEssentialsBlendCard extends StatelessWidget {
     final cartItem = CartItemEntity(
       productId: blendUsed.id,
       productName: blendUsed.name,
-      productType: 'blend',
+      productType: 'product',
       quantity: 1,
       price: blendUsed.pricePerKg,
+      mrp: blendUsed.pricePerKg,
       imageUrl: blendUsed.imageUrl,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

@@ -81,6 +81,13 @@ import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_pr
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyalty_points_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 
+// Coupons
+import 'package:one_atta/features/coupons/data/datasources/coupon_remote_data_source.dart';
+import 'package:one_atta/features/coupons/data/datasources/coupon_remote_data_source_impl.dart';
+import 'package:one_atta/features/coupons/data/repositories/coupon_repository_impl.dart';
+import 'package:one_atta/features/coupons/domain/repositories/coupon_repository.dart';
+import 'package:one_atta/features/coupons/presentation/bloc/coupon_bloc.dart';
+
 // Reels
 import 'package:one_atta/features/reels/data/datasources/reels_local_data_source.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_local_data_source_impl.dart';
@@ -250,6 +257,20 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  //! Features - Coupons
+  // BLoC
+  sl.registerFactory(() => CouponBloc(couponRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<CouponRepository>(
+    () => CouponRepositoryImpl(remoteDataSource: sl(), authRepository: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<CouponRemoteDataSource>(
+    () => CouponRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Features - Reels

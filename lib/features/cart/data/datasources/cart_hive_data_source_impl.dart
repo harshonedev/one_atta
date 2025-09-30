@@ -10,8 +10,21 @@ class CartHiveDataSourceImpl implements CartLocalDataSource {
     if (_cartBox != null && _cartBox!.isOpen) {
       return _cartBox!;
     }
-    _cartBox = await Hive.openBox<CartItemModel>(_boxName);
-    return _cartBox!;
+
+    try {
+      _cartBox = await Hive.openBox<CartItemModel>(_boxName);
+      return _cartBox!;
+    } catch (e) {
+      // If there's an error opening the box (e.g., type mismatch due to model changes),
+      // delete the box and create a new one
+      try {
+        await Hive.deleteBoxFromDisk(_boxName);
+      } catch (deleteError) {
+        // Ignore delete errors
+      }
+      _cartBox = await Hive.openBox<CartItemModel>(_boxName);
+      return _cartBox!;
+    }
   }
 
   @override

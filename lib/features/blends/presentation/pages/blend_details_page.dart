@@ -473,6 +473,7 @@ class BlendDetailsView extends StatelessWidget {
       productType: 'blend',
       quantity: 1,
       price: blendUsed.pricePerKg,
+      mrp: blendUsed.pricePerKg,
       imageUrl: BlendImages.getImageForBlend(blendUsed.id),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

@@ -41,3 +41,40 @@ class UpdateItemQuantity extends CartEvent {
 class ClearCart extends CartEvent {}
 
 class LoadCartItemCount extends CartEvent {}
+
+class ApplyCoupon extends CartEvent {
+  final String couponCode;
+  final double discountAmount;
+
+  const ApplyCoupon({required this.couponCode, required this.discountAmount});
+
+  @override
+  List<Object> get props => [couponCode, discountAmount];
+}
+
+class RemoveCoupon extends CartEvent {}
+
+class ApplyLoyaltyPoints extends CartEvent {
+  final int points;
+  final double discountAmount;
+
+  const ApplyLoyaltyPoints({
+    required this.points,
+    required this.discountAmount,
+  });
+
+  @override
+  List<Object> get props => [points, discountAmount];
+}
+
+class RemoveLoyaltyPoints extends CartEvent {}
+
+class UpdateCartPricing extends CartEvent {
+  final double? couponDiscount;
+  final double? loyaltyDiscount;
+
+  const UpdateCartPricing({this.couponDiscount, this.loyaltyDiscount});
+
+  @override
+  List<Object> get props => [couponDiscount ?? 0.0, loyaltyDiscount ?? 0.0];
+}

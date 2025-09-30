@@ -188,9 +188,14 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
     String addressId, {
     required String token,
   }) async {
+    final requestData = <String, dynamic>{};
+
+    requestData['is_default'] = true;
+
     final response = await apiRequest.callRequest(
       method: HttpMethod.put,
-      url: '$baseUrl/$addressId/default',
+      url: '$baseUrl/$addressId',
+      data: requestData,
       token: token,
     );
 
@@ -199,7 +204,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
         response.data['success'] == true
             ? AddressModel.fromJson(response.data['data'])
             : throw Exception(
-                response.data['message'] ?? 'Failed to set default address',
+                response.data['message'] ?? 'Failed to update address',
               ),
       ApiError() => throw response.failure,
     };

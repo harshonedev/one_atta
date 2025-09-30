@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/routing/app_router.dart';
 import 'package:one_atta/core/theme/theme.dart';
+import 'package:one_atta/features/address/presentation/bloc/address_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
@@ -13,6 +14,7 @@ import 'package:one_atta/features/blends/presentation/bloc/saved_blends_bloc.dar
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
+import 'package:one_atta/features/coupons/presentation/bloc/coupon_bloc.dart';
 import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_impl.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_local_data_source_impl.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
@@ -49,7 +51,10 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => di.sl<SavedBlendsBloc>()),
         BlocProvider(create: (context) => di.sl<CartBloc>()),
         BlocProvider(create: (context) => di.sl<DailyEssentialsBloc>()),
-        BlocProvider(create: (context) => di.sl<AddressBloc>()),
+        BlocProvider(
+          create: (context) => di.sl<AddressBloc>()..add(LoadAddresses()),
+        ),
+        BlocProvider(create: (context) => di.sl<CouponBloc>()),
         BlocProvider(
           create: (context) =>
               di.sl<UserProfileBloc>()..add(const GetUserProfileRequested()),

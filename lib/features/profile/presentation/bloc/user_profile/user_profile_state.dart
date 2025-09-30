@@ -61,4 +61,3 @@ class UserProfileError extends UserProfileState {
   /// Check if error is due to validation issues
   bool get isValidationError => errorType == 'validation';
 }
- 
