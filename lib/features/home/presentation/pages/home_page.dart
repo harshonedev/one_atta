@@ -370,9 +370,7 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         '100% Chemical Free',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.tertiary.withValues(alpha: 0.8),
+                          color: Colors.amber.shade200,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

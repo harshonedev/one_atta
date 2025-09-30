@@ -99,11 +99,6 @@ class LikedRecipesView extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context.go('/recipes'),
-              child: const Text('Explore Recipes'),
-            ),
           ],
         ),
       ),
@@ -121,7 +116,7 @@ class LikedRecipesView extends StatelessWidget {
         final recipe = state.likedRecipes[index];
         return RecipeCard(
           recipe: recipe,
-          onTap: () => context.push('/recipes/${recipe.id}'),
+          onTap: () => context.push('/recipe-details/${recipe.id}'),
         );
       },
     );

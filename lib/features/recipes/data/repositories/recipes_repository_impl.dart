@@ -93,7 +93,7 @@ class RecipesRepositoryImpl implements RecipesRepository {
       if (token == null) {
         return Left(UnauthorizedFailure('User is not authenticated'));
       }
-      final result = await remoteDataSource.toggleRecipeLike(id, token);
+      final result = await remoteDataSource.toggleRecipeLike(token, id);
       return Right(result);
     } on Failure catch (failure) {
       return Left(failure);

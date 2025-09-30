@@ -15,9 +15,6 @@ import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essen
 import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
 import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_impl.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_local_data_source_impl.dart';
-import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_bloc.dart';
-import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyalty_points_bloc.dart';
-import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_event.dart';
 
