@@ -41,6 +41,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     on<AnalyzeBlend>(_onAnalyzeBlend);
     on<SaveBlend>(_onSaveBlend);
     on<LoadUserBlends>(_onLoadUserBlends);
+    on<SaveBlendAndAddToCart>(_onSaveBlendAndAddToCart);
   }
 
   void _onInitializeCustomizer(
@@ -506,6 +507,96 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     } catch (e) {
       emit(state.copyWith(error: 'Failed to load user data: $e'));
     }
+  }
+
+  Future<void> _onSaveBlendAndAddToCart(
+    SaveBlendAndAddToCart event,
+    Emitter<CustomizerState> emit,
+  ) async {
+    emit(state.copyWith(isSaving: true, clearError: true));
+
+    try {
+      SavedBlendEntity? blendToAddToCart;
+
+      // Check if there's already a saved blend from current analysis
+      if (state.savedBlend != null) {
+        blendToAddToCart = state.savedBlend;
+      } else {
+        // Need to save the blend first
+        String blendName = event.blendName ?? _generateDefaultBlendName();
+
+        // Check if the provided name already exists
+        if (state.userBlends.any(
+          (blend) => blend.name.toLowerCase() == blendName.toLowerCase(),
+        )) {
+          // Generate a unique name by appending number
+          int counter = 1;
+          String originalName = blendName;
+          while (state.userBlends.any(
+            (blend) => blend.name.toLowerCase() == blendName.toLowerCase(),
+          )) {
+            blendName = '$originalName $counter';
+            counter++;
+          }
+        }
+
+        // Prepare additives list
+        final additives = <AdditiveEntity>[];
+        for (final ingredient in state.selectedIngredients) {
+          additives.add(
+            AdditiveEntity(
+              ingredient: ingredient.id,
+              percentage: ingredient.percentage * 100,
+            ),
+          );
+        }
+
+        final saveBlendRequest = SaveBlendEntity(
+          name: blendName,
+          additives: additives,
+          isPublic: false,
+          weightKg: state.totalWeight / 1000,
+        );
+
+        final result = await customizerRepository.saveBlend(saveBlendRequest);
+
+        await result.fold(
+          (failure) async {
+            emit(state.copyWith(isSaving: false, error: failure.message));
+            return;
+          },
+          (savedBlend) async {
+            blendToAddToCart = savedBlend;
+            emit(state.copyWith(savedBlend: savedBlend));
+          },
+        );
+      }
+
+      // Now add to cart (this will be handled by the UI layer)
+      if (blendToAddToCart != null) {
+        emit(
+          state.copyWith(
+            isSaving: false,
+            savedBlend: blendToAddToCart,
+            error: null,
+          ),
+        );
+      }
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isSaving: false,
+          error: 'Failed to save blend and add to cart: $e',
+        ),
+      );
+    }
+  }
+
+  String _generateDefaultBlendName() {
+    if (state.currentUser != null) {
+      return _generateSmartBlendName(state.currentUser!, state.userBlends);
+    }
+    return 'My Custom Blend';
   }
 
   /// Helper method to get appropriate icon for ingredient name

@@ -72,3 +72,12 @@ class SaveBlend extends CustomizerEvent {
 }
 
 class LoadUserBlends extends CustomizerEvent {}
+
+class SaveBlendAndAddToCart extends CustomizerEvent {
+  final String? blendName;
+
+  const SaveBlendAndAddToCart({this.blendName});
+
+  @override
+  List<Object?> get props => [blendName];
+}

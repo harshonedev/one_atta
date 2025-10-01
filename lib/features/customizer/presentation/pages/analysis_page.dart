@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_analysis_entity.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_state.dart';
+import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 
 class AnalysisPage extends StatefulWidget {
   const AnalysisPage({super.key});
@@ -13,13 +18,59 @@ class AnalysisPage extends StatefulWidget {
 }
 
 class _AnalysisPageState extends State<AnalysisPage> {
+  bool _pendingAddToCart = false;
+  bool _hasItemInCart = false;
+
   @override
   void initState() {
     super.initState();
     // Load user blends when the page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CustomizerBloc>().add(LoadUserBlends());
+      // Also load cart to check if current blend is already in cart
+      context.read<CartBloc>().add(LoadCart());
     });
+  }
+
+  void _checkAndAddToCartIfPending(BuildContext context, savedBlend) {
+    if (_pendingAddToCart) {
+      _pendingAddToCart = false;
+      _addBlendToCart(context, savedBlend);
+    }
+  }
+
+  void _addBlendToCart(BuildContext context, savedBlend) {
+    final cartBloc = context.read<CartBloc>();
+
+    // Create cart item from saved blend
+    final cartItem = CartItemEntity(
+      productId: savedBlend.id,
+      productName: savedBlend.name,
+      productType: 'blend',
+      quantity: 1,
+      price: savedBlend.pricePerKg,
+      mrp: savedBlend.pricePerKg * 1.2, // Assume 20% markup from MRP
+      imageUrl: null, // Custom blends might not have images
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      weightInKg: 1, // Default to 1kg
+    );
+
+    cartBloc.add(AddItemToCart(item: cartItem));
+
+    // Update state to show "Go to Cart" button
+    setState(() {
+      _hasItemInCart = true;
+    });
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${savedBlend.name} added to cart!'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -37,59 +88,96 @@ class _AnalysisPageState extends State<AnalysisPage> {
           ),
         ),
       ),
-      body: BlocConsumer<CustomizerBloc, CustomizerState>(
-        listener: (context, state) {
-          if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error!),
-                backgroundColor: Colors.red,
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<CartBloc, CartState>(
+            listener: (context, cartState) {
+              // Check if current saved blend is in cart
+              if (cartState is CartLoaded) {
+                final customizerState = context.read<CustomizerBloc>().state;
+                if (customizerState.savedBlend != null) {
+                  final isInCart = cartState.cart.items.any(
+                    (item) => item.productId == customizerState.savedBlend!.id,
+                  );
+                  if (isInCart != _hasItemInCart) {
+                    setState(() {
+                      _hasItemInCart = isInCart;
+                    });
+                  }
+                }
+              }
+            },
+          ),
+        ],
+        child: BlocConsumer<CustomizerBloc, CustomizerState>(
+          listener: (context, state) {
+            if (state.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error!),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+            if (state.savedBlend != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Blend saved successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+
+            // Handle add to cart after save
+            if (state.savedBlend != null &&
+                !state.isSaving &&
+                state.error == null) {
+              // Check if this was triggered by SaveBlendAndAddToCart
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _checkAndAddToCartIfPending(context, state.savedBlend!);
+                }
+              });
+            }
+          },
+          builder: (context, state) {
+            if (state.isAnalyzing) {
+              return const _AnalyzingLoader();
+            }
+
+            if (state.analysisResult == null) {
+              return const Center(child: Text('No analysis data available.'));
+            }
+
+            final analysis = state.analysisResult!;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _NutritionalInfoCard(analysis: analysis),
+                  const SizedBox(height: 24),
+                  _RotiCharacteristicsCard(analysis: analysis),
+                  const SizedBox(height: 24),
+                  _HealthBenefitsCard(analysis: analysis),
+                  const SizedBox(height: 24),
+                  _AllergensCard(analysis: analysis),
+                  const SizedBox(height: 24),
+                  _SuitabilityNotesCard(analysis: analysis),
+                  const SizedBox(height: 24),
+                  _DisclaimerCard(),
+                  const SizedBox(height: 32),
+                  _ActionButtonsSection(
+                    isSaving: state.isSaving,
+                    hasItemInCart: _hasItemInCart,
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             );
-          }
-          if (state.savedBlend != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Blend saved successfully!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state.isAnalyzing) {
-            return const _AnalyzingLoader();
-          }
-
-          if (state.analysisResult == null) {
-            return const Center(child: Text('No analysis data available.'));
-          }
-
-          final analysis = state.analysisResult!;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _NutritionalInfoCard(analysis: analysis),
-                const SizedBox(height: 24),
-                _RotiCharacteristicsCard(analysis: analysis),
-                const SizedBox(height: 24),
-                _HealthBenefitsCard(analysis: analysis),
-                const SizedBox(height: 24),
-                _AllergensCard(analysis: analysis),
-                const SizedBox(height: 24),
-                _SuitabilityNotesCard(analysis: analysis),
-                const SizedBox(height: 24),
-                _DisclaimerCard(),
-                const SizedBox(height: 32),
-                _ActionButtonsSection(isSaving: state.isSaving),
-                const SizedBox(height: 16),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -345,8 +433,12 @@ class _DisclaimerCard extends StatelessWidget {
 
 class _ActionButtonsSection extends StatelessWidget {
   final bool isSaving;
+  final bool hasItemInCart;
 
-  const _ActionButtonsSection({required this.isSaving});
+  const _ActionButtonsSection({
+    required this.isSaving,
+    required this.hasItemInCart,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -388,9 +480,9 @@ class _ActionButtonsSection extends StatelessWidget {
             child: SizedBox(
               height: 56,
               child: OutlinedButton(
-                onPressed: () {
-                  // TODO: Implement Add to Cart
-                },
+                onPressed: hasItemInCart
+                    ? () => _goToCart(context)
+                    : () => _handleAddToCart(context),
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
@@ -400,12 +492,17 @@ class _ActionButtonsSection extends StatelessWidget {
                     width: 1.5,
                   ),
                 ),
-                child: Text(
-                  'Add to Cart',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      hasItemInCart ? 'Go to Cart' : 'Add to Cart',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -492,6 +589,31 @@ class _ActionButtonsSection extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _goToCart(BuildContext context) {
+    context.go('/cart');
+  }
+
+  void _handleAddToCart(BuildContext context) {
+    final customizerBloc = context.read<CustomizerBloc>();
+    final state = customizerBloc.state;
+
+    // Check if blend is already saved
+    if (state.savedBlend != null) {
+      // Blend is already saved, directly add to cart
+      final analysisPageState = context
+          .findAncestorStateOfType<_AnalysisPageState>();
+      analysisPageState?._addBlendToCart(context, state.savedBlend!);
+    } else {
+      // Need to save blend first, then add to cart
+      final analysisPageState = context
+          .findAncestorStateOfType<_AnalysisPageState>();
+      if (analysisPageState != null) {
+        analysisPageState._pendingAddToCart = true;
+        customizerBloc.add(const SaveBlendAndAddToCart());
+      }
+    }
   }
 }
 
