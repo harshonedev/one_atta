@@ -92,7 +92,7 @@ class _LoyaltyPointsRedemptionWidgetState
                     ),
                     const Spacer(),
                     Text(
-                      '${_availablePoints} available',
+                      '$_availablePoints available',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -121,7 +121,7 @@ class _LoyaltyPointsRedemptionWidgetState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Redeem up to ${_maxRedeemablePoints} points (₹${_maxRedeemablePoints})',
+          'Redeem up to $_maxRedeemablePoints points (₹$_maxRedeemablePoints)',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -198,7 +198,7 @@ class _LoyaltyPointsRedemptionWidgetState
             children: [
               Chip(
                 label: Text(
-                  'Use ${_maxRedeemablePoints} points',
+                  'Use $_maxRedeemablePoints points',
                   style: const TextStyle(fontSize: 12),
                 ),
                 backgroundColor: Colors.amber.withOpacity(0.1),
@@ -252,7 +252,7 @@ class _LoyaltyPointsRedemptionWidgetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_pointsToRedeem} points redeemed',
+                  '$_pointsToRedeem points redeemed',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: Colors.amber.shade700,

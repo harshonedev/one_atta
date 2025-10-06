@@ -4,10 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_state.dart';
+import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_state.dart';
+import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/delivery_event.dart';
+import 'package:one_atta/features/cart/presentation/bloc/delivery_state.dart';
 import 'package:one_atta/features/cart/presentation/widgets/cart_address_selection_widget.dart';
 import 'package:one_atta/features/cart/presentation/widgets/cart_item_card.dart';
 import 'package:one_atta/features/cart/presentation/widgets/estimated_delivery_widget.dart';
@@ -25,7 +30,7 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   AddressEntity? _selectedAddress;
   CouponEntity? _appliedCoupon;
-  int _loyaltyPointsToRedeem = 0;
+  final int _loyaltyPointsToRedeem = 0;
   bool _isProcessingOrder = false;
 
   @override
@@ -40,6 +45,9 @@ class _CartPageState extends State<CartPage> {
         (addr) => addr.isDefault,
         orElse: () => addressState.addresses.first,
       );
+
+      // Check delivery availability for the selected address
+      _onCheckDeliveryAvailability(_selectedAddress!.postalCode);
     }
   }
 
@@ -47,6 +55,24 @@ class _CartPageState extends State<CartPage> {
     setState(() {
       _selectedAddress = address;
     });
+    if (address != null) {
+      _onCheckDeliveryAvailability(address.postalCode);
+    }
+  }
+
+  void _onCheckDeliveryAvailability(String pincode) {
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is CartLoaded) {
+      print('Checking delivery for pincode: $pincode');
+      context.read<DeliveryBloc>().add(
+        CheckDeliveryAvailability(
+          pincode: pincode,
+          orderValue:
+              cartState.itemTotal, // Use itemTotal for delivery calculation
+          isExpress: false, // Ignoring express delivery for now
+        ),
+      );
+    }
   }
 
   void _onCouponApplied(CouponEntity? coupon, double discount) {
@@ -63,20 +89,6 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-  void _onLoyaltyPointsRedeemed(int points, double discount) {
-    setState(() {
-      _loyaltyPointsToRedeem = points;
-    });
-
-    if (points > 0) {
-      context.read<CartBloc>().add(
-        ApplyLoyaltyPoints(points: points, discountAmount: discount),
-      );
-    } else {
-      context.read<CartBloc>().add(RemoveLoyaltyPoints());
-    }
-  }
-
   void _proceedToCheckout() {
     if (_selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,28 +100,67 @@ class _CartPageState extends State<CartPage> {
       return;
     }
 
-    // TODO: Implement order placement
     setState(() {
       _isProcessingOrder = true;
     });
 
-    // Simulate order processing
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isProcessingOrder = false;
-        });
+    // Create order first
+    final cartState = context.read<CartBloc>().state;
+    final authState = context.read<AuthBloc>().state;
+    final email = (authState is AuthAuthenticated) ? authState.user.email : '';
+    if (cartState is CartLoaded) {
+      // Navigate to payment method selection with order data
+      final orderData = {
+        'items': cartState.cart.items
+            .map(
+              (item) => {
+                'item_type': item.productType == 'Product'
+                    ? 'Product'
+                    : 'Blend',
+                'item': item.productId,
+                'quantity': item.quantity,
+              },
+            )
+            .toList(),
+        'delivery_address': _selectedAddress!.id,
+        'contact_numbers': [_selectedAddress!.primaryPhone],
+        'subtotal': cartState.itemTotal,
+        'coupon_code': _appliedCoupon?.code,
+        'coupon_discount': cartState.couponDiscount,
+        'loyalty_discount': cartState.loyaltyDiscount,
+        'delivery_fee': cartState.deliveryFee,
+        'total_amount': cartState.toPayTotal,
+        'phone': _selectedAddress!.primaryPhone,
+        'email': email,
+      };
 
-        // Navigate to order confirmation page
-        context.push('/order/confirmation');
-      }
-    });
+      setState(() {
+        _isProcessingOrder = false;
+      });
+
+      // Navigate to payment method selection
+      context.push(
+        '/payment/methods',
+        extra: {'orderData': orderData, 'amount': cartState.toPayTotal},
+      );
+    } else {
+      setState(() {
+        _isProcessingOrder = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to process order. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Cart',
@@ -120,57 +171,74 @@ class _CartPageState extends State<CartPage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
       ),
-      body: BlocBuilder<CartBloc, CartState>(
-        builder: (context, cartState) {
-          if (cartState is CartLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (cartState is CartError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Failed to load cart',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    cartState.message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<CartBloc>().add(LoadCart());
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
+      body: BlocListener<DeliveryBloc, DeliveryState>(
+        listener: (context, deliveryState) {
+          // Update cart bloc when delivery charges change
+          if (deliveryState is DeliveryLoaded) {
+            context.read<CartBloc>().add(
+              UpdateDeliveryCharges(
+                deliveryCharges: deliveryState.deliveryCharges,
               ),
             );
+          } else if (deliveryState is DeliveryNotAvailable ||
+              deliveryState is DeliveryError) {
+            // Set delivery charges to 0 if delivery not available or error
+            context.read<CartBloc>().add(
+              const UpdateDeliveryCharges(deliveryCharges: 0.0),
+            );
           }
-
-          if (cartState is CartLoaded) {
-            if (cartState.cart.items.isEmpty) {
-              return _buildEmptyCart();
+        },
+        child: BlocBuilder<CartBloc, CartState>(
+          builder: (context, cartState) {
+            if (cartState is CartLoading) {
+              return const Center(child: CircularProgressIndicator());
             }
 
-            return _buildCartContent(cartState.cart.items);
-          }
+            if (cartState is CartError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load cart',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      cartState.message,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<CartBloc>().add(LoadCart());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          return const SizedBox.shrink();
-        },
+            if (cartState is CartLoaded) {
+              if (cartState.cart.items.isEmpty) {
+                return _buildEmptyCart();
+              }
+              return _buildCartContent(cartState.cart.items);
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }

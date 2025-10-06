@@ -78,3 +78,12 @@ class UpdateCartPricing extends CartEvent {
   @override
   List<Object> get props => [couponDiscount ?? 0.0, loyaltyDiscount ?? 0.0];
 }
+
+class UpdateDeliveryCharges extends CartEvent {
+  final double deliveryCharges;
+
+  const UpdateDeliveryCharges({required this.deliveryCharges});
+
+  @override
+  List<Object> get props => [deliveryCharges];
+}

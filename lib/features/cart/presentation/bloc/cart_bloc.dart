@@ -17,11 +17,13 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final ClearCartUseCase clearCartUseCase;
   final GetCartItemCountUseCase getCartItemCountUseCase;
 
+  String? _appliedCouponCode;
+  int _loyaltyPointsRedeemed = 0;
+
   // Track current pricing state
   double _couponDiscount = 0.0;
   double _loyaltyDiscount = 0.0;
-  String? _appliedCouponCode;
-  int _loyaltyPointsRedeemed = 0;
+  double _deliveryCharges = 0.0;
 
   CartBloc({
     required this.getCartUseCase,
@@ -42,6 +44,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<ApplyLoyaltyPoints>(_onApplyLoyaltyPoints);
     on<RemoveLoyaltyPoints>(_onRemoveLoyaltyPoints);
     on<UpdateCartPricing>(_onUpdateCartPricing);
+    on<UpdateDeliveryCharges>(_onUpdateDeliveryCharges);
   }
 
   Future<void> _onLoadCart(LoadCart event, Emitter<CartState> emit) async {
@@ -64,7 +67,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   CartLoaded _calculateCartTotals(cart, count) {
     final mrpTotal = _calculateMrpTotal(cart.items);
     final itemTotal = _calculateItemTotal(cart.items);
-    final deliveryFee = _calculateDeliveryFee(itemTotal);
+    final deliveryFee =
+        _deliveryCharges; // Use delivery charges from delivery bloc
     final savingsFromMrp = mrpTotal - itemTotal;
     final totalSavings = savingsFromMrp + _couponDiscount + _loyaltyDiscount;
     final toPayTotal =
@@ -94,10 +98,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
   }
 
-  double _calculateDeliveryFee(double subtotal) {
-    // Free delivery for orders above ₹299
-    return subtotal >= 299 ? 0.0 : 49.0;
-  }
+  // Removed: Delivery fee is now managed by delivery bloc
+  // and updated via UpdateDeliveryCharges event
 
   Future<void> _onAddItemToCart(
     AddItemToCart event,
@@ -226,6 +228,18 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     if (event.loyaltyDiscount != null) {
       _loyaltyDiscount = event.loyaltyDiscount!;
     }
+
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+    }
+  }
+
+  Future<void> _onUpdateDeliveryCharges(
+    UpdateDeliveryCharges event,
+    Emitter<CartState> emit,
+  ) async {
+    _deliveryCharges = event.deliveryCharges;
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;

@@ -28,6 +28,10 @@ import 'package:one_atta/features/address/presentation/pages/addresses_list_page
 import 'package:one_atta/features/address/presentation/pages/add_edit_address_page.dart';
 import 'package:one_atta/features/profile/presentation/pages/profile_page.dart';
 import 'package:one_atta/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:one_atta/features/payment/presentation/pages/payment_method_selection_page.dart';
+import 'package:one_atta/features/payment/presentation/pages/payment_process_page.dart';
+import 'package:one_atta/features/orders/presentation/pages/order_confirmation_page.dart';
+import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -108,7 +112,7 @@ class AppRouter {
               path: '/home',
               name: 'home',
               builder: (context, state) => const HomePage(),
-            ),
+            ), 
             GoRoute(
               path: '/orders',
               name: 'orders',
@@ -222,6 +226,60 @@ class AppRouter {
           path: '/profile/edit',
           name: 'edit-profile',
           builder: (context, state) => const EditProfilePage(),
+        ),
+        // Payment Routes
+        GoRoute(
+          path: '/payment/methods',
+          name: 'payment-methods',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final orderData = extra['orderData'] as Map<String, dynamic>? ?? {};
+            final amount = extra['amount'] as double? ?? 0.0;
+
+            // Create a temporary order ID for payment flow
+            final tempOrderId = DateTime.now().millisecondsSinceEpoch
+                .toString();
+
+            return PaymentMethodSelectionPage(
+              orderId: tempOrderId,
+              amount: amount,
+              orderData: orderData,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/payment/process',
+          name: 'payment-process',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final orderId = extra['orderId'] as String? ?? '';
+            final amount = extra['amount'] as double? ?? 0.0;
+            final paymentMethod = extra['paymentMethod'] as PaymentMethodEntity;
+            final orderData = extra['orderData'] as Map<String, dynamic>? ?? {};
+
+            return PaymentProcessPage(
+              orderId: orderId,
+              amount: amount,
+              paymentMethod: paymentMethod,
+              orderData: orderData,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/order/confirmation',
+          name: 'order-confirmation',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final orderId = extra['orderId'] as String? ?? '';
+            final paymentId = extra['paymentId'] as String?;
+            final amount = extra['amount'] as double? ?? 0.0;
+
+            return OrderConfirmationPage(
+              orderId: orderId,
+              paymentId: paymentId,
+              amount: amount,
+            );
+          },
         ),
       ],
       errorBuilder: (context, state) => Scaffold(

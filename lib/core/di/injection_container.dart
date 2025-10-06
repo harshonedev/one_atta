@@ -58,6 +58,13 @@ import 'package:one_atta/features/cart/domain/usecases/get_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/remove_from_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/update_cart_item_quantity_usecase.dart';
 
+// Delivery
+import 'package:one_atta/features/cart/data/datasources/delivery_remote_data_source.dart';
+import 'package:one_atta/features/cart/data/datasources/delivery_remote_data_source_impl.dart';
+import 'package:one_atta/features/cart/data/services/delivery_service_impl.dart';
+import 'package:one_atta/features/cart/domain/services/delivery_service.dart';
+import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
+
 // Daily Essentials
 import 'package:one_atta/features/daily_essentials/data/datasources/daily_essentials_remote_data_source.dart';
 import 'package:one_atta/features/daily_essentials/data/datasources/daily_essentials_remote_data_source_impl.dart';
@@ -97,6 +104,24 @@ import 'package:one_atta/features/reels/data/repositories/reels_repository_impl.
 import 'package:one_atta/features/reels/domain/repositories/reels_repository.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
 import 'package:one_atta/core/services/video_cache_manager.dart';
+
+// Payment
+import 'package:one_atta/features/payment/data/datasources/payment_remote_data_source.dart';
+import 'package:one_atta/features/payment/data/datasources/payment_remote_data_source_impl.dart';
+import 'package:one_atta/features/payment/data/repositories/payment_repository_impl.dart';
+import 'package:one_atta/features/payment/domain/repositories/payment_repository.dart';
+import 'package:one_atta/features/payment/presentation/bloc/payment_bloc.dart';
+
+// Orders
+import 'package:one_atta/features/orders/data/datasources/order_remote_data_source.dart';
+import 'package:one_atta/features/orders/data/datasources/order_remote_data_source_impl.dart';
+import 'package:one_atta/features/orders/data/repositories/order_repository_impl.dart';
+import 'package:one_atta/features/orders/domain/repositories/order_repository.dart';
+import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
+
+// Network
+import 'package:one_atta/core/network/network_info.dart';
+import 'package:one_atta/core/network/network_info_impl.dart';
 
 final sl = GetIt.instance;
 
@@ -207,6 +232,20 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<CartLocalDataSource>(() => CartHiveDataSourceImpl());
 
+  //! Features - Delivery
+  // BLoC
+  sl.registerFactory(() => DeliveryBloc(deliveryService: sl()));
+
+  // Service
+  sl.registerLazySingleton<DeliveryService>(
+    () => DeliveryServiceImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<DeliveryRemoteDataSource>(
+    () => DeliveryRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
   //! Features - Daily Essentials
   // BLoC
   sl.registerFactory(() => DailyEssentialsBloc(repository: sl()));
@@ -276,6 +315,37 @@ Future<void> init() async {
   //! Features - Reels
   // BLoC
   sl.registerFactory(() => ReelsBloc(reelsRepository: sl()));
+
+  //! Features - Payment
+  // BLoC
+  sl.registerFactory(() => PaymentBloc(paymentRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<PaymentRepository>(
+    () => PaymentRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<PaymentRemoteDataSource>(
+    () => PaymentRemoteDataSourceImpl(dio: sl()),
+  );
+
+  //! Features - Orders
+  // BLoC
+  sl.registerFactory(() => OrderBloc(orderRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(dio: sl()),
+  );
+
+  //! Network
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl());
 
   // Repository
   sl.registerLazySingleton<ReelsRepository>(

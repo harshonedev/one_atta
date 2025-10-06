@@ -1,0 +1,120 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:one_atta/features/orders/domain/repositories/order_repository.dart';
+import 'package:one_atta/features/orders/presentation/bloc/order_event.dart';
+import 'package:one_atta/features/orders/presentation/bloc/order_state.dart';
+
+class OrderBloc extends Bloc<OrderEvent, OrderState> {
+  final OrderRepository orderRepository;
+
+  OrderBloc({required this.orderRepository}) : super(OrderInitial()) {
+    on<CreateOrder>(_onCreateOrder);
+    on<LoadOrder>(_onLoadOrder);
+    on<LoadUserOrders>(_onLoadUserOrders);
+    on<CancelOrder>(_onCancelOrder);
+    on<ReorderOrder>(_onReorderOrder);
+    on<ResetOrderState>(_onResetOrderState);
+  }
+
+  Future<void> _onCreateOrder(
+    CreateOrder event,
+    Emitter<OrderState> emit,
+  ) async {
+    emit(OrderLoading());
+
+    final result = await orderRepository.createOrder(
+      items: event.items,
+      deliveryAddressId: event.deliveryAddressId,
+      contactNumbers: event.contactNumbers,
+      paymentMethod: event.paymentMethod,
+      subtotal: event.subtotal,
+      couponCode: event.couponCode,
+      couponDiscount: event.couponDiscount,
+      loyaltyDiscount: event.loyaltyDiscount,
+      deliveryFee: event.deliveryFee,
+      totalAmount: event.totalAmount,
+      specialInstructions: event.specialInstructions,
+    );
+
+    result.fold(
+      (failure) => emit(OrderError(failure.message)),
+      (order) => emit(OrderCreated(order)),
+    );
+  }
+
+  Future<void> _onLoadOrder(LoadOrder event, Emitter<OrderState> emit) async {
+    emit(OrderLoading());
+
+    final result = await orderRepository.getOrderById(event.orderId);
+    result.fold(
+      (failure) => emit(OrderError(failure.message)),
+      (order) => emit(OrderLoaded(order)),
+    );
+  }
+
+  Future<void> _onLoadUserOrders(
+    LoadUserOrders event,
+    Emitter<OrderState> emit,
+  ) async {
+    emit(OrderLoading());
+
+    final result = await orderRepository.getUserOrders(
+      status: event.status,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      page: event.page,
+      limit: event.limit,
+    );
+
+    result.fold(
+      (failure) => emit(OrderError(failure.message)),
+      (orders) => emit(
+        OrdersLoaded(
+          orders: orders,
+          totalCount: orders.length, // TODO: Get actual total count from API
+          currentPage: event.page,
+          hasNextPage: orders.length >= event.limit,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onCancelOrder(
+    CancelOrder event,
+    Emitter<OrderState> emit,
+  ) async {
+    emit(OrderLoading());
+
+    final result = await orderRepository.cancelOrder(
+      event.orderId,
+      reason: event.reason,
+    );
+
+    result.fold(
+      (failure) => emit(OrderError(failure.message)),
+      (order) => emit(OrderCancelled(order)),
+    );
+  }
+
+  Future<void> _onReorderOrder(
+    ReorderOrder event,
+    Emitter<OrderState> emit,
+  ) async {
+    emit(OrderLoading());
+
+    final result = await orderRepository.reorder(
+      event.originalOrderId,
+      deliveryAddressId: event.deliveryAddressId,
+      paymentMethod: event.paymentMethod,
+      modifyItems: event.modifyItems,
+    );
+
+    result.fold(
+      (failure) => emit(OrderError(failure.message)),
+      (order) => emit(OrderReordered(order)),
+    );
+  }
+
+  void _onResetOrderState(ResetOrderState event, Emitter<OrderState> emit) {
+    emit(OrderInitial());
+  }
+}

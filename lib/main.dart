@@ -5,6 +5,7 @@ import 'package:one_atta/core/routing/app_router.dart';
 import 'package:one_atta/core/theme/theme.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.dart';
@@ -19,6 +20,8 @@ import 'package:one_atta/features/cart/data/datasources/cart_hive_data_source_im
 import 'package:one_atta/features/reels/data/datasources/reels_local_data_source_impl.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_event.dart';
+import 'package:one_atta/features/payment/presentation/bloc/payment_bloc.dart';
+import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +71,9 @@ class MainApp extends StatelessWidget {
         BlocProvider(
           create: (context) => di.sl<ReelsBloc>()..add(const LoadReelsFeed()),
         ),
+        BlocProvider(create: (context) => di.sl<PaymentBloc>()),
+        BlocProvider(create: (context) => di.sl<OrderBloc>()),
+        BlocProvider(create: (context) => di.sl<DeliveryBloc>()),
       ],
       child: MaterialApp.router(
         title: 'One Atta',

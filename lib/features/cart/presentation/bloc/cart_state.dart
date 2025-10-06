@@ -34,9 +34,8 @@ class CartLoaded extends CartState {
     this.savingsTotal = 0.0,
     this.toPayTotal = 0.0,
   });
-
   @override
-  List<Object> get props => [
+  List<Object?> get props => [
     cart,
     itemCount,
     mrpTotal,
@@ -47,6 +46,30 @@ class CartLoaded extends CartState {
     savingsTotal,
     toPayTotal,
   ];
+
+  CartLoaded copyWith({
+    CartEntity? cart,
+    int? itemCount,
+    double? mrpTotal,
+    double? itemTotal,
+    double? deliveryFee,
+    double? couponDiscount,
+    double? loyaltyDiscount,
+    double? savingsTotal,
+    double? toPayTotal,
+  }) {
+    return CartLoaded(
+      cart: cart ?? this.cart,
+      itemCount: itemCount ?? this.itemCount,
+      mrpTotal: mrpTotal ?? this.mrpTotal,
+      itemTotal: itemTotal ?? this.itemTotal,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      couponDiscount: couponDiscount ?? this.couponDiscount,
+      loyaltyDiscount: loyaltyDiscount ?? this.loyaltyDiscount,
+      savingsTotal: savingsTotal ?? this.savingsTotal,
+      toPayTotal: toPayTotal ?? this.toPayTotal,
+    );
+  }
 }
 
 class CartError extends CartState {
