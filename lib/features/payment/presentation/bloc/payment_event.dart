@@ -19,54 +19,88 @@ class SelectPaymentMethod extends PaymentEvent {
   List<Object> get props => [paymentMethod];
 }
 
-class InitiatePayment extends PaymentEvent {
-  final String orderId;
-  final double amount;
-  final Map<String, dynamic>? metadata;
+/// Create order with payment (POST /api/app/payments/create-order)
+class CreateOrder extends PaymentEvent {
+  final List<Map<String, dynamic>> items;
+  final String deliveryAddress;
+  final List<String> contactNumbers;
+  final String paymentMethod;
+  final String? couponCode;
+  final int? loyaltyPointsUsed;
+  final double deliveryCharges;
+  final double codCharges;
 
-  const InitiatePayment({
-    required this.orderId,
-    required this.amount,
-    this.metadata,
+  const CreateOrder({
+    required this.items,
+    required this.deliveryAddress,
+    required this.contactNumbers,
+    required this.paymentMethod,
+    this.couponCode,
+    this.loyaltyPointsUsed,
+    required this.deliveryCharges,
+    required this.codCharges,
   });
 
   @override
-  List<Object?> get props => [orderId, amount, metadata];
+  List<Object?> get props => [
+    items,
+    deliveryAddress,
+    contactNumbers,
+    paymentMethod,
+    couponCode,
+    loyaltyPointsUsed,
+    deliveryCharges,
+    codCharges,
+  ];
 }
 
-class ProcessRazorpayPayment extends PaymentEvent {
-  final String paymentId;
-  final String razorpayPaymentId;
+/// Verify Razorpay payment (POST /api/app/payments/verify)
+class VerifyRazorpayPayment extends PaymentEvent {
+  final String orderId;
   final String razorpayOrderId;
+  final String razorpayPaymentId;
   final String razorpaySignature;
 
-  const ProcessRazorpayPayment({
-    required this.paymentId,
-    required this.razorpayPaymentId,
+  const VerifyRazorpayPayment({
+    required this.orderId,
     required this.razorpayOrderId,
+    required this.razorpayPaymentId,
     required this.razorpaySignature,
   });
 
   @override
   List<Object> get props => [
-    paymentId,
-    razorpayPaymentId,
+    orderId,
     razorpayOrderId,
+    razorpayPaymentId,
     razorpaySignature,
   ];
 }
 
+/// Confirm COD order (POST /api/app/payments/confirm-cod/:orderId)
+class ConfirmCODOrder extends PaymentEvent {
+  final String orderId;
+
+  const ConfirmCODOrder({required this.orderId});
+
+  @override
+  List<Object> get props => [orderId];
+}
+
+/// Handle payment failure (POST /api/app/payments/failure)
 class HandlePaymentFailure extends PaymentEvent {
-  final String paymentId;
-  final String failureReason;
+  final String orderId;
+  final String razorpayPaymentId;
+  final Map<String, dynamic> error;
 
   const HandlePaymentFailure({
-    required this.paymentId,
-    required this.failureReason,
+    required this.orderId,
+    required this.razorpayPaymentId,
+    required this.error,
   });
 
   @override
-  List<Object> get props => [paymentId, failureReason];
+  List<Object> get props => [orderId, razorpayPaymentId, error];
 }
 
 class ResetPaymentState extends PaymentEvent {}

@@ -172,7 +172,6 @@ enum CouponApplicableTo {
   }
 }
 
-
 class CouponItem extends Equatable {
   final String itemId; //item id
   final String itemType;
@@ -197,4 +196,3 @@ class CouponItem extends Equatable {
     totalPrice,
   ];
 }
-

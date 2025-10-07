@@ -31,7 +31,6 @@ import 'package:one_atta/features/profile/presentation/pages/edit_profile_page.d
 import 'package:one_atta/features/payment/presentation/pages/payment_method_selection_page.dart';
 import 'package:one_atta/features/payment/presentation/pages/payment_process_page.dart';
 import 'package:one_atta/features/orders/presentation/pages/order_confirmation_page.dart';
-import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -112,7 +111,7 @@ class AppRouter {
               path: '/home',
               name: 'home',
               builder: (context, state) => const HomePage(),
-            ), 
+            ),
             GoRoute(
               path: '/orders',
               name: 'orders',
@@ -252,17 +251,10 @@ class AppRouter {
           name: 'payment-process',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
-            final orderId = extra['orderId'] as String? ?? '';
-            final amount = extra['amount'] as double? ?? 0.0;
-            final paymentMethod = extra['paymentMethod'] as PaymentMethodEntity;
-            final orderData = extra['orderData'] as Map<String, dynamic>? ?? {};
+            final order = extra['order'] as Map<String, dynamic>? ?? {};
+            final razorpay = extra['razorpay'] as Map<String, dynamic>? ?? {};
 
-            return PaymentProcessPage(
-              orderId: orderId,
-              amount: amount,
-              paymentMethod: paymentMethod,
-              orderData: orderData,
-            );
+            return PaymentProcessPage(order: order, razorpay: razorpay);
           },
         ),
         GoRoute(
@@ -271,13 +263,12 @@ class AppRouter {
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
             final orderId = extra['orderId'] as String? ?? '';
-            final paymentId = extra['paymentId'] as String?;
-            final amount = extra['amount'] as double? ?? 0.0;
+            final order = extra['order'] as Map<String, dynamic>?;
 
             return OrderConfirmationPage(
               orderId: orderId,
-              paymentId: paymentId,
-              amount: amount,
+              paymentId: null, // No longer needed
+              amount: order?['total_amount'] ?? 0.0,
             );
           },
         ),

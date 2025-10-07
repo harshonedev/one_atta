@@ -47,17 +47,17 @@ class ZoneInfoEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        zoneName,
-        deliveryCharges,
-        codCharges,
-        totalCharges,
-        isFreeDelivery,
-        eta,
-        etaDisplay,
-        codAvailable,
-        expressDelivery,
-        freeDeliveryThreshold,
-      ];
+    zoneName,
+    deliveryCharges,
+    codCharges,
+    totalCharges,
+    isFreeDelivery,
+    eta,
+    etaDisplay,
+    codAvailable,
+    expressDelivery,
+    freeDeliveryThreshold,
+  ];
 
   @override
   String toString() {

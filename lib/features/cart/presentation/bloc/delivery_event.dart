@@ -23,5 +23,3 @@ class CheckDeliveryAvailability extends DeliveryEvent {
   @override
   List<Object> get props => [pincode, orderValue, weight, isExpress];
 }
-
-

@@ -191,6 +191,14 @@ class _CartPageState extends State<CartPage> {
         'total_amount': cartState.toPayTotal,
         'phone': _selectedAddress!.primaryPhone,
         'email': email,
+        'address_details': {
+          'recipient_name': _selectedAddress!.recipientName,
+          'full_address': _selectedAddress!.fullAddress,
+          'primary_phone': _selectedAddress!.primaryPhone,
+          'city': _selectedAddress!.city,
+          'state': _selectedAddress!.state,
+          'postal_code': _selectedAddress!.postalCode,
+        },
       };
 
       setState(() {

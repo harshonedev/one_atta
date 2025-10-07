@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:one_atta/features/payment/domain/entities/payment_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
 
 abstract class PaymentState extends Equatable {
@@ -37,43 +36,49 @@ class PaymentMethodsLoaded extends PaymentState {
   List<Object?> get props => [paymentMethods, selectedPaymentMethod];
 }
 
-class PaymentCreated extends PaymentState {
-  final PaymentEntity payment;
+/// Order created successfully (with Razorpay details if online payment)
+class OrderCreated extends PaymentState {
+  final Map<String, dynamic> order;
+  final Map<String, dynamic>? razorpay; // null for COD
 
-  const PaymentCreated(this.payment);
+  const OrderCreated({required this.order, this.razorpay});
 
   @override
-  List<Object> get props => [payment];
+  List<Object?> get props => [order, razorpay];
 }
 
+/// Payment is being processed (Razorpay)
 class PaymentProcessing extends PaymentState {
-  final PaymentEntity payment;
+  final String orderId;
 
-  const PaymentProcessing(this.payment);
+  const PaymentProcessing(this.orderId);
 
   @override
-  List<Object> get props => [payment];
+  List<Object> get props => [orderId];
 }
 
+/// Payment/Order completed successfully
 class PaymentCompleted extends PaymentState {
-  final PaymentEntity payment;
+  final Map<String, dynamic> order;
 
-  const PaymentCompleted(this.payment);
+  const PaymentCompleted(this.order);
 
   @override
-  List<Object> get props => [payment];
+  List<Object> get props => [order];
 }
 
+/// Payment failed
 class PaymentFailed extends PaymentState {
   final String message;
-  final PaymentEntity? payment;
+  final Map<String, dynamic>? order;
 
-  const PaymentFailed({required this.message, this.payment});
+  const PaymentFailed({required this.message, this.order});
 
   @override
-  List<Object?> get props => [message, payment];
+  List<Object?> get props => [message, order];
 }
 
+/// General payment error
 class PaymentError extends PaymentState {
   final String message;
 

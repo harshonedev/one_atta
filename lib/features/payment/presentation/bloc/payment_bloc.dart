@@ -9,8 +9,9 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
   PaymentBloc({required this.paymentRepository}) : super(PaymentInitial()) {
     on<LoadPaymentMethods>(_onLoadPaymentMethods);
     on<SelectPaymentMethod>(_onSelectPaymentMethod);
-    on<InitiatePayment>(_onInitiatePayment);
-    on<ProcessRazorpayPayment>(_onProcessRazorpayPayment);
+    on<CreateOrder>(_onCreateOrder);
+    on<VerifyRazorpayPayment>(_onVerifyRazorpayPayment);
+    on<ConfirmCODOrder>(_onConfirmCODOrder);
     on<HandlePaymentFailure>(_onHandlePaymentFailure);
     on<ResetPaymentState>(_onResetPaymentState);
   }
@@ -39,83 +40,83 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     }
   }
 
-  Future<void> _onInitiatePayment(
-    InitiatePayment event,
+  /// Create order with payment (POST /api/app/payments/create-order)
+  Future<void> _onCreateOrder(
+    CreateOrder event,
     Emitter<PaymentState> emit,
   ) async {
-    if (state is PaymentMethodsLoaded) {
-      final currentState = state as PaymentMethodsLoaded;
-      final selectedMethod = currentState.selectedPaymentMethod;
+    emit(PaymentLoading());
 
-      if (selectedMethod == null) {
-        emit(const PaymentError('Please select a payment method'));
-        return;
-      }
-
-      emit(PaymentLoading());
-
-      final result = await paymentRepository.createPayment(
-        orderId: event.orderId,
-        paymentMethodId: selectedMethod.id,
-        amount: event.amount,
-        metadata: event.metadata,
-      );
-
-      result.fold((failure) => emit(PaymentError(failure.message)), (payment) {
-        if (selectedMethod.type == 'COD') {
-          // For COD, payment is completed immediately
-          emit(PaymentCompleted(payment));
-        } else {
-          // For online payments, create payment and wait for processing
-          emit(PaymentCreated(payment));
-        }
-      });
-    }
-  }
-
-  Future<void> _onProcessRazorpayPayment(
-    ProcessRazorpayPayment event,
-    Emitter<PaymentState> emit,
-  ) async {
-    emit(
-      PaymentProcessing(
-        state is PaymentCreated
-            ? (state as PaymentCreated).payment
-            : state is PaymentProcessing
-            ? (state as PaymentProcessing).payment
-            :
-              // Fallback if state doesn't have payment
-              throw StateError('Invalid state for processing payment'),
-      ),
+    final result = await paymentRepository.createOrder(
+      items: event.items,
+      deliveryAddress: event.deliveryAddress,
+      contactNumbers: event.contactNumbers,
+      paymentMethod: event.paymentMethod,
+      couponCode: event.couponCode,
+      loyaltyPointsUsed: event.loyaltyPointsUsed,
+      deliveryCharges: event.deliveryCharges,
+      codCharges: event.codCharges,
     );
 
-    final result = await paymentRepository.processRazorpayPayment(
-      paymentId: event.paymentId,
-      razorpayPaymentId: event.razorpayPaymentId,
+    result.fold((failure) => emit(PaymentError(failure.message)), (data) {
+      final order = data['order'] as Map<String, dynamic>;
+      final razorpay = data['razorpay'] as Map<String, dynamic>?;
+
+      emit(OrderCreated(order: order, razorpay: razorpay));
+    });
+  }
+
+  /// Verify Razorpay payment (POST /api/app/payments/verify)
+  Future<void> _onVerifyRazorpayPayment(
+    VerifyRazorpayPayment event,
+    Emitter<PaymentState> emit,
+  ) async {
+    emit(PaymentProcessing(event.orderId));
+
+    final result = await paymentRepository.verifyPayment(
+      orderId: event.orderId,
       razorpayOrderId: event.razorpayOrderId,
+      razorpayPaymentId: event.razorpayPaymentId,
       razorpaySignature: event.razorpaySignature,
     );
 
     result.fold(
       (failure) => emit(PaymentFailed(message: failure.message)),
-      (payment) => emit(PaymentCompleted(payment)),
+      (order) => emit(PaymentCompleted(order)),
     );
   }
 
-  Future<void> _onHandlePaymentFailure(
-    HandlePaymentFailure event,
+  /// Confirm COD order (POST /api/app/payments/confirm-cod/:orderId)
+  Future<void> _onConfirmCODOrder(
+    ConfirmCODOrder event,
     Emitter<PaymentState> emit,
   ) async {
-    final result = await paymentRepository.updatePaymentStatus(
-      paymentId: event.paymentId,
-      status: 'failed',
-      failureReason: event.failureReason,
+    emit(PaymentProcessing(event.orderId));
+
+    final result = await paymentRepository.confirmCODOrder(
+      orderId: event.orderId,
     );
 
     result.fold(
       (failure) => emit(PaymentFailed(message: failure.message)),
-      (payment) =>
-          emit(PaymentFailed(message: event.failureReason, payment: payment)),
+      (order) => emit(PaymentCompleted(order)),
+    );
+  }
+
+  /// Handle payment failure (POST /api/app/payments/failure)
+  Future<void> _onHandlePaymentFailure(
+    HandlePaymentFailure event,
+    Emitter<PaymentState> emit,
+  ) async {
+    final result = await paymentRepository.handlePaymentFailure(
+      orderId: event.orderId,
+      razorpayPaymentId: event.razorpayPaymentId,
+      error: event.error,
+    );
+
+    result.fold(
+      (failure) => emit(PaymentFailed(message: failure.message)),
+      (order) => emit(PaymentFailed(message: 'Payment failed', order: order)),
     );
   }
 

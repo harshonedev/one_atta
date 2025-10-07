@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:one_atta/core/error/exceptions.dart';
 import 'package:one_atta/features/payment/data/datasources/payment_remote_data_source.dart';
 import 'package:one_atta/features/payment/data/models/payment_method_model.dart';
-import 'package:one_atta/features/payment/data/models/payment_model.dart';
 
 class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   final Dio dio;
@@ -87,59 +86,55 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   }
 
   @override
-  Future<PaymentModel> createPayment({
-    required String orderId,
-    required String paymentMethodId,
-    required double amount,
-    Map<String, dynamic>? metadata,
+  Future<Map<String, dynamic>> createOrder({
+    required List<Map<String, dynamic>> items,
+    required String deliveryAddress,
+    required List<String> contactNumbers,
+    required String paymentMethod,
+    String? couponCode,
+    int? loyaltyPointsUsed,
+    required double deliveryCharges,
+    required double codCharges,
   }) async {
     try {
-      // For development - return mock payment
-      final mockPayment = {
-        '_id': 'payment_${DateTime.now().millisecondsSinceEpoch}',
-        'order_id': orderId,
-        'payment_method_id': paymentMethodId,
-        'payment_method_type': _getPaymentMethodType(paymentMethodId),
-        'amount': amount,
-        'status': paymentMethodId == 'cod_001' ? 'completed' : 'pending',
-        'razorpay_order_id': paymentMethodId != 'cod_001'
-            ? 'rzp_order_${DateTime.now().millisecondsSinceEpoch}'
-            : null,
-        'metadata': metadata,
-        'created_at': DateTime.now().toIso8601String(),
+      final requestData = {
+        'items': items,
+        'delivery_address': deliveryAddress,
+        'contact_numbers': contactNumbers,
+        'payment_method': paymentMethod,
+        'delivery_charges': deliveryCharges,
+        'cod_charges': codCharges,
       };
 
-      return PaymentModel.fromJson(mockPayment);
+      // Add optional fields if provided
+      if (couponCode != null && couponCode.isNotEmpty) {
+        requestData['coupon_code'] = couponCode;
+      }
+      if (loyaltyPointsUsed != null && loyaltyPointsUsed > 0) {
+        requestData['loyalty_points_used'] = loyaltyPointsUsed;
+      }
 
-      // Commented out the actual API call for development
-      /*
       final response = await dio.post(
-        '/api/app/payment/create',
-        data: {
-          'order_id': orderId,
-          'payment_method_id': paymentMethodId,
-          'amount': amount,
-          'metadata': metadata,
-        },
+        '/api/app/payments/create-order',
+        data: requestData,
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          return PaymentModel.fromJson(data['data']);
+          return data['data'] as Map<String, dynamic>;
         } else {
           throw ServerException(
-            message: data['message'] ?? 'Failed to create payment',
+            message: data['message'] ?? 'Failed to create order',
             statusCode: response.statusCode ?? 500,
           );
         }
       } else {
         throw ServerException(
-          message: 'Failed to create payment',
+          message: 'Failed to create order',
           statusCode: response.statusCode ?? 500,
         );
       }
-      */
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data['message'] ?? 'Network error occurred',
@@ -147,41 +142,26 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       );
     } catch (e) {
       throw ServerException(
-        message: 'Unexpected error occurred',
+        message: 'Unexpected error occurred: ${e.toString()}',
         statusCode: 500,
       );
     }
   }
 
-  String _getPaymentMethodType(String paymentMethodId) {
-    switch (paymentMethodId) {
-      case 'cod_001':
-        return 'COD';
-      case 'upi_001':
-        return 'UPI';
-      case 'card_001':
-        return 'Card';
-      case 'wallet_001':
-        return 'Wallet';
-      default:
-        return 'Unknown';
-    }
-  }
-
   @override
-  Future<PaymentModel> processRazorpayPayment({
-    required String paymentId,
-    required String razorpayPaymentId,
+  Future<Map<String, dynamic>> verifyPayment({
+    required String orderId,
     required String razorpayOrderId,
+    required String razorpayPaymentId,
     required String razorpaySignature,
   }) async {
     try {
       final response = await dio.post(
-        '/api/app/payment/razorpay/verify',
+        '/api/app/payments/verify',
         data: {
-          'payment_id': paymentId,
-          'razorpay_payment_id': razorpayPaymentId,
+          'order_id': orderId,
           'razorpay_order_id': razorpayOrderId,
+          'razorpay_payment_id': razorpayPaymentId,
           'razorpay_signature': razorpaySignature,
         },
       );
@@ -189,7 +169,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       if (response.statusCode == 200) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          return PaymentModel.fromJson(data['data']);
+          return data['data'] as Map<String, dynamic>;
         } else {
           throw ServerException(
             message: data['message'] ?? 'Failed to verify payment',
@@ -209,71 +189,32 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       );
     } catch (e) {
       throw ServerException(
-        message: 'Unexpected error occurred',
+        message: 'Unexpected error occurred: ${e.toString()}',
         statusCode: 500,
       );
     }
   }
 
   @override
-  Future<PaymentModel> getPaymentById(String paymentId) async {
-    try {
-      final response = await dio.get('/api/app/payment/$paymentId');
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          return PaymentModel.fromJson(data['data']);
-        } else {
-          throw ServerException(
-            message: data['message'] ?? 'Payment not found',
-            statusCode: response.statusCode ?? 404,
-          );
-        }
-      } else {
-        throw ServerException(
-          message: 'Payment not found',
-          statusCode: response.statusCode ?? 404,
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode ?? 500,
-      );
-    } catch (e) {
-      throw ServerException(
-        message: 'Unexpected error occurred',
-        statusCode: 500,
-      );
-    }
-  }
-
-  @override
-  Future<PaymentModel> updatePaymentStatus({
-    required String paymentId,
-    required String status,
-    String? failureReason,
+  Future<Map<String, dynamic>> confirmCODOrder({
+    required String orderId,
   }) async {
     try {
-      final response = await dio.patch(
-        '/api/app/payment/$paymentId/status',
-        data: {'status': status, 'failure_reason': failureReason},
-      );
+      final response = await dio.post('/api/app/payments/confirm-cod/$orderId');
 
       if (response.statusCode == 200) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          return PaymentModel.fromJson(data['data']);
+          return data['data'] as Map<String, dynamic>;
         } else {
           throw ServerException(
-            message: data['message'] ?? 'Failed to update payment status',
+            message: data['message'] ?? 'Failed to confirm COD order',
             statusCode: response.statusCode ?? 500,
           );
         }
       } else {
         throw ServerException(
-          message: 'Failed to update payment status',
+          message: 'Failed to confirm COD order',
           statusCode: response.statusCode ?? 500,
         );
       }
@@ -284,7 +225,52 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       );
     } catch (e) {
       throw ServerException(
-        message: 'Unexpected error occurred',
+        message: 'Unexpected error occurred: ${e.toString()}',
+        statusCode: 500,
+      );
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> handlePaymentFailure({
+    required String orderId,
+    required String razorpayPaymentId,
+    required Map<String, dynamic> error,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/api/app/payments/failure',
+        data: {
+          'order_id': orderId,
+          'razorpay_payment_id': razorpayPaymentId,
+          'error': error,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          return data['data'] as Map<String, dynamic>;
+        } else {
+          throw ServerException(
+            message: data['message'] ?? 'Failed to record payment failure',
+            statusCode: response.statusCode ?? 500,
+          );
+        }
+      } else {
+        throw ServerException(
+          message: 'Failed to record payment failure',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException catch (e) {
+      throw ServerException(
+        message: e.response?.data['message'] ?? 'Network error occurred',
+        statusCode: e.response?.statusCode ?? 500,
+      );
+    } catch (e) {
+      throw ServerException(
+        message: 'Unexpected error occurred: ${e.toString()}',
         statusCode: 500,
       );
     }

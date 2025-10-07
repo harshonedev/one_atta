@@ -2,23 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_bloc.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_event.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_state.dart';
 
 class PaymentProcessPage extends StatefulWidget {
-  final String orderId;
-  final double amount;
-  final PaymentMethodEntity paymentMethod;
-  final Map<String, dynamic>? orderData;
+  final Map<String, dynamic> order;
+  final Map<String, dynamic> razorpay;
 
   const PaymentProcessPage({
     super.key,
-    required this.orderId,
-    required this.amount,
-    required this.paymentMethod,
-    this.orderData,
+    required this.order,
+    required this.razorpay,
   });
 
   @override
@@ -28,13 +23,13 @@ class PaymentProcessPage extends StatefulWidget {
 class _PaymentProcessPageState extends State<PaymentProcessPage> {
   late Razorpay _razorpay;
   bool _isProcessing = false;
-  String? _currentPaymentId;
+  String? _currentOrderId;
 
   @override
   void initState() {
     super.initState();
     _initializeRazorpay();
-    _initiatePayment();
+    _openRazorpayCheckout();
   }
 
   void _initializeRazorpay() {
@@ -44,34 +39,27 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
   }
 
-  void _initiatePayment() {
+  void _openRazorpayCheckout() {
     setState(() {
       _isProcessing = true;
+      _currentOrderId = widget.order['_id'] as String;
     });
 
-    // First create payment in backend
-    context.read<PaymentBloc>().add(
-      InitiatePayment(
-        orderId: widget.orderId,
-        amount: widget.amount,
-        metadata: widget.orderData,
-      ),
-    );
-  }
+    final razorpayOrderId = widget.razorpay['order_id'] as String;
+    final amount = widget.razorpay['amount'] as int; // Amount in paise
+    final keyId = widget.razorpay['key_id'] as String;
 
-  void _openRazorpayCheckout(String razorpayOrderId) {
     final options = {
-      'key': 'rzp_test_1234567890', // Replace with your Razorpay key
-      'amount': (widget.amount * 100).toInt(), // Amount in paise
+      'key': keyId,
+      'amount': amount,
+      'currency': widget.razorpay['currency'] ?? 'INR',
       'name': 'One Atta',
       'description': 'Order Payment',
       'order_id': razorpayOrderId,
-      'prefill': {
-        'contact': widget.orderData?['phone'] ?? '',
-        'email': widget.orderData?['email'] ?? '',
-      },
+      'prefill': {'contact': '', 'email': ''},
       'theme': {
-        'color': Theme.of(context).colorScheme.primary.value.toRadixString(16),
+        'color':
+            '#${Theme.of(context).colorScheme.primary.value.toRadixString(16).substring(2)}',
       },
     };
 
@@ -92,12 +80,13 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    if (_currentPaymentId != null) {
+    if (_currentOrderId != null) {
+      // Verify payment with backend
       context.read<PaymentBloc>().add(
-        ProcessRazorpayPayment(
-          paymentId: _currentPaymentId!,
-          razorpayPaymentId: response.paymentId ?? '',
+        VerifyRazorpayPayment(
+          orderId: _currentOrderId!,
           razorpayOrderId: response.orderId ?? '',
+          razorpayPaymentId: response.paymentId ?? '',
           razorpaySignature: response.signature ?? '',
         ),
       );
@@ -105,11 +94,21 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    if (_currentPaymentId != null) {
+    if (_currentOrderId != null) {
+      // Record payment failure
+      final error = {
+        'code': response.code.toString(),
+        'description': response.message ?? 'Payment failed',
+        'source': 'razorpay',
+        'step': 'payment_authentication',
+        'reason': 'payment_failed',
+      };
+
       context.read<PaymentBloc>().add(
         HandlePaymentFailure(
-          paymentId: _currentPaymentId!,
-          failureReason: response.message ?? 'Payment failed',
+          orderId: _currentOrderId!,
+          razorpayPaymentId: '', // May not be available in case of error
+          error: error,
         ),
       );
     } else {
@@ -123,6 +122,9 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
           backgroundColor: Colors.red,
         ),
       );
+
+      // Go back to payment selection
+      context.pop();
     }
   }
 
@@ -160,24 +162,14 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       ),
       body: BlocConsumer<PaymentBloc, PaymentState>(
         listener: (context, state) {
-          if (state is PaymentCreated) {
-            setState(() {
-              _currentPaymentId = state.payment.id;
-            });
-
-            // Open Razorpay checkout with the received order ID
-            if (state.payment.razorpayOrderId != null) {
-              _openRazorpayCheckout(state.payment.razorpayOrderId!);
-            }
-          } else if (state is PaymentCompleted) {
+          if (state is PaymentCompleted) {
             // Navigate to order confirmation
+            final order = state.order;
+            final orderId = order['_id'] as String;
+
             context.go(
               '/order/confirmation',
-              extra: {
-                'orderId': widget.orderId,
-                'paymentId': state.payment.id,
-                'amount': widget.amount,
-              },
+              extra: {'orderId': orderId, 'order': order},
             );
           } else if (state is PaymentFailed) {
             setState(() {
@@ -222,7 +214,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
                 ] else ...[
                   // Retry Button
                   ElevatedButton.icon(
-                    onPressed: _initiatePayment,
+                    onPressed: _openRazorpayCheckout,
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry Payment'),
                     style: ElevatedButton.styleFrom(
@@ -247,6 +239,9 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   }
 
   Widget _buildPaymentMethodInfo() {
+    final orderId = widget.order['_id'] as String;
+    final totalAmount = (widget.order['total_amount'] as num).toDouble();
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(20),
@@ -266,14 +261,14 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            widget.paymentMethod.name,
+            'Razorpay Payment',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            'Amount: ₹${widget.amount.toStringAsFixed(2)}',
+            'Amount: ₹${totalAmount.toStringAsFixed(2)}',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
@@ -281,7 +276,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Order ID: #${widget.orderId.substring(widget.orderId.length - 8).toUpperCase()}',
+            'Order ID: #${orderId.substring(orderId.length - 8).toUpperCase()}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -302,7 +297,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       ),
       child: Row(
         children: [
-          Icon(Icons.security, color: Colors.green, size: 20),
+          const Icon(Icons.security, color: Colors.green, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -320,7 +315,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   String _getProcessingMessage(PaymentState state) {
     if (state is PaymentLoading) {
       return 'Initializing Payment...';
-    } else if (state is PaymentCreated) {
+    } else if (state is OrderCreated) {
       return 'Opening Payment Gateway...';
     } else if (state is PaymentProcessing) {
       return 'Verifying Payment...';
@@ -346,7 +341,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
           FilledButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _initiatePayment();
+              _openRazorpayCheckout();
             },
             child: const Text('Retry'),
           ),
