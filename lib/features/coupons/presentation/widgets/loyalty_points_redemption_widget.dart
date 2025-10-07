@@ -5,11 +5,13 @@ import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
 class LoyaltyPointsRedemptionWidget extends StatefulWidget {
   final double orderAmount;
   final Function(int, double) onPointsRedeemed;
+  final bool isDisabled;
 
   const LoyaltyPointsRedemptionWidget({
     super.key,
     required this.orderAmount,
     required this.onPointsRedeemed,
+    this.isDisabled = false,
   });
 
   @override
@@ -63,31 +65,39 @@ class _LoyaltyPointsRedemptionWidgetState
         if (state is UserProfileLoaded) {
           _availablePoints = state.profile.loyaltyPoints;
 
-          if (_availablePoints <= 0) {
-            return const SizedBox.shrink();
-          }
+          // Always show the widget, even with 0 points
+          final isEffectivelyDisabled =
+              widget.isDisabled || _availablePoints <= 0;
 
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: widget.isDisabled
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                  : Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.stars, color: Colors.amber, size: 20),
+                    Icon(
+                      Icons.stars,
+                      color: widget.isDisabled ? Colors.grey : Colors.amber,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
-                      'Loyalty Points',
+                      'Atta Points',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: widget.isDisabled
+                            ? Theme.of(context).colorScheme.onSurfaceVariant
+                            : null,
                       ),
                     ),
                     const Spacer(),
@@ -101,10 +111,12 @@ class _LoyaltyPointsRedemptionWidgetState
                 ),
                 const SizedBox(height: 12),
 
-                if (_isRedeemed) ...[
+                if (_availablePoints <= 0) ...[
+                  _buildNoPointsMessage(),
+                ] else if (_isRedeemed) ...[
                   _buildRedeemedPointsCard(),
                 ] else ...[
-                  _buildPointsInput(),
+                  _buildPointsInput(isDisabled: isEffectivelyDisabled),
                 ],
               ],
             ),
@@ -116,7 +128,31 @@ class _LoyaltyPointsRedemptionWidgetState
     );
   }
 
-  Widget _buildPointsInput() {
+  Widget _buildNoPointsMessage() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: Colors.grey.shade600, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'You don\'t have any Atta Points yet. Start shopping to earn points!',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPointsInput({bool isDisabled = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -133,13 +169,14 @@ class _LoyaltyPointsRedemptionWidgetState
               child: TextField(
                 controller: _pointsController,
                 keyboardType: TextInputType.number,
+                enabled: !isDisabled,
                 decoration: InputDecoration(
                   hintText: 'Enter points to redeem',
                   hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(32),
                     borderSide: BorderSide(
                       color: Theme.of(
                         context,
@@ -147,7 +184,7 @@ class _LoyaltyPointsRedemptionWidgetState
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(32),
                     borderSide: BorderSide(
                       color: Theme.of(
                         context,
@@ -155,7 +192,7 @@ class _LoyaltyPointsRedemptionWidgetState
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(32),
                     borderSide: BorderSide(color: Colors.amber),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
@@ -171,21 +208,22 @@ class _LoyaltyPointsRedemptionWidgetState
               ),
             ),
             const SizedBox(width: 12),
-            ElevatedButton(
+            FilledButton(
               onPressed:
-                  (_pointsToRedeem > 0 &&
+                  (!isDisabled &&
+                      _pointsToRedeem > 0 &&
                       _pointsToRedeem <= _maxRedeemablePoints)
                   ? _applyPoints
                   : null,
-              style: ElevatedButton.styleFrom(
+              style: FilledButton.styleFrom(
                 backgroundColor: Colors.amber,
-                foregroundColor: Colors.black,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(32),
                 ),
               ),
               child: const Text('Redeem'),

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:one_atta/features/cart/domain/entities/cart_entity.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/domain/usecases/add_to_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/clear_cart_usecase.dart';
@@ -16,9 +17,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final UpdateCartItemQuantityUseCase updateCartItemQuantityUseCase;
   final ClearCartUseCase clearCartUseCase;
   final GetCartItemCountUseCase getCartItemCountUseCase;
-
-  String? _appliedCouponCode;
-  int _loyaltyPointsRedeemed = 0;
 
   // Track current pricing state
   double _couponDiscount = 0.0;
@@ -64,7 +62,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   // Helper method to calculate all cart totals
-  CartLoaded _calculateCartTotals(cart, count) {
+  CartLoaded _calculateCartTotals(CartEntity cart, int count) {
     final mrpTotal = _calculateMrpTotal(cart.items);
     final itemTotal = _calculateItemTotal(cart.items);
     final deliveryFee =
@@ -170,7 +168,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     _couponDiscount = event.discountAmount;
-    _appliedCouponCode = event.couponCode;
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
@@ -183,7 +180,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     _couponDiscount = 0.0;
-    _appliedCouponCode = null;
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
@@ -196,7 +192,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     _loyaltyDiscount = event.discountAmount;
-    _loyaltyPointsRedeemed = event.points;
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
@@ -209,7 +204,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     _loyaltyDiscount = 0.0;
-    _loyaltyPointsRedeemed = 0;
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;

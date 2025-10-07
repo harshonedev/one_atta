@@ -19,6 +19,7 @@ import 'package:one_atta/features/cart/presentation/widgets/estimated_delivery_w
 import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 import 'package:one_atta/features/coupons/presentation/widgets/coupon_input_widget.dart';
 import 'package:one_atta/features/coupons/presentation/widgets/enhanced_cart_summary_widget.dart';
+import 'package:one_atta/features/coupons/presentation/widgets/loyalty_points_redemption_widget.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -30,7 +31,8 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   AddressEntity? _selectedAddress;
   CouponEntity? _appliedCoupon;
-  final int _loyaltyPointsToRedeem = 0;
+  int _loyaltyPointsToRedeem = 0;
+  double _loyaltyDiscountAmount = 0.0;
   bool _isProcessingOrder = false;
 
   @override
@@ -45,7 +47,6 @@ class _CartPageState extends State<CartPage> {
         (addr) => addr.isDefault,
         orElse: () => addressState.addresses.first,
       );
-
       // Check delivery availability for the selected address
       _onCheckDeliveryAvailability(_selectedAddress!.postalCode);
     }
@@ -76,6 +77,17 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _onCouponApplied(CouponEntity? coupon, double discount) {
+    // Don't allow coupon if loyalty points are applied
+    if (coupon != null && _loyaltyPointsToRedeem > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Remove Atta Points to apply coupon'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _appliedCoupon = coupon;
     });
@@ -86,6 +98,53 @@ class _CartPageState extends State<CartPage> {
       );
     } else {
       context.read<CartBloc>().add(RemoveCoupon());
+    }
+
+    // Recalculate delivery with updated cart total
+    if (_selectedAddress != null) {
+      final cartState = context.read<CartBloc>().state;
+      if (cartState is CartLoaded) {
+        _onCheckDeliveryAvailability(_selectedAddress!.postalCode);
+      }
+    }
+  }
+
+  void _onLoyaltyPointsRedeemed(int points, double discountAmount) {
+    // Don't allow loyalty points if coupon is applied
+    if (points > 0 && _appliedCoupon != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Remove coupon to use Atta Points'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _loyaltyPointsToRedeem = points;
+      _loyaltyDiscountAmount = discountAmount;
+    });
+
+    // Apply loyalty discount to cart
+    context.read<CartBloc>().add(
+      ApplyLoyaltyPoints(points: points, discountAmount: discountAmount),
+    );
+
+    // Recalculate delivery with updated cart total (after loyalty discount)
+    if (_selectedAddress != null) {
+      final cartState = context.read<CartBloc>().state;
+      if (cartState is CartLoaded) {
+        // Use amount after loyalty discount for delivery calculation
+        final amountForDelivery = cartState.itemTotal - discountAmount;
+        context.read<DeliveryBloc>().add(
+          CheckDeliveryAvailability(
+            pincode: _selectedAddress!.postalCode,
+            orderValue: amountForDelivery,
+            isExpress: false,
+          ),
+        );
+      }
     }
   }
 
@@ -198,11 +257,14 @@ class _CartPageState extends State<CartPage> {
                 final deliveryState = context.read<DeliveryBloc>().state;
 
                 // Recalculate delivery if order value changed
+                // Use amount after loyalty discount for delivery calculation
                 if (deliveryState is DeliveryLoaded) {
+                  final amountForDelivery =
+                      cartState.itemTotal - _loyaltyDiscountAmount;
                   context.read<DeliveryBloc>().add(
                     CheckDeliveryAvailability(
                       pincode: _selectedAddress!.postalCode,
-                      orderValue: cartState.itemTotal,
+                      orderValue: amountForDelivery,
                       isExpress: deliveryState.isExpressDelivery,
                     ),
                   );
@@ -321,6 +383,59 @@ class _CartPageState extends State<CartPage> {
                 // Delivery Fee Info
                 _buildDeliveryFeeInfo(),
 
+                // Loyalty Points Section (Atta Points)
+                BlocBuilder<CartBloc, CartState>(
+                  builder: (context, state) {
+                    double orderAmount = 0.0;
+
+                    if (state is CartLoaded) {
+                      orderAmount = state.itemTotal;
+                    } else {
+                      orderAmount = cartItems.fold(
+                        0.0,
+                        (total, item) => total + (item.price * item.quantity),
+                      );
+                    }
+
+                    return LoyaltyPointsRedemptionWidget(
+                      orderAmount: orderAmount,
+                      onPointsRedeemed: _onLoyaltyPointsRedeemed,
+                      isDisabled: _appliedCoupon != null,
+                    );
+                  },
+                ),
+
+                // Show message if loyalty points are applied
+                if (_loyaltyPointsToRedeem > 0)
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: Colors.orange.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Atta Points applied. You cannot use a coupon.',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.orange.shade700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // Coupon Section
                 BlocBuilder<CartBloc, CartState>(
                   builder: (context, state) {
@@ -349,15 +464,42 @@ class _CartPageState extends State<CartPage> {
                           )
                           .toList(),
                       onCouponApplied: _onCouponApplied,
+                      isDisabled: _loyaltyPointsToRedeem > 0,
                     );
                   },
                 ),
 
-                // // Loyalty Points Section
-                // LoyaltyPointsRedemptionWidget(
-                //   orderAmount: _calculateCartTotal(cartItems),
-                //   onPointsRedeemed: _onLoyaltyPointsRedeemed,
-                // ),
+                // Show message if coupon is applied
+                if (_appliedCoupon != null)
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: Colors.orange.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Coupon applied. You cannot use Atta Points.',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.orange.shade700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 Divider(
                   color: Theme.of(
                     context,

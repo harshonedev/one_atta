@@ -9,12 +9,14 @@ class CouponInputWidget extends StatefulWidget {
   final double orderAmount;
   final List<CouponItem> items;
   final Function(CouponEntity?, double) onCouponApplied;
+  final bool isDisabled;
 
   const CouponInputWidget({
     super.key,
     required this.orderAmount,
     required this.items,
     required this.onCouponApplied,
+    this.isDisabled = false,
   });
 
   @override
@@ -137,7 +139,14 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: widget.isDisabled
+              ? Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+              : Theme.of(context).colorScheme.surface,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -145,15 +154,20 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
               children: [
                 Icon(
                   Icons.local_offer_outlined,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: widget.isDisabled
+                      ? Theme.of(context).colorScheme.onSurfaceVariant
+                      : Theme.of(context).colorScheme.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Apply Coupon',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: widget.isDisabled
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : null,
+                  ),
                 ),
               ],
             ),
@@ -174,6 +188,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
     return BlocBuilder<CouponBloc, CouponState>(
       builder: (context, state) {
         final isLoading = state is CouponLoading;
+        final isEffectivelyDisabled = widget.isDisabled || isLoading;
 
         return Row(
           children: [
@@ -181,7 +196,9 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
               child: TextField(
                 controller: _couponController,
                 decoration: InputDecoration(
-                  hintText: 'Enter coupon code',
+                  hintText: widget.isDisabled
+                      ? 'Remove Atta Points to use coupon'
+                      : 'Enter coupon code',
                   hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -213,13 +230,13 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
                   ),
                 ),
                 textCapitalization: TextCapitalization.characters,
-                enabled: !isLoading,
-                onSubmitted: _applyCoupon,
+                enabled: !isEffectivelyDisabled,
+                onSubmitted: widget.isDisabled ? null : _applyCoupon,
               ),
             ),
             const SizedBox(width: 12),
             FilledButton(
-              onPressed: isLoading
+              onPressed: isEffectivelyDisabled
                   ? null
                   : () => _applyCoupon(_couponController.text),
               style: FilledButton.styleFrom(

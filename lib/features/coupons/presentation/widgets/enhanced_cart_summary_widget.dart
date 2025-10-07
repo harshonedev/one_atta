@@ -86,7 +86,7 @@ class EnhancedCartSummaryWidget extends StatelessWidget {
             if (loyaltyPointsRedeemed > 0) ...[
               _buildSummaryRow(
                 context,
-                'Loyalty Points ($loyaltyPointsRedeemed points)',
+                'Atta Points ($loyaltyPointsRedeemed points)',
                 '-₹${loyalDiscount.toStringAsFixed(2)}',
                 isDiscount: true,
               ),
