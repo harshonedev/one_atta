@@ -23,25 +23,6 @@ class CouponLoading extends CouponState {
   List<Object?> get props => [operation];
 }
 
-/// Success states
-class AvailableCouponsLoaded extends CouponState {
-  final List<CouponEntity> coupons;
-
-  const AvailableCouponsLoaded(this.coupons);
-
-  @override
-  List<Object?> get props => [coupons];
-}
-
-class CouponValidated extends CouponState {
-  final CouponValidationEntity validation;
-
-  const CouponValidated(this.validation);
-
-  @override
-  List<Object?> get props => [validation];
-}
-
 class CouponApplied extends CouponState {
   final CouponValidationEntity application;
   final CouponEntity appliedCoupon;
@@ -58,15 +39,6 @@ class CouponApplied extends CouponState {
 
 class CouponRemoved extends CouponState {
   const CouponRemoved();
-}
-
-class CouponDetailsLoaded extends CouponState {
-  final CouponEntity coupon;
-
-  const CouponDetailsLoaded(this.coupon);
-
-  @override
-  List<Object?> get props => [coupon];
 }
 
 /// Error states

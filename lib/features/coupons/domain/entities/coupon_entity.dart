@@ -171,3 +171,30 @@ enum CouponApplicableTo {
     );
   }
 }
+
+
+class CouponItem extends Equatable {
+  final String itemId; //item id
+  final String itemType;
+  final int quantity;
+  final double pricePerKg;
+  final double totalPrice;
+
+  const CouponItem({
+    required this.itemId,
+    required this.itemType,
+    required this.quantity,
+    required this.pricePerKg,
+    required this.totalPrice,
+  });
+
+  @override
+  List<Object?> get props => [
+    itemId,
+    itemType,
+    quantity,
+    pricePerKg,
+    totalPrice,
+  ];
+}
+

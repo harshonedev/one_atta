@@ -24,6 +24,11 @@ class ApiRequest {
         ...?headers,
       };
 
+      // logs request body
+      logger.i(
+        '➡️ ${method.name.toUpperCase()} Request to $url with headers: $requestHeaders and body: $data',
+      );
+
       final response = await dio.request(
         url,
         options: Options(

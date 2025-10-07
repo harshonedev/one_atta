@@ -17,76 +17,10 @@ class CouponRepositoryImpl implements CouponRepository {
   });
 
   @override
-  Future<Either<Failure, List<CouponEntity>>> getAvailableCoupons({
-    double? orderAmount,
-    List<String>? itemIds,
-  }) async {
-    try {
-      final tokenResult = await authRepository.getToken();
-      return await tokenResult.fold((failure) async => Left(failure), (
-        token,
-      ) async {
-        if (token == null) {
-          return Left(UnauthorizedFailure('User not authenticated'));
-        }
-        try {
-          final coupons = await remoteDataSource.getAvailableCoupons(
-            token: token,
-            orderAmount: orderAmount,
-            itemIds: itemIds,
-          );
-          logger.i('Retrieved ${coupons.length} available coupons');
-          return Right(coupons.map((model) => model.toEntity()).toList());
-        } catch (e) {
-          logger.e('Failed to get available coupons: $e');
-          return Left(ServerFailure(e.toString()));
-        }
-      });
-    } catch (e) {
-      logger.e('Unexpected error getting coupons: $e');
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, CouponValidationEntity>> validateCoupon({
-    required String couponCode,
-    required double orderAmount,
-    required List<String> itemIds,
-  }) async {
-    try {
-      final tokenResult = await authRepository.getToken();
-      return await tokenResult.fold((failure) async => Left(failure), (
-        token,
-      ) async {
-        if (token == null) {
-          return Left(UnauthorizedFailure('User not authenticated'));
-        }
-        try {
-          final validation = await remoteDataSource.validateCoupon(
-            token: token,
-            couponCode: couponCode,
-            orderAmount: orderAmount,
-            itemIds: itemIds,
-          );
-          logger.i('Validated coupon $couponCode: ${validation.isValid}');
-          return Right(validation.toEntity());
-        } catch (e) {
-          logger.e('Failed to validate coupon $couponCode: $e');
-          return Left(ServerFailure(e.toString()));
-        }
-      });
-    } catch (e) {
-      logger.e('Unexpected error validating coupon: $e');
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, CouponValidationEntity>> applyCoupon({
     required String couponCode,
     required double orderAmount,
-    required List<String> itemIds,
+    required List<CouponItem> items,
   }) async {
     try {
       final tokenResult = await authRepository.getToken();
@@ -101,7 +35,7 @@ class CouponRepositoryImpl implements CouponRepository {
             token: token,
             couponCode: couponCode,
             orderAmount: orderAmount,
-            itemIds: itemIds,
+            items: items,
           );
           logger.i(
             'Applied coupon $couponCode: discount ${application.discountAmount}',
@@ -119,9 +53,9 @@ class CouponRepositoryImpl implements CouponRepository {
   }
 
   @override
-  Future<Either<Failure, CouponEntity>> getCouponByCode(
-    String couponCode,
-  ) async {
+  Future<Either<Failure, CouponEntity>> fetchCouponByCode({
+    required String couponCode,
+  }) async {
     try {
       final tokenResult = await authRepository.getToken();
       return await tokenResult.fold((failure) async => Left(failure), (
@@ -131,19 +65,25 @@ class CouponRepositoryImpl implements CouponRepository {
           return Left(UnauthorizedFailure('User not authenticated'));
         }
         try {
-          final coupon = await remoteDataSource.getCouponByCode(
+          final coupon = await remoteDataSource.fetchCouponByCode(
             token: token,
             couponCode: couponCode,
           );
-          logger.i('Retrieved coupon details for $couponCode');
+          logger.i('Fetched coupon $couponCode: ${coupon.code}');
           return Right(coupon.toEntity());
+        } on Failure catch (failure) {
+          logger.e('API failure fetching coupon $couponCode: $failure');
+          return Left(failure);
         } catch (e) {
-          logger.e('Failed to get coupon $couponCode: $e');
+          logger.e('Failed to fetch coupon $couponCode: $e');
           return Left(ServerFailure(e.toString()));
         }
       });
+    } on Failure catch (failure) {
+      logger.e('API failure fetching coupon by code: $failure');
+      return Left(failure);
     } catch (e) {
-      logger.e('Unexpected error getting coupon: $e');
+      logger.e('Unexpected error fetching coupon by code: $e');
       return Left(ServerFailure(e.toString()));
     }
   }

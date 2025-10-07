@@ -16,6 +16,7 @@ class EstimatedDeliveryWidget extends StatelessWidget {
     ).colorScheme.onSurfaceVariant;
 
     return BlocBuilder<DeliveryBloc, DeliveryState>(
+      buildWhen: (previous, current) => current is DeliveryLoaded,
       builder: (context, state) {
         final estimatedTime = (state is DeliveryLoaded)
             ? state.etaDisplay
@@ -62,7 +63,7 @@ class EstimatedDeliveryWidget extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Estimated Delivery: $estimatedTime days',
+                        'Estimated Delivery: $estimatedTime',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: primaryColor,

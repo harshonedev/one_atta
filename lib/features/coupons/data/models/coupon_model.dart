@@ -29,27 +29,37 @@ class CouponModel extends CouponEntity {
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       discountType: CouponDiscountType.fromString(
-        json['discount_type'] ?? 'fixed',
+        json['discount_type'] ?? json['discountType'] ?? 'fixed',
       ),
-      discountValue: (json['discount_value'] ?? 0).toDouble(),
-      maximumDiscount: json['maximum_discount']?.toDouble(),
-      minimumOrderAmount: json['minimum_order_amount']?.toDouble(),
-      totalUsageLimit: json['total_usage_limit'] ?? 0,
-      usedCount: json['used_count'] ?? 0,
-      userUsageLimit: json['user_usage_limit'],
+      discountValue: (json['discount_value'] ?? json['discountValue'] ?? 0)
+          .toDouble(),
+      maximumDiscount: (json['max_discount_amount'] ?? json['maximumDiscount'])
+          ?.toDouble(),
+      minimumOrderAmount:
+          (json['min_order_amount'] ?? json['minimumOrderAmount'])?.toDouble(),
+      totalUsageLimit: json['usage_limit'] ?? json['totalUsageLimit'] ?? 0,
+      usedCount: json['used_count'] ?? json['usedCount'] ?? 0,
+      userUsageLimit: json['usage_limit_per_user'] ?? json['userUsageLimit'],
       validFrom: DateTime.parse(
-        json['valid_from'] ?? DateTime.now().toIso8601String(),
+        json['valid_from'] ??
+            json['validFrom'] ??
+            DateTime.now().toIso8601String(),
       ),
       validUntil: DateTime.parse(
-        json['valid_until'] ?? DateTime.now().toIso8601String(),
+        json['valid_until'] ??
+            json['validUntil'] ??
+            DateTime.now().toIso8601String(),
       ),
       applicableTo: CouponApplicableTo.fromString(
-        json['applicable_to'] ?? 'all',
+        json['applicable_to'] ?? json['applicableTo'] ?? 'all',
       ),
-      applicableItems: List<String>.from(json['applicable_items'] ?? []),
-      isActive: json['is_active'] ?? false,
-      isCurrentlyValid: json['is_currently_valid'] ?? false,
-      discountDisplay: json['discount_display'],
+      applicableItems: List<String>.from(
+        json['applicable_items'] ?? json['applicableItems'] ?? [],
+      ),
+      isActive: json['is_active'] ?? json['isActive'] ?? false,
+      isCurrentlyValid:
+          json['is_currently_valid'] ?? json['isCurrentlyValid'] ?? false,
+      discountDisplay: json['discount_display'] ?? json['discountDisplay'],
     );
   }
 
@@ -61,11 +71,11 @@ class CouponModel extends CouponEntity {
       'description': description,
       'discount_type': discountType.value,
       'discount_value': discountValue,
-      'maximum_discount': maximumDiscount,
-      'minimum_order_amount': minimumOrderAmount,
-      'total_usage_limit': totalUsageLimit,
+      'max_discount_amount': maximumDiscount,
+      'min_order_amount': minimumOrderAmount,
+      'usage_limit': totalUsageLimit,
       'used_count': usedCount,
-      'user_usage_limit': userUsageLimit,
+      'usage_limit_per_user': userUsageLimit,
       'valid_from': validFrom.toIso8601String(),
       'valid_until': validUntil.toIso8601String(),
       'applicable_to': applicableTo.value,
@@ -108,15 +118,51 @@ class CouponValidationModel extends CouponValidationEntity {
     super.coupon,
   });
 
+  /// Factory for /validate endpoint response (deprecated, use fromApplyResponse)
   factory CouponValidationModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>?;
+
+    // Handle error response
+    if (json['success'] == false) {
+      return CouponValidationModel(
+        isValid: false,
+        message: json['message'] ?? 'Invalid coupon',
+        discountAmount: 0.0,
+        coupon: null,
+      );
+    }
+
+    // Success response
     return CouponValidationModel(
       isValid: json['success'] ?? false,
-      message: json['message'] ?? '',
+      message: data?['message'] ?? json['message'] ?? '',
       discountAmount: (data?['discount_amount'] ?? 0).toDouble(),
       coupon: data?['coupon'] != null
           ? CouponModel.fromJson(data!['coupon'])
           : null,
+    );
+  }
+
+  /// Factory for /validate (apply) endpoint response
+  factory CouponValidationModel.fromApplyResponse(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>?;
+
+    // Handle error response
+    if (json['success'] == false) {
+      return CouponValidationModel(
+        isValid: false,
+        message: json['message'] ?? 'Failed to apply coupon',
+        discountAmount: 0.0,
+        coupon: null,
+      );
+    }
+
+    // Success response - extract coupon from code if available
+    return CouponValidationModel(
+      isValid: json['success'] ?? false,
+      message: data?['message'] ?? json['message'] ?? '',
+      discountAmount: (data?['discount_amount'] ?? 0).toDouble(),
+      coupon: null, // Apply endpoint doesn't return full coupon details
     );
   }
 

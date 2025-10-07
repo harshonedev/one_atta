@@ -7,13 +7,13 @@ import 'package:one_atta/features/coupons/presentation/bloc/coupon_state.dart';
 
 class CouponInputWidget extends StatefulWidget {
   final double orderAmount;
-  final List<String> itemIds;
+  final List<CouponItem> items;
   final Function(CouponEntity?, double) onCouponApplied;
 
   const CouponInputWidget({
     super.key,
     required this.orderAmount,
-    required this.itemIds,
+    required this.items,
     required this.onCouponApplied,
   });
 
@@ -25,6 +25,35 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
   final _couponController = TextEditingController();
   CouponEntity? _appliedCoupon;
   double _discountAmount = 0.0;
+  bool _isRevalidating = false;
+
+  @override
+  void didUpdateWidget(CouponInputWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // If order amount or items changed and we have an applied coupon, revalidate
+    if (_appliedCoupon != null &&
+        (oldWidget.orderAmount != widget.orderAmount ||
+            oldWidget.items != widget.items)) {
+      _revalidateCoupon();
+    }
+  }
+
+  void _revalidateCoupon() {
+    if (_appliedCoupon == null) return;
+
+    setState(() {
+      _isRevalidating = true;
+    });
+
+    context.read<CouponBloc>().add(
+      RevalidateCoupon(
+        couponCode: _appliedCoupon!.code,
+        orderAmount: widget.orderAmount,
+        items: widget.items,
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -39,7 +68,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
       ApplyCoupon(
         couponCode: couponCode.trim(),
         orderAmount: widget.orderAmount,
-        itemIds: widget.itemIds,
+        items: widget.items,
       ),
     );
   }
@@ -59,24 +88,48 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
     return BlocListener<CouponBloc, CouponState>(
       listener: (context, state) {
         if (state is CouponApplied) {
+          final wasRevalidating = _isRevalidating;
+
           setState(() {
             _appliedCoupon = state.appliedCoupon;
             _discountAmount = state.application.discountAmount;
+            _isRevalidating = false;
           });
           widget.onCouponApplied(_appliedCoupon, _discountAmount);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.successMessage),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+
+          // Only show snackbar for initial application, not revalidation
+          if (!wasRevalidating) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.successMessage),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        } else if (state is CouponRemoved) {
+          // Handle coupon removal (auto-removal due to validation failure)
+          if (_appliedCoupon != null) {
+            setState(() {
+              _appliedCoupon = null;
+              _discountAmount = 0.0;
+              _couponController.clear();
+              _isRevalidating = false;
+            });
+            widget.onCouponApplied(null, 0.0);
+          }
         } else if (state is CouponError) {
+          setState(() {
+            _isRevalidating = false;
+          });
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.userFriendlyMessage),
               backgroundColor: Theme.of(context).colorScheme.error,
               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -137,7 +190,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
                     borderSide: BorderSide(
                       color: Theme.of(
                         context,
-                      ).colorScheme.outline.withOpacity(0.3),
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
@@ -145,7 +198,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
                     borderSide: BorderSide(
                       color: Theme.of(
                         context,
-                      ).colorScheme.outline.withOpacity(0.3),
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -203,9 +256,9 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -222,11 +275,34 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
                     color: Colors.green.shade700,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  'Saved ₹${_discountAmount.toInt()}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.green.shade600),
+                  _appliedCoupon!.name,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.green.shade600,
+                    fontSize: 11,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade700,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'You saved ₹${_discountAmount.toInt()}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
               ],
             ),

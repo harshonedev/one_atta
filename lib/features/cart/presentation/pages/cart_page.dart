@@ -171,23 +171,46 @@ class _CartPageState extends State<CartPage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
       ),
-      body: BlocListener<DeliveryBloc, DeliveryState>(
-        listener: (context, deliveryState) {
-          // Update cart bloc when delivery charges change
-          if (deliveryState is DeliveryLoaded) {
-            context.read<CartBloc>().add(
-              UpdateDeliveryCharges(
-                deliveryCharges: deliveryState.deliveryCharges,
-              ),
-            );
-          } else if (deliveryState is DeliveryNotAvailable ||
-              deliveryState is DeliveryError) {
-            // Set delivery charges to 0 if delivery not available or error
-            context.read<CartBloc>().add(
-              const UpdateDeliveryCharges(deliveryCharges: 0.0),
-            );
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<DeliveryBloc, DeliveryState>(
+            listener: (context, deliveryState) {
+              // Update cart bloc when delivery charges change
+              if (deliveryState is DeliveryLoaded) {
+                context.read<CartBloc>().add(
+                  UpdateDeliveryCharges(
+                    deliveryCharges: deliveryState.deliveryCharges,
+                  ),
+                );
+              } else if (deliveryState is DeliveryNotAvailable ||
+                  deliveryState is DeliveryError) {
+                // Set delivery charges to 0 if delivery not available or error
+                context.read<CartBloc>().add(
+                  const UpdateDeliveryCharges(deliveryCharges: 0.0),
+                );
+              }
+            },
+          ),
+          BlocListener<CartBloc, CartState>(
+            listener: (context, cartState) {
+              // When cart total changes, recheck delivery availability
+              if (cartState is CartLoaded && _selectedAddress != null) {
+                final deliveryState = context.read<DeliveryBloc>().state;
+
+                // Recalculate delivery if order value changed
+                if (deliveryState is DeliveryLoaded) {
+                  context.read<DeliveryBloc>().add(
+                    CheckDeliveryAvailability(
+                      pincode: _selectedAddress!.postalCode,
+                      orderValue: cartState.itemTotal,
+                      isExpress: deliveryState.isExpressDelivery,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
         child: BlocBuilder<CartBloc, CartState>(
           builder: (context, cartState) {
             if (cartState is CartLoading) {
@@ -295,6 +318,9 @@ class _CartPageState extends State<CartPage> {
                   ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
 
+                // Delivery Fee Info
+                _buildDeliveryFeeInfo(),
+
                 // Coupon Section
                 BlocBuilder<CartBloc, CartState>(
                   builder: (context, state) {
@@ -311,7 +337,17 @@ class _CartPageState extends State<CartPage> {
 
                     return CouponInputWidget(
                       orderAmount: orderAmount,
-                      itemIds: cartItems.map((item) => item.productId).toList(),
+                      items: cartItems
+                          .map(
+                            (item) => CouponItem(
+                              itemId: item.productId,
+                              itemType: item.productType,
+                              quantity: item.quantity,
+                              pricePerKg: item.price,
+                              totalPrice: item.totalPrice,
+                            ),
+                          )
+                          .toList(),
                       onCouponApplied: _onCouponApplied,
                     );
                   },
@@ -395,6 +431,139 @@ class _CartPageState extends State<CartPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDeliveryFeeInfo() {
+    return BlocBuilder<DeliveryBloc, DeliveryState>(
+      buildWhen: (previous, current) => current is DeliveryLoaded,
+      builder: (context, deliveryState) {
+        if (deliveryState is! DeliveryLoaded) {
+          return const SizedBox.shrink();
+        }
+        return BlocBuilder<CartBloc, CartState>(
+          buildWhen: (previous, current) => current is CartLoaded,
+          builder: (context, cartState) {
+            if (cartState is! CartLoaded) {
+              return const SizedBox.shrink();
+            }
+            final itemTotal = cartState.itemTotal;
+            final threshold = deliveryState.freeDeliveryThreshold;
+            final isFree = deliveryState.isFreeDelivery;
+            final deliveryFee = deliveryState.deliveryCharges;
+
+            // If already free delivery
+            if (isFree) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.local_shipping_outlined,
+                      color: Colors.green.shade700,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Yay! You got FREE delivery',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // If close to free delivery
+            if (threshold > 0 && itemTotal < threshold) {
+              final amountNeeded = threshold - itemTotal;
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.orange.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.orange.shade700,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.orange.shade700),
+                          children: [
+                            const TextSpan(text: 'Add items worth '),
+                            TextSpan(
+                              text: '₹${amountNeeded.toInt()}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const TextSpan(text: ' more for FREE delivery'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Show current delivery fee
+            if (deliveryFee > 0) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.local_shipping_outlined,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Delivery fee: ₹${deliveryFee.toInt()}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
+        );
+      },
     );
   }
 
