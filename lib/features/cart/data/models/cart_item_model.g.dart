@@ -27,14 +27,15 @@ class CartItemModelAdapter extends TypeAdapter<CartItemModel> {
       imageUrl: fields[6] as String?,
       createdAt: fields[7] as DateTime,
       updatedAt: fields[8] as DateTime,
-      weightInKg: fields[9] == null ? 1 : fields[9] as int,
+      weightInKg: fields[9] as int,
+      isCustomBlend: fields[11] == null ? false : fields[11] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, CartItemModel obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -56,7 +57,9 @@ class CartItemModelAdapter extends TypeAdapter<CartItemModel> {
       ..writeByte(8)
       ..write(obj.updatedAt)
       ..writeByte(9)
-      ..write(obj.weightInKg);
+      ..write(obj.weightInKg)
+      ..writeByte(11)
+      ..write(obj.isCustomBlend);
   }
 
   @override

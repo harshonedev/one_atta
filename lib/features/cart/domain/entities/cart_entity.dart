@@ -8,7 +8,8 @@ class CartEntity extends Equatable {
 
   int get totalItems => items.fold(0, (sum, item) => sum + item.quantity);
 
-  double get totalPrice => items.fold(0, (sum, item) => sum + item.totalPrice);
+  double get totalPrice =>
+      items.fold(0, (sum, item) => sum + (item.totalPrice * item.weightInKg));
 
   bool get isEmpty => items.isEmpty;
 

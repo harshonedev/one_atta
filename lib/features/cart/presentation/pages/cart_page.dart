@@ -539,8 +539,6 @@ class _CartPageState extends State<CartPage> {
                     }
                   },
                 ),
-
-                const SizedBox(height: 100), // Space for checkout button
               ],
             ),
           ),

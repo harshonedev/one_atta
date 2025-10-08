@@ -23,6 +23,8 @@ class DailyEssentialDetailsPage extends StatefulWidget {
 
 class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
   int _quantity = 1;
+  int _selectedWeight = 1; // Default to 1Kg
+  final List<int> _availableWeights = [1, 3, 5]; // Available weights in Kg
 
   @override
   void initState() {
@@ -334,6 +336,77 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                 ),
               ),
 
+              // Weight Selection
+              _buildSection(
+                context,
+                'Select Weight',
+                Row(
+                  children: _availableWeights.map((weight) {
+                    final isSelected = _selectedWeight == weight;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedWeight = weight;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '$weight Kg',
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(
+                                        color: isSelected
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimary
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.onSurface,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '₹${(product.price * weight).toStringAsFixed(0)}',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary
+                                                  .withValues(alpha: 0.9)
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
               // Description
               _buildSection(
                 context,
@@ -468,7 +541,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
             title,
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           if (subtitle != null && subtitle.isNotEmpty)
             Text(
@@ -597,18 +670,44 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
 
             // Add to cart button
             Expanded(
-              child: FilledButton.icon(
+              child: FilledButton(
                 onPressed: product.isInStock
                     ? () => _addToCart(context, product)
                     : null,
-                icon: const Icon(Icons.add_shopping_cart),
-                label: Text(product.isInStock ? 'Add to Cart' : 'Out of Stock'),
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 24,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(32),
                   ),
                 ),
+                child: product.isInStock
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.add_shopping_cart, size: 20),
+                          const SizedBox(width: 8),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Add to Cart',
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : const Text('Out of Stock'),
               ),
             ),
           ],
@@ -624,11 +723,12 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
       productName: product.name,
       productType: 'product',
       quantity: _quantity,
-      mrp: product.originalPrice,
-      price: product.price,
+      mrp: product.originalPrice * _selectedWeight,
+      price: product.price * _selectedWeight,
       imageUrl: product.imageUrls.first,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      weightInKg: _selectedWeight,
     );
 
     context.read<CartBloc>().add(AddItemToCart(item: cartItem));
@@ -647,7 +747,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '${product.name} added to cart!',
+                '${product.name} ($_selectedWeight Kg) added to cart!',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.w500,

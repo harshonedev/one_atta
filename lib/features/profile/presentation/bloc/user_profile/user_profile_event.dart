@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:one_atta/features/profile/domain/entities/profile_update_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
 
 abstract class UserProfileEvent extends Equatable {
   const UserProfileEvent();

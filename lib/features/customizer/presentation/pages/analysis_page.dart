@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/features/customizer/domain/entities/blend_request_entity.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_analysis_entity.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
@@ -39,7 +40,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     }
   }
 
-  void _addBlendToCart(BuildContext context, savedBlend) {
+  void _addBlendToCart(BuildContext context, SavedBlendEntity savedBlend) {
     final cartBloc = context.read<CartBloc>();
 
     // Create cart item from saved blend
@@ -53,7 +54,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
       imageUrl: null, // Custom blends might not have images
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-      weightInKg: 1, // Default to 1kg
+      weightInKg: savedBlend.weightKg,
+      isCustomBlend: true,
     );
 
     cartBloc.add(AddItemToCart(item: cartItem));

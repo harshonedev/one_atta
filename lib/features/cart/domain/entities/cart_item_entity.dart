@@ -12,6 +12,7 @@ class CartItemEntity extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
   final int weightInKg; // in kg
+  final bool isCustomBlend;
 
   const CartItemEntity({
     this.id,
@@ -24,7 +25,8 @@ class CartItemEntity extends Equatable {
     this.imageUrl,
     required this.createdAt,
     required this.updatedAt,
-    this.weightInKg = 1,
+    required this.weightInKg,
+    this.isCustomBlend = false,
   });
 
   double get totalPrice => price * quantity;
@@ -41,6 +43,7 @@ class CartItemEntity extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     int? weightInKg,
+    bool? isCustomBlend,
   }) {
     return CartItemEntity(
       id: id ?? this.id,
@@ -54,6 +57,7 @@ class CartItemEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       weightInKg: weightInKg ?? this.weightInKg,
+      isCustomBlend: isCustomBlend ?? this.isCustomBlend,
     );
   }
 
@@ -70,5 +74,6 @@ class CartItemEntity extends Equatable {
     updatedAt,
     weightInKg,
     mrp,
+    isCustomBlend,
   ];
 }

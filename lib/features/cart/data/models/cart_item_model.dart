@@ -45,9 +45,13 @@ class CartItemModel extends CartItemEntity {
   @override
   final DateTime updatedAt;
 
-  @HiveField(9, defaultValue: 1)
+  @HiveField(9)
   @override
   final int weightInKg;
+
+  @override
+  @HiveField(11, defaultValue: false)
+  final bool isCustomBlend;
 
   const CartItemModel({
     this.id,
@@ -60,7 +64,8 @@ class CartItemModel extends CartItemEntity {
     this.imageUrl,
     required this.createdAt,
     required this.updatedAt,
-    this.weightInKg = 1,
+    required this.weightInKg,
+    this.isCustomBlend = false,
   }) : super(
          id: id,
          productId: productId,
@@ -73,6 +78,7 @@ class CartItemModel extends CartItemEntity {
          updatedAt: updatedAt,
          weightInKg: weightInKg,
          mrp: mrp,
+         isCustomBlend: isCustomBlend,
        );
 
   factory CartItemModel.fromMap(Map<String, dynamic> map) {
@@ -88,6 +94,7 @@ class CartItemModel extends CartItemEntity {
       updatedAt: DateTime.parse(map['updated_at'] as String),
       weightInKg: map['weight_in_kg'] as int? ?? 1,
       mrp: (map['mrp'] as num).toDouble(),
+      isCustomBlend: map['is_custom_blend'] as bool? ?? false,
     );
   }
 
@@ -104,6 +111,7 @@ class CartItemModel extends CartItemEntity {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'weight_in_kg': weightInKg,
+      'is_custom_blend': isCustomBlend,
     };
   }
 
@@ -120,6 +128,7 @@ class CartItemModel extends CartItemEntity {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       weightInKg: entity.weightInKg,
+      isCustomBlend: entity.isCustomBlend,
     );
   }
 
@@ -136,6 +145,7 @@ class CartItemModel extends CartItemEntity {
     DateTime? updatedAt,
     int? weightInKg,
     double? mrp,
+    bool? isCustomBlend,
   }) {
     return CartItemModel(
       id: id ?? this.id,
@@ -149,6 +159,7 @@ class CartItemModel extends CartItemEntity {
       updatedAt: updatedAt ?? this.updatedAt,
       weightInKg: weightInKg ?? this.weightInKg,
       mrp: mrp ?? this.mrp,
+      isCustomBlend: isCustomBlend ?? this.isCustomBlend,
     );
   }
 }

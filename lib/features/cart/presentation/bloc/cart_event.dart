@@ -87,3 +87,13 @@ class UpdateDeliveryCharges extends CartEvent {
   @override
   List<Object> get props => [deliveryCharges];
 }
+
+class UpdateItemWeight extends CartEvent {
+  final String productId;
+  final int weightInKg;
+
+  const UpdateItemWeight({required this.productId, required this.weightInKg});
+
+  @override
+  List<Object> get props => [productId, weightInKg];
+}

@@ -30,10 +30,18 @@ class BlendDetailsPage extends StatelessWidget {
   }
 }
 
-class BlendDetailsView extends StatelessWidget {
+class BlendDetailsView extends StatefulWidget {
   final String blendId;
 
   const BlendDetailsView({super.key, required this.blendId});
+
+  @override
+  State<BlendDetailsView> createState() => _BlendDetailsViewState();
+}
+
+class _BlendDetailsViewState extends State<BlendDetailsView> {
+  int _selectedWeight = 1; // Default to 1Kg
+  final List<int> _availableWeights = [1, 3, 5]; // Available weights in Kg
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +115,9 @@ class BlendDetailsView extends StatelessWidget {
       ),
       body: ErrorPage(
         onRetry: () {
-          context.read<BlendDetailsBloc>().add(LoadBlendDetails(blendId));
+          context.read<BlendDetailsBloc>().add(
+            LoadBlendDetails(widget.blendId),
+          );
         },
       ),
     );
@@ -149,10 +159,10 @@ class BlendDetailsView extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Background image
+                  // BacKground image
                   Positioned.fill(
                     child: Image.network(
-                      BlendImages.getImageForBlend(blendId),
+                      BlendImages.getImageForBlend(widget.blendId),
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -306,7 +316,7 @@ class BlendDetailsView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '₹${blend.pricePerKg.toStringAsFixed(2)}/kg',
+                              '₹${blend.pricePerKg.toStringAsFixed(2)}/Kg',
                               style: Theme.of(context).textTheme.headlineMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -327,24 +337,146 @@ class BlendDetailsView extends StatelessWidget {
                           ],
                         ),
                         const Spacer(),
-                        FilledButton.icon(
+                        FilledButton(
                           onPressed: isLoading
                               ? null
                               : () {
                                   _addBlendToCart(context, blend);
                                 },
-                          icon: isLoading
-                              ? SizedBox(
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Icon(Icons.add_shopping_cart),
-                          label: const Text('Add to Cart'),
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.add_shopping_cart,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Add to Cart',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelLarge
+                                              ?.copyWith(
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.onPrimary,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                         ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Weight Selection
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Select Weight',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: _availableWeights.map((weight) {
+                        final isSelected = _selectedWeight == weight;
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _selectedWeight = weight;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                  horizontal: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      '$weight Kg',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            color: isSelected
+                                                ? Theme.of(
+                                                    context,
+                                                  ).colorScheme.onPrimary
+                                                : Theme.of(
+                                                    context,
+                                                  ).colorScheme.onSurface,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '₹${(blend.pricePerKg * weight).toStringAsFixed(0)}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: isSelected
+                                                ? Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimary
+                                                      .withValues(alpha: 0.9)
+                                                : Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
@@ -472,11 +604,12 @@ class BlendDetailsView extends StatelessWidget {
       productName: blendUsed.name,
       productType: 'blend',
       quantity: 1,
-      price: blendUsed.pricePerKg,
-      mrp: blendUsed.pricePerKg,
+      price: blendUsed.pricePerKg * _selectedWeight,
+      mrp: blendUsed.pricePerKg * _selectedWeight,
       imageUrl: BlendImages.getImageForBlend(blendUsed.id),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      weightInKg: _selectedWeight,
     );
 
     context.read<CartBloc>().add(AddItemToCart(item: cartItem));
@@ -495,7 +628,7 @@ class BlendDetailsView extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '${blendUsed.name} added to cart!',
+                '${blendUsed.name} ($_selectedWeight Kg) added to cart!',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.w500,

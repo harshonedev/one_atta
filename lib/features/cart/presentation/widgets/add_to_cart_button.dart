@@ -11,6 +11,7 @@ class AddToCartButton extends StatelessWidget {
   final double price;
   final String? imageUrl;
   final int quantity;
+  final int weightInKg;
   final VoidCallback? onPressed;
 
   const AddToCartButton({
@@ -19,6 +20,7 @@ class AddToCartButton extends StatelessWidget {
     required this.productName,
     required this.productType,
     required this.price,
+    required this.weightInKg,
     this.imageUrl,
     this.quantity = 1,
     this.onPressed,
@@ -41,6 +43,7 @@ class AddToCartButton extends StatelessWidget {
             imageUrl: imageUrl,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
+            weightInKg: weightInKg,
           );
 
           context.read<CartBloc>().add(AddItemToCart(item: cartItem));
@@ -74,6 +77,7 @@ class CompactAddToCartButton extends StatelessWidget {
   final double price;
   final String? imageUrl;
   final int quantity;
+  final int weightInKg;
   final VoidCallback? onPressed;
 
   const CompactAddToCartButton({
@@ -82,6 +86,7 @@ class CompactAddToCartButton extends StatelessWidget {
     required this.productName,
     required this.productType,
     required this.price,
+    required this.weightInKg,
     this.imageUrl,
     this.quantity = 1,
     this.onPressed,
@@ -98,6 +103,7 @@ class CompactAddToCartButton extends StatelessWidget {
           quantity: quantity,
           price: price,
           mrp: price,
+          weightInKg: weightInKg,
           imageUrl: imageUrl,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),

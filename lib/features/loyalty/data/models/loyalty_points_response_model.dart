@@ -1,4 +1,4 @@
-import 'package:one_atta/features/profile/domain/entities/loyalty_points_response_entity.dart';
+import 'package:one_atta/features/loyalty/domain/entities/loyalty_points_response_entity.dart';
 
 class LoyaltyPointsResponseModel extends LoyaltyPointsResponseEntity {
   const LoyaltyPointsResponseModel({

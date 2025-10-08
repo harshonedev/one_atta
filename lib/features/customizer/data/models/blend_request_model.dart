@@ -147,6 +147,7 @@ class SavedBlendModel {
       deleted: deleted,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      weightKg: 1, // Default value 1kg
     );
   }
 }

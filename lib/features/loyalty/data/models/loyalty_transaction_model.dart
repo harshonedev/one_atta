@@ -1,4 +1,4 @@
-import 'package:one_atta/features/profile/domain/entities/loyalty_transaction_entity.dart';
+import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
 
 class LoyaltyTransactionModel extends LoyaltyTransactionEntity {
   const LoyaltyTransactionModel({
@@ -92,8 +92,8 @@ class LoyaltyHistoryResponseModel {
   }
 }
 
-class LoyaltyPointsResponseModel extends LoyaltyPointsResponse {
-  const LoyaltyPointsResponseModel({
+class LoyaltyPointsResponseTransactionModel extends LoyaltyPointsResponse {
+  const LoyaltyPointsResponseTransactionModel({
     required super.success,
     required super.points,
     super.monetaryValue,
@@ -101,9 +101,11 @@ class LoyaltyPointsResponseModel extends LoyaltyPointsResponse {
     super.transactionId,
   });
 
-  factory LoyaltyPointsResponseModel.fromJson(Map<String, dynamic> json) {
+  factory LoyaltyPointsResponseTransactionModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
     final data = json['data'] ?? {};
-    return LoyaltyPointsResponseModel(
+    return LoyaltyPointsResponseTransactionModel(
       success: json['success'] ?? false,
       points: data['points'] ?? 0,
       monetaryValue: data['monetaryValue']?.toDouble(),

@@ -3,6 +3,9 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/network/api_request.dart';
+import 'package:one_atta/features/loyalty/data/datasources/loyalty_remote_datasource.dart';
+import 'package:one_atta/features/loyalty/data/repositories/loyalty_repository_impl.dart';
+import 'package:one_atta/features/loyalty/domain/repositories/loyalty_repository.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source_impl.dart';
 import 'package:one_atta/features/recipes/data/repositories/recipes_repository_impl.dart';
@@ -57,6 +60,7 @@ import 'package:one_atta/features/cart/domain/usecases/get_cart_item_count_useca
 import 'package:one_atta/features/cart/domain/usecases/get_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/remove_from_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/update_cart_item_quantity_usecase.dart';
+import 'package:one_atta/features/cart/domain/usecases/update_cart_item_weight_usecase.dart';
 
 // Delivery
 import 'package:one_atta/features/cart/data/datasources/delivery_remote_data_source.dart';
@@ -85,7 +89,6 @@ import 'package:one_atta/features/profile/data/repositories/profile_repository_i
 import 'package:one_atta/features/profile/domain/repositories/profile_repository.dart';
 // Profile - Updated BLoCs
 import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_bloc.dart';
-import 'package:one_atta/features/profile/presentation/bloc/loyalty_points/loyalty_points_bloc.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 
 // Coupons
@@ -211,6 +214,7 @@ Future<void> init() async {
       addToCartUseCase: sl(),
       removeFromCartUseCase: sl(),
       updateCartItemQuantityUseCase: sl(),
+      updateCartItemWeightUseCase: sl(),
       clearCartUseCase: sl(),
       getCartItemCountUseCase: sl(),
     ),
@@ -221,6 +225,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddToCartUseCase(sl()));
   sl.registerLazySingleton(() => RemoveFromCartUseCase(sl()));
   sl.registerLazySingleton(() => UpdateCartItemQuantityUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCartItemWeightUseCase(sl()));
   sl.registerLazySingleton(() => ClearCartUseCase(sl()));
   sl.registerLazySingleton(() => GetCartItemCountUseCase(sl()));
 
@@ -279,11 +284,24 @@ Future<void> init() async {
     () => AddressRemoteDataSourceImpl(apiRequest: sl()),
   );
 
+  //! Features - Loyalty
+  // Repository
+  sl.registerLazySingleton<LoyaltyRepository>(
+    () => LoyaltyRepositoryImpl(
+      remoteDataSource: sl(),
+      authLocalDataSource: sl(),
+    ),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<LoyaltyRemoteDataSource>(
+    () => LoyaltyRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
   //! Features - Profile
   // BLoCs - Specialized for better separation of concerns
   sl.registerFactory(() => UserProfileBloc(profileRepository: sl()));
-  sl.registerFactory(() => LoyaltyPointsBloc(profileRepository: sl()));
-  sl.registerFactory(() => LoyaltyHistoryBloc(profileRepository: sl()));
+  sl.registerFactory(() => LoyaltyHistoryBloc(loyaltyRepository: sl()));
 
   // Repository
   sl.registerLazySingleton<ProfileRepository>(

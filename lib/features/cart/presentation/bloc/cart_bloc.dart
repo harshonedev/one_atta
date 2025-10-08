@@ -7,6 +7,7 @@ import 'package:one_atta/features/cart/domain/usecases/get_cart_item_count_useca
 import 'package:one_atta/features/cart/domain/usecases/get_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/remove_from_cart_usecase.dart';
 import 'package:one_atta/features/cart/domain/usecases/update_cart_item_quantity_usecase.dart';
+import 'package:one_atta/features/cart/domain/usecases/update_cart_item_weight_usecase.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_state.dart';
 
@@ -15,6 +16,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final AddToCartUseCase addToCartUseCase;
   final RemoveFromCartUseCase removeFromCartUseCase;
   final UpdateCartItemQuantityUseCase updateCartItemQuantityUseCase;
+  final UpdateCartItemWeightUseCase updateCartItemWeightUseCase;
   final ClearCartUseCase clearCartUseCase;
   final GetCartItemCountUseCase getCartItemCountUseCase;
 
@@ -28,6 +30,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     required this.addToCartUseCase,
     required this.removeFromCartUseCase,
     required this.updateCartItemQuantityUseCase,
+    required this.updateCartItemWeightUseCase,
     required this.clearCartUseCase,
     required this.getCartItemCountUseCase,
   }) : super(CartInitial()) {
@@ -35,6 +38,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<AddItemToCart>(_onAddItemToCart);
     on<RemoveItemFromCart>(_onRemoveItemFromCart);
     on<UpdateItemQuantity>(_onUpdateItemQuantity);
+    on<UpdateItemWeight>(_onUpdateItemWeight);
     on<ClearCart>(_onClearCart);
     on<LoadCartItemCount>(_onLoadCartItemCount);
     on<ApplyCoupon>(_onApplyCoupon);
@@ -130,6 +134,20 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final result = await updateCartItemQuantityUseCase(
       event.productId,
       event.quantity,
+    );
+
+    result.fold((failure) => emit(CartError(message: failure.message)), (_) {
+      add(LoadCart()); // Reload cart to update UI
+    });
+  }
+
+  Future<void> _onUpdateItemWeight(
+    UpdateItemWeight event,
+    Emitter<CartState> emit,
+  ) async {
+    final result = await updateCartItemWeightUseCase(
+      event.productId,
+      event.weightInKg,
     );
 
     result.fold((failure) => emit(CartError(message: failure.message)), (_) {

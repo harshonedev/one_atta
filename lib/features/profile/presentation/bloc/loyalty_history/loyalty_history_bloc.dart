@@ -1,17 +1,17 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 import 'package:one_atta/core/error/failures.dart';
-import 'package:one_atta/features/profile/domain/entities/loyalty_transaction_entity.dart';
-import 'package:one_atta/features/profile/domain/repositories/profile_repository.dart';
+import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
+import 'package:one_atta/features/loyalty/domain/repositories/loyalty_repository.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_event.dart';
 import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_state.dart';
 
 class LoyaltyHistoryBloc
     extends Bloc<LoyaltyHistoryEvent, LoyaltyHistoryState> {
-  final ProfileRepository profileRepository;
+  final LoyaltyRepository loyaltyRepository;
   final Logger logger = Logger();
 
-  LoyaltyHistoryBloc({required this.profileRepository})
+  LoyaltyHistoryBloc({required this.loyaltyRepository})
     : super(const LoyaltyHistoryInitial()) {
     on<GetLoyaltyHistoryRequested>(_onGetLoyaltyHistoryRequested);
     on<RefreshLoyaltyHistoryRequested>(_onRefreshLoyaltyHistoryRequested);
@@ -25,7 +25,7 @@ class LoyaltyHistoryBloc
     emit(const LoyaltyHistoryLoading());
     logger.i('Getting loyalty transaction history');
 
-    final result = await profileRepository.getLoyaltyTransactionHistory();
+    final result = await loyaltyRepository.getLoyaltyTransactionHistory();
     result.fold(
       (failure) {
         logger.e('Failed to get loyalty history: ${failure.message}');
@@ -80,7 +80,7 @@ class LoyaltyHistoryBloc
 
     logger.i('Refreshing loyalty transaction history');
 
-    final result = await profileRepository.getLoyaltyTransactionHistory();
+    final result = await loyaltyRepository.getLoyaltyTransactionHistory();
     result.fold(
       (failure) {
         logger.e('Failed to refresh loyalty history: ${failure.message}');

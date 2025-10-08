@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:one_atta/features/profile/domain/entities/loyalty_transaction_entity.dart';
+import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
 
 abstract class LoyaltyHistoryState extends Equatable {
   const LoyaltyHistoryState();

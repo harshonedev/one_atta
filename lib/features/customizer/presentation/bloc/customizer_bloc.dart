@@ -439,8 +439,14 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
       result.fold(
         (failure) =>
             emit(state.copyWith(isSaving: false, error: failure.message)),
-        (savedBlend) =>
-            emit(state.copyWith(isSaving: false, savedBlend: savedBlend)),
+        (savedBlend) => emit(
+          state.copyWith(
+            isSaving: false,
+            savedBlend: savedBlend.copyWith(
+              weightKg: state.totalWeight ~/ 1000,
+            ),
+          ),
+        ),
       );
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: 'Failed to save blend: $e'));

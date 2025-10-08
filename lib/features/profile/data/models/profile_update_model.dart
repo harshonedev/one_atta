@@ -1,4 +1,4 @@
-import 'package:one_atta/features/profile/domain/entities/profile_update_entity.dart';
+import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
 
 class ProfileUpdateModel extends ProfileUpdateEntity {
   const ProfileUpdateModel({

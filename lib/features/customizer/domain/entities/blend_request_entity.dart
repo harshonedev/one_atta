@@ -54,6 +54,7 @@ class SavedBlendEntity extends Equatable {
   final bool deleted;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int weightKg;
 
   const SavedBlendEntity({
     required this.id,
@@ -69,7 +70,42 @@ class SavedBlendEntity extends Equatable {
     required this.deleted,
     required this.createdAt,
     required this.updatedAt,
+    required this.weightKg,
   });
+
+  SavedBlendEntity copyWith({
+    String? id,
+    String? name,
+    List<AdditiveEntity>? additives,
+    String? createdBy,
+    String? shareCode,
+    int? shareCount,
+    bool? isPublic,
+    double? pricePerKg,
+    double? totalPrice,
+    int? expiryDays,
+    bool? deleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? weightKg,
+  }) {
+    return SavedBlendEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      additives: additives ?? this.additives,
+      createdBy: createdBy ?? this.createdBy,
+      shareCode: shareCode ?? this.shareCode,
+      shareCount: shareCount ?? this.shareCount,
+      isPublic: isPublic ?? this.isPublic,
+      pricePerKg: pricePerKg ?? this.pricePerKg,
+      totalPrice: totalPrice ?? this.totalPrice,
+      expiryDays: expiryDays ?? this.expiryDays,
+      deleted: deleted ?? this.deleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      weightKg: weightKg ?? this.weightKg,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -86,5 +122,6 @@ class SavedBlendEntity extends Equatable {
     deleted,
     createdAt,
     updatedAt,
+    weightKg,
   ];
 }

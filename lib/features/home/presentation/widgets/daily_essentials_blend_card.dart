@@ -183,7 +183,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
                         children: [
                           // Price
                           Text(
-                            '₹${blend.pricePerKg.toStringAsFixed(0)}/kg',
+                            '₹${blend.pricePerKg.toStringAsFixed(0)}/Kg',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
@@ -309,7 +309,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
                     children: [
                       // Price
                       Text(
-                        '₹${blend.pricePerKg.toStringAsFixed(0)}/kg',
+                        '₹${blend.pricePerKg.toStringAsFixed(0)}/Kg',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).colorScheme.primary,
@@ -365,6 +365,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
       productName: blendUsed.name,
       productType: 'product',
       quantity: 1,
+      weightInKg: 1,
       price: blendUsed.pricePerKg,
       mrp: blendUsed.pricePerKg,
       imageUrl: blendUsed.imageUrl,

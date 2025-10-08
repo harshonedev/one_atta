@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:one_atta/features/profile/domain/entities/loyalty_transaction_entity.dart';
+import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
 
 class LoyaltyTransactionCard extends StatelessWidget {
   final LoyaltyTransactionEntity transaction;

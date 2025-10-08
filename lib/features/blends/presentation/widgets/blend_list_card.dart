@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
-import 'package:one_atta/features/cart/presentation/widgets/add_to_cart_button.dart';
 
 class BlendListCard extends StatelessWidget {
   final PublicBlendEntity blend;
@@ -102,14 +101,6 @@ class BlendListCard extends StatelessWidget {
                                 ),
                           ),
                         ],
-                      ),
-                      const SizedBox(width: 12),
-                      CompactAddToCartButton(
-                        productId: blend.id,
-                        productName: blend.name,
-                        productType: 'blend',
-                        price: blend.pricePerKg,
-                        imageUrl: BlendImages.getImageForBlend(blend.id),
                       ),
                     ],
                   ),

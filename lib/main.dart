@@ -62,7 +62,6 @@ class MainApp extends StatelessWidget {
           create: (context) =>
               di.sl<UserProfileBloc>()..add(const GetUserProfileRequested()),
         ),
-        BlocProvider(create: (context) => di.sl<LoyaltyPointsBloc>()),
         BlocProvider(
           create: (context) =>
               di.sl<LoyaltyHistoryBloc>()

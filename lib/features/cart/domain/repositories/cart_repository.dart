@@ -11,6 +11,10 @@ abstract class CartRepository {
     String productId,
     int quantity,
   );
+  Future<Either<Failure, Unit>> updateItemWeight(
+    String productId,
+    int weightInKg,
+  );
   Future<Either<Failure, Unit>> clearCart();
   Future<Either<Failure, int>> getCartItemCount();
 }

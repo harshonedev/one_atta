@@ -73,6 +73,36 @@ class CartRepositoryImpl implements CartRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> updateItemWeight(
+    String productId,
+    int weightInKg,
+  ) async {
+    try {
+      final existingItem = await localDataSource.getCartItemByProductId(
+        productId,
+      );
+      if (existingItem != null) {
+        // Calculate new price and MRP based on weight
+        final pricePerKg = existingItem.price / existingItem.weightInKg;
+        final mrpPerKg = existingItem.mrp / existingItem.weightInKg;
+
+        final updatedItem = existingItem.copyWith(
+          weightInKg: weightInKg,
+          price: pricePerKg * weightInKg,
+          mrp: mrpPerKg * weightInKg,
+          updatedAt: DateTime.now(),
+        );
+        await localDataSource.updateCartItem(updatedItem);
+      }
+      return const Right(unit);
+    } catch (e) {
+      return Left(
+        CacheFailure('Failed to update item weight: ${e.toString()}'),
+      );
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> clearCart() async {
     try {
       await localDataSource.clearCart();
