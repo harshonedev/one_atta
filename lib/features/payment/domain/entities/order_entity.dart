@@ -26,6 +26,7 @@ class OrderEntity extends Equatable {
   final String? paymentFailureReason;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final List<OrderItem> items;
 
   const OrderEntity({
     required this.id,
@@ -51,6 +52,7 @@ class OrderEntity extends Equatable {
     this.paymentFailureReason,
     required this.createdAt,
     this.updatedAt,
+    this.items = const [],
   });
 
   // to json
@@ -79,7 +81,47 @@ class OrderEntity extends Equatable {
       'paymentFailureReason': paymentFailureReason,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'items': items.map((item) => item.toJson()).toList(),
     };
+  }
+
+  factory OrderEntity.fromJson(Map<String, dynamic> json) {
+    return OrderEntity(
+      id: json['id'] as String,
+      userId: json['userId'] as String,
+      status: json['status'] as String,
+      paymentStatus: json['paymentStatus'] as String,
+      paymentMethod: json['paymentMethod'] as String,
+      actualPaymentMethod: json['actualPaymentMethod'] as String?,
+      paymentVerified: json['paymentVerified'] as bool,
+      razorpayOrderId: json['razorpayOrderId'] as String?,
+      razorpayPaymentId: json['razorpayPaymentId'] as String?,
+      subtotal: (json['subtotal'] as num).toDouble(),
+      discountAmount: (json['discountAmount'] as num).toDouble(),
+      loyaltyDiscountAmount: (json['loyaltyDiscountAmount'] as num).toDouble(),
+      deliveryCharges: (json['deliveryCharges'] as num).toDouble(),
+      codCharges: (json['codCharges'] as num).toDouble(),
+      totalAmount: (json['totalAmount'] as num).toDouble(),
+      deliveryAddressId: json['deliveryAddressId'] as String,
+      contactNumbers: (json['contactNumbers'] as List)
+          .map((e) => e as String)
+          .toList(),
+      couponCode: json['couponCode'] as String?,
+      loyaltyPointsUsed: json['loyaltyPointsUsed'] as int,
+      paymentCompletedAt: json['paymentCompletedAt'] != null
+          ? DateTime.parse(json['paymentCompletedAt'] as String)
+          : null,
+      paymentFailureReason: json['paymentFailureReason'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
+      items: json['items'] != null
+          ? (json['items'] as List)
+                .map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
+                .toList()
+          : [],
+    );
   }
 
   @override
@@ -107,6 +149,7 @@ class OrderEntity extends Equatable {
     paymentFailureReason,
     createdAt,
     updatedAt,
+    items,
   ];
 }
 

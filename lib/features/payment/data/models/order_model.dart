@@ -25,6 +25,7 @@ class OrderModel extends OrderEntity {
     super.paymentFailureReason,
     required super.createdAt,
     super.updatedAt,
+    super.items,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -49,12 +50,7 @@ class OrderModel extends OrderEntity {
       deliveryCharges: (json['delivery_charges'] as num?)?.toDouble() ?? 0.0,
       codCharges: (json['cod_charges'] as num?)?.toDouble() ?? 0.0,
       totalAmount: (json['total_amount'] as num).toDouble(),
-      deliveryAddressId: json['delivery_address'] != null
-          ? (json['delivery_address'] is String
-                ? json['delivery_address'] as String
-                : (json['delivery_address'] as Map<String, dynamic>)['_id']
-                      as String)
-          : '', // Empty string for create order response
+      deliveryAddressId: _parseDeliveryAddressId(json['delivery_address']),
       contactNumbers: json['contact_numbers'] != null
           ? (json['contact_numbers'] as List).map((e) => e.toString()).toList()
           : [], // Empty list for create order response
@@ -68,9 +64,15 @@ class OrderModel extends OrderEntity {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
+      items: json['items'] != null
+          ? (json['items'] as List)
+                .map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
+                .toList()
+          : [],
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -96,6 +98,7 @@ class OrderModel extends OrderEntity {
       'payment_failure_reason': paymentFailureReason,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'items': items.map((item) => item.toJson()).toList(),
     };
   }
 
@@ -124,6 +127,60 @@ class OrderModel extends OrderEntity {
       paymentFailureReason: paymentFailureReason,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      items: items,
+    );
+  }
+
+  /// Safely parses delivery_address field which can be:
+  /// - null (for create order responses, returns empty string)
+  /// - a String (address ID, returns as-is)
+  /// - a Map with '_id' field (populated address object, extracts ID)
+  /// Throws FormatException if delivery_address is present but malformed
+  static String _parseDeliveryAddressId(dynamic deliveryAddress) {
+    // Case 1: null or absent - allowed for create order responses
+    if (deliveryAddress == null) {
+      return '';
+    }
+
+    // Case 2: Already a String (address ID)
+    if (deliveryAddress is String) {
+      return deliveryAddress;
+    }
+
+    // Case 3: Map (populated address object)
+    if (deliveryAddress is Map<String, dynamic>) {
+      // Check if '_id' field exists
+      if (!deliveryAddress.containsKey('_id')) {
+        throw FormatException(
+          'Invalid delivery_address: Map is missing required "_id" field. '
+          'Received keys: ${deliveryAddress.keys.join(", ")}',
+        );
+      }
+
+      final addressId = deliveryAddress['_id'];
+
+      // Verify '_id' is a String
+      if (addressId is! String) {
+        throw FormatException(
+          'Invalid delivery_address: "_id" field must be a String, '
+          'but got ${addressId.runtimeType}',
+        );
+      }
+
+      // Verify '_id' is not empty
+      if (addressId.isEmpty) {
+        throw FormatException(
+          'Invalid delivery_address: "_id" field cannot be empty',
+        );
+      }
+
+      return addressId;
+    }
+
+    // Case 4: Unsupported type
+    throw FormatException(
+      'Invalid delivery_address: Expected null, String, or Map<String, dynamic>, '
+      'but got ${deliveryAddress.runtimeType}',
     );
   }
 }

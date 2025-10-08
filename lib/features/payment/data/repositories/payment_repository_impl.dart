@@ -61,7 +61,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
         deliveryCharges: deliveryCharges,
         codCharges: codCharges,
       );
-      logger.i('Order created successfully: $response');
+      logger.i('Order created successfully: ${response.order.id}');
       return Right(response);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
