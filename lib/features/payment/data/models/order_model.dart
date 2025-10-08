@@ -30,12 +30,14 @@ class OrderModel extends OrderEntity {
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['_id'] as String,
-      userId: json['user_id'] is String
-          ? json['user_id'] as String
-          : (json['user_id'] as Map<String, dynamic>)['_id'] as String,
+      userId: json['user_id'] != null
+          ? (json['user_id'] is String
+                ? json['user_id'] as String
+                : (json['user_id'] as Map<String, dynamic>)['_id'] as String)
+          : '', // Empty string for create order response
       status: json['status'] as String,
       paymentStatus: json['payment_status'] as String,
-      paymentMethod: json['payment_method'] as String,
+      paymentMethod: json['payment_method'] as String? ?? 'unknown',
       actualPaymentMethod: json['actual_payment_method'] as String?,
       paymentVerified: json['payment_verified'] as bool? ?? false,
       razorpayOrderId: json['razorpay_order_id'] as String?,
@@ -47,12 +49,15 @@ class OrderModel extends OrderEntity {
       deliveryCharges: (json['delivery_charges'] as num?)?.toDouble() ?? 0.0,
       codCharges: (json['cod_charges'] as num?)?.toDouble() ?? 0.0,
       totalAmount: (json['total_amount'] as num).toDouble(),
-      deliveryAddressId: json['delivery_address'] is String
-          ? json['delivery_address'] as String
-          : (json['delivery_address'] as Map<String, dynamic>)['_id'] as String,
-      contactNumbers: (json['contact_numbers'] as List)
-          .map((e) => e.toString())
-          .toList(),
+      deliveryAddressId: json['delivery_address'] != null
+          ? (json['delivery_address'] is String
+                ? json['delivery_address'] as String
+                : (json['delivery_address'] as Map<String, dynamic>)['_id']
+                      as String)
+          : '', // Empty string for create order response
+      contactNumbers: json['contact_numbers'] != null
+          ? (json['contact_numbers'] as List).map((e) => e.toString()).toList()
+          : [], // Empty list for create order response
       couponCode: json['coupon_code'] as String?,
       loyaltyPointsUsed: json['loyalty_points_used'] as int? ?? 0,
       paymentCompletedAt: json['payment_completed_at'] != null

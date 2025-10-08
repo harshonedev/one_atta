@@ -26,12 +26,24 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   late Razorpay _razorpay;
   bool _isProcessing = false;
   String? _currentOrderId;
+  bool _hasOpenedCheckout = false;
 
   @override
   void initState() {
     super.initState();
     _initializeRazorpay();
-    _openRazorpayCheckout();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Open Razorpay checkout only once after the widget is fully initialized
+    if (!_hasOpenedCheckout) {
+      _hasOpenedCheckout = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _openRazorpayCheckout();
+      });
+    }
   }
 
   void _initializeRazorpay() {
@@ -170,7 +182,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
 
             context.go(
               '/order/confirmation',
-              extra: {'orderId': order.id, 'order': order},
+              extra: {'orderId': order.id, 'order': order.toJson()},
             );
           } else if (state is PaymentFailed) {
             setState(() {

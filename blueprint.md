@@ -55,6 +55,29 @@ One Atta is a Flutter application for flour/atta blending and recipe management.
 - **Navigation**: Bottom navigation with 5 tabs
 - **Layout**: Consistent spacing and card-based design
 
+## Recent Updates
+
+### Payment Method Selection Simplified (October 8, 2025)
+**Feature**: Simplified payment method selection to show only two options:
+1. **COD (Cash on Delivery)** - Direct COD payment with additional COD charges
+2. **Prepaid (UPI, Card, Wallet)** - Online payment through Razorpay gateway
+
+**Implementation Details**:
+- Removed dependency on API-loaded payment methods
+- Created local state management for payment type selection (`_selectedPaymentType`)
+- When user selects "Prepaid", the `payment_method` sent to backend is "Razorpay"
+- Razorpay then handles the actual payment method selection (UPI, Card, Wallet, NetBanking)
+- COD charges are automatically calculated and displayed when COD is selected
+- Order summary dynamically updates based on selected payment type
+- Removed unused `PaymentMethodEntity` import and related methods
+
+**UI Changes**:
+- Two prominent payment tiles instead of multiple options
+- COD tile: Green icon with money symbol
+- Prepaid tile: Purple icon with wallet symbol
+- Clear descriptions for each payment type
+- Continue button text changes based on selection ("Place Order" for COD, "Continue to Payment" for Prepaid)
+
 ## Current Task: Cart Feature Implementation
 
 ### Requirements

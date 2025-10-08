@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_state.dart';
-import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_bloc.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_event.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_state.dart';
@@ -27,75 +27,79 @@ class PaymentMethodSelectionPage extends StatefulWidget {
 
 class _PaymentMethodSelectionPageState
     extends State<PaymentMethodSelectionPage> {
+  String? _selectedPaymentType; // 'COD' or 'Razorpay'
+
   @override
   void initState() {
     super.initState();
-    context.read<PaymentBloc>().add(LoadPaymentMethods());
+    // No need to load payment methods from API
   }
 
-  void _onPaymentMethodSelected(PaymentMethodEntity paymentMethod) {
-    context.read<PaymentBloc>().add(SelectPaymentMethod(paymentMethod));
+  void _onPaymentMethodSelected(String paymentType) {
+    setState(() {
+      _selectedPaymentType = paymentType;
+    });
   }
 
   void _proceedToPayment() {
-    final state = context.read<PaymentBloc>().state;
-    if (state is PaymentMethodsLoaded && state.selectedPaymentMethod != null) {
-      final selectedMethod = state.selectedPaymentMethod!;
-      final orderData = widget.orderData;
-
-      if (orderData == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order data is missing'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      // Get delivery charges from delivery bloc
-      final deliveryState = context.read<DeliveryBloc>().state;
-      double deliveryCharges = 0.0;
-      double codCharges = 0.0;
-
-      if (deliveryState is DeliveryLoaded) {
-        deliveryCharges = deliveryState.deliveryCharges;
-        if (selectedMethod.type == 'COD' && deliveryState.codAvailable) {
-          codCharges = deliveryState.codCharges;
-        }
-      }
-
-      // Extract items from orderData
-      final items = (orderData['items'] as List)
-          .map((item) => item as Map<String, dynamic>)
-          .toList();
-      final deliveryAddress = orderData['delivery_address'] as String;
-      final contactNumbers = (orderData['contact_numbers'] as List)
-          .map((e) => e.toString())
-          .toList();
-      final couponCode = orderData['coupon_code'] as String?;
-
-      // Create order via API
-      context.read<PaymentBloc>().add(
-        CreateOrder(
-          items: items,
-          deliveryAddress: deliveryAddress,
-          contactNumbers: contactNumbers,
-          paymentMethod: selectedMethod.type,
-          couponCode: couponCode,
-          loyaltyPointsUsed: null, // Can be added later
-          deliveryCharges: deliveryCharges,
-          codCharges: codCharges,
-        ),
-      );
-    } else {
+    if (_selectedPaymentType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a payment method'),
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    final orderData = widget.orderData;
+
+    if (orderData == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Order data is missing'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Get delivery charges from delivery bloc
+    final deliveryState = context.read<DeliveryBloc>().state;
+    double deliveryCharges = 0.0;
+    double codCharges = 0.0;
+
+    if (deliveryState is DeliveryLoaded) {
+      deliveryCharges = deliveryState.deliveryCharges;
+      if (_selectedPaymentType == 'COD' && deliveryState.codAvailable) {
+        codCharges = deliveryState.codCharges;
+      }
+    }
+
+    // Extract items from orderData
+    final items = (orderData['items'] as List)
+        .map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
+        .toList();
+    final deliveryAddress = orderData['delivery_address'] as String;
+    final contactNumbers = (orderData['contact_numbers'] as List)
+        .map((e) => e.toString())
+        .toList();
+    final couponCode = orderData['coupon_code'] as String?;
+
+    // Create order via API
+    // _selectedPaymentType is either 'COD' or 'Razorpay'
+    context.read<PaymentBloc>().add(
+      CreateOrder(
+        items: items,
+        deliveryAddress: deliveryAddress,
+        contactNumbers: contactNumbers,
+        paymentMethod: _selectedPaymentType!, // 'COD' or 'Razorpay'
+        couponCode: couponCode,
+        loyaltyPointsUsed: null, // Can be added later
+        deliveryCharges: deliveryCharges,
+        codCharges: codCharges,
+      ),
+    );
   }
 
   @override
@@ -142,7 +146,7 @@ class _PaymentMethodSelectionPageState
             // Navigate to order confirmation
             context.go(
               '/order/confirmation',
-              extra: {'orderId': order.id, 'order': order},
+              extra: {'orderId': order.id, 'order': order.toJson()},
             );
           } else if (state is PaymentError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -166,85 +170,60 @@ class _PaymentMethodSelectionPageState
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state is PaymentError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Failed to load payment methods',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<PaymentBloc>().add(LoadPaymentMethods());
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Delivery Address
+                      _buildDeliveryAddress(),
+                      const SizedBox(height: 16),
 
-          if (state is PaymentMethodsLoaded) {
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Delivery Address
-                        _buildDeliveryAddress(),
-                        const SizedBox(height: 16),
+                      // Payment Methods
+                      Text(
+                        'Select Payment Method',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
 
-                        // Payment Methods
-                        Text(
-                          'Select Payment Method',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 16),
+                      // COD Option
+                      _buildSimplePaymentMethodTile(
+                        type: 'COD',
+                        name: 'Cash on Delivery',
+                        description: 'Pay with cash when your order arrives',
+                        icon: Icons.money,
+                        iconColor: Colors.green,
+                        isSelected: _selectedPaymentType == 'COD',
+                      ),
 
-                        ...state.paymentMethods.map(
-                          (method) => _buildPaymentMethodTile(
-                            method: method,
-                            isSelected:
-                                state.selectedPaymentMethod?.id == method.id,
-                          ),
-                        ),
+                      const SizedBox(height: 12),
 
-                        // Order Summary
-                        const SizedBox(height: 24),
-                        _buildOrderSummary(state.selectedPaymentMethod),
-                      ],
-                    ),
+                      // Prepaid Option (Razorpay)
+                      _buildSimplePaymentMethodTile(
+                        type: 'Razorpay',
+                        name: 'Prepaid',
+                        description: 'Pay online via UPI, Card or Wallet',
+                        icon: Icons.account_balance_wallet,
+                        iconColor: Colors.purple,
+                        isSelected: _selectedPaymentType == 'Razorpay',
+                      ),
+
+                      // Order Summary
+                      const SizedBox(height: 24),
+                      _buildOrderSummary(),
+                    ],
                   ),
                 ),
+              ),
 
-                // Continue Button
-                _buildContinueButton(state.selectedPaymentMethod),
-              ],
-            );
-          }
-
-          return const Center(child: Text('Select a payment method'));
+              // Continue Button
+              _buildContinueButton(),
+            ],
+          );
         },
       ),
     );
@@ -301,7 +280,7 @@ class _PaymentMethodSelectionPageState
     );
   }
 
-  Widget _buildOrderSummary(PaymentMethodEntity? selectedPaymentMethod) {
+  Widget _buildOrderSummary() {
     final orderData = widget.orderData;
     if (orderData == null) return const SizedBox.shrink();
 
@@ -322,8 +301,7 @@ class _PaymentMethodSelectionPageState
         if (deliveryState is DeliveryLoaded) {
           deliveryCharges = deliveryState.deliveryCharges;
           // Add COD charges only if COD payment method is selected
-          if (selectedPaymentMethod?.type == 'COD' &&
-              deliveryState.codAvailable) {
+          if (_selectedPaymentType == 'COD' && deliveryState.codAvailable) {
             codCharges = deliveryState.codCharges;
           }
         }
@@ -433,93 +411,7 @@ class _PaymentMethodSelectionPageState
     );
   }
 
-  Widget _buildPaymentMethodTile({
-    required PaymentMethodEntity method,
-    required bool isSelected,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Colors.transparent,
-          width: isSelected ? 2 : 1,
-        ),
-      ),
-      child: ListTile(
-        onTap: method.isEnabled ? () => _onPaymentMethodSelected(method) : null,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: _buildPaymentMethodIcon(method.type),
-        title: Text(
-          method.name,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w500,
-            color: method.isEnabled
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        subtitle: method.description != null
-            ? Text(
-                method.description!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              )
-            : null,
-        trailing: Radio<String>(
-          value: method.id,
-          groupValue: isSelected ? method.id : null,
-          onChanged: method.isEnabled
-              ? (_) => _onPaymentMethodSelected(method)
-              : null,
-          activeColor: Theme.of(context).colorScheme.primary,
-        ),
-        enabled: method.isEnabled,
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethodIcon(String type) {
-    IconData iconData;
-    Color? iconColor;
-
-    switch (type.toLowerCase()) {
-      case 'cod':
-        iconData = Icons.money;
-        iconColor = Colors.green;
-        break;
-      case 'upi':
-        iconData = Icons.account_balance_wallet;
-        iconColor = Colors.purple;
-        break;
-      case 'card':
-        iconData = Icons.credit_card;
-        iconColor = Colors.blue;
-        break;
-      case 'wallet':
-        iconData = Icons.wallet;
-        iconColor = Colors.orange;
-        break;
-      default:
-        iconData = Icons.payment;
-        iconColor = Theme.of(context).colorScheme.primary;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: iconColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(iconData, color: iconColor, size: 24),
-    );
-  }
-
-  Widget _buildContinueButton(PaymentMethodEntity? selectedMethod) {
+  Widget _buildContinueButton() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -536,7 +428,7 @@ class _PaymentMethodSelectionPageState
         child: SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: selectedMethod != null ? _proceedToPayment : null,
+            onPressed: _selectedPaymentType != null ? _proceedToPayment : null,
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -546,7 +438,7 @@ class _PaymentMethodSelectionPageState
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
             ),
             child: Text(
-              selectedMethod?.type == 'COD'
+              _selectedPaymentType == 'COD'
                   ? 'Place Order'
                   : 'Continue to Payment',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -555,6 +447,60 @@ class _PaymentMethodSelectionPageState
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSimplePaymentMethodTile({
+    required String type,
+    required String name,
+    required String description,
+    required IconData icon,
+    required Color iconColor,
+    required bool isSelected,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: ListTile(
+        onTap: () => _onPaymentMethodSelected(type),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: iconColor, size: 24),
+        ),
+        title: Text(
+          name,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        subtitle: Text(
+          description,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: Radio<String>(
+          value: type,
+          groupValue: isSelected ? type : null,
+          onChanged: (_) => _onPaymentMethodSelected(type),
+          activeColor: Theme.of(context).colorScheme.primary,
         ),
       ),
     );

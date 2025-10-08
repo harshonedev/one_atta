@@ -322,7 +322,10 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<PaymentRepository>(
-    () => PaymentRepositoryImpl(remoteDataSource: sl()),
+    () => PaymentRepositoryImpl(
+      remoteDataSource: sl(),
+      authLocalDataSource: sl(),
+    ),
   );
 
   // Data sources

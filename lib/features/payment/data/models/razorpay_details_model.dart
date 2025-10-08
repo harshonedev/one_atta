@@ -11,7 +11,7 @@ class RazorpayDetailsModel extends RazorpayDetailsEntity {
   factory RazorpayDetailsModel.fromJson(Map<String, dynamic> json) {
     return RazorpayDetailsModel(
       orderId: json['order_id'] as String,
-      amount: json['amount'] as int,
+      amount: (json['amount'] as num).toInt(), // Handle both int and double
       currency: json['currency'] as String,
       keyId: json['key_id'] as String,
     );

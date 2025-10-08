@@ -64,7 +64,6 @@ class _CartPageState extends State<CartPage> {
   void _onCheckDeliveryAvailability(String pincode) {
     final cartState = context.read<CartBloc>().state;
     if (cartState is CartLoaded) {
-      print('Checking delivery for pincode: $pincode');
       context.read<DeliveryBloc>().add(
         CheckDeliveryAvailability(
           pincode: pincode,
@@ -173,7 +172,7 @@ class _CartPageState extends State<CartPage> {
         'items': cartState.cart.items
             .map(
               (item) => {
-                'item_type': item.productType == 'Product'
+                'item_type': item.productType.toLowerCase() == 'product'
                     ? 'Product'
                     : 'Blend',
                 'item': item.productId,
@@ -732,7 +731,7 @@ class _CartPageState extends State<CartPage> {
             color: Theme.of(context).colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),

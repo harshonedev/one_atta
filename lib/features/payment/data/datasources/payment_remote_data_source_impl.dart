@@ -5,6 +5,7 @@ import 'package:one_atta/features/payment/data/datasources/payment_remote_data_s
 import 'package:one_atta/features/payment/data/models/create_order_response.dart';
 import 'package:one_atta/features/payment/data/models/order_model.dart';
 import 'package:one_atta/features/payment/data/models/payment_method_model.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 
 class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   final ApiRequest apiRequest;
@@ -51,29 +52,6 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       return mockMethods
           .map((method) => PaymentMethodModel.fromJson(method))
           .toList();
-
-      // TODO: Uncomment for production API call
-      /*
-      final response = await apiRequest.callRequest(
-        method: HttpMethod.get,
-        url: '$baseUrl/methods',
-      );
-
-      return switch (response) {
-        ApiSuccess() => response.data['success'] == true
-            ? (response.data['data'] as List<dynamic>)
-                .map((method) => PaymentMethodModel.fromJson(method))
-                .toList()
-            : throw ServerException(
-                message: response.data['message'] ?? 'Failed to fetch payment methods',
-                statusCode: 500,
-              ),
-        ApiError() => throw ServerException(
-            message: response.failure.message,
-            statusCode: 500,
-          ),
-      };
-      */
     } catch (e) {
       throw ServerException(
         message: 'Unexpected error occurred: ${e.toString()}',
@@ -84,7 +62,8 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
 
   @override
   Future<CreateOrderResponse> createOrder({
-    required List<Map<String, dynamic>> items,
+    required String token,
+    required List<OrderItem> items,
     required String deliveryAddress,
     required List<String> contactNumbers,
     required String paymentMethod,
@@ -94,7 +73,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
     required double codCharges,
   }) async {
     final requestData = {
-      'items': items,
+      'items': items.map((item) => item.toJson()).toList(),
       'delivery_address': deliveryAddress,
       'contact_numbers': contactNumbers,
       'payment_method': paymentMethod,
@@ -110,6 +89,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       method: HttpMethod.post,
       url: '$baseUrl/create-order',
       data: requestData,
+      token: token,
     );
 
     return switch (response) {
@@ -131,6 +111,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
 
   @override
   Future<OrderModel> verifyPayment({
+    required String token,
     required String orderId,
     required String razorpayOrderId,
     required String razorpayPaymentId,
@@ -145,6 +126,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
         'razorpay_payment_id': razorpayPaymentId,
         'razorpay_signature': razorpaySignature,
       },
+      token: token,
     );
 
     return switch (response) {
@@ -163,10 +145,14 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   }
 
   @override
-  Future<OrderModel> confirmCODOrder({required String orderId}) async {
+  Future<OrderModel> confirmCODOrder({
+    required String token,
+    required String orderId,
+  }) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.post,
       url: '$baseUrl/confirm-cod/$orderId',
+      token: token,
     );
 
     return switch (response) {
@@ -187,6 +173,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
 
   @override
   Future<OrderModel> handlePaymentFailure({
+    required String token,
     required String orderId,
     required String razorpayPaymentId,
     required Map<String, dynamic> error,
@@ -199,6 +186,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
         'razorpay_payment_id': razorpayPaymentId,
         'error': error,
       },
+      token: token,
     );
 
     return switch (response) {

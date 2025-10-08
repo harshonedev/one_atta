@@ -53,6 +53,35 @@ class OrderEntity extends Equatable {
     this.updatedAt,
   });
 
+  // to json
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'status': status,
+      'paymentStatus': paymentStatus,
+      'paymentMethod': paymentMethod,
+      'actualPaymentMethod': actualPaymentMethod,
+      'paymentVerified': paymentVerified,
+      'razorpayOrderId': razorpayOrderId,
+      'razorpayPaymentId': razorpayPaymentId,
+      'subtotal': subtotal,
+      'discountAmount': discountAmount,
+      'loyaltyDiscountAmount': loyaltyDiscountAmount,
+      'deliveryCharges': deliveryCharges,
+      'codCharges': codCharges,
+      'totalAmount': totalAmount,
+      'deliveryAddressId': deliveryAddressId,
+      'contactNumbers': contactNumbers,
+      'couponCode': couponCode,
+      'loyaltyPointsUsed': loyaltyPointsUsed,
+      'paymentCompletedAt': paymentCompletedAt?.toIso8601String(),
+      'paymentFailureReason': paymentFailureReason,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -79,4 +108,31 @@ class OrderEntity extends Equatable {
     createdAt,
     updatedAt,
   ];
+}
+
+class OrderItem extends Equatable {
+  final String id;
+  final String type;
+  final int quantity;
+
+  const OrderItem({
+    required this.id,
+    required this.type,
+    required this.quantity,
+  });
+
+  factory OrderItem.fromJson(Map<String, dynamic> json) {
+    return OrderItem(
+      id: json['item'] as String,
+      type: json['item_type'] as String,
+      quantity: json['quantity'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'item': id, 'item_type': type, 'quantity': quantity};
+  }
+
+  @override
+  List<Object> get props => [id, type, quantity];
 }

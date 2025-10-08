@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
 
 abstract class PaymentEvent extends Equatable {
@@ -21,7 +22,7 @@ class SelectPaymentMethod extends PaymentEvent {
 
 /// Create order with payment (POST /api/app/payments/create-order)
 class CreateOrder extends PaymentEvent {
-  final List<Map<String, dynamic>> items;
+  final List<OrderItem> items;
   final String deliveryAddress;
   final List<String> contactNumbers;
   final String paymentMethod;

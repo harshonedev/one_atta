@@ -11,7 +11,7 @@ abstract class PaymentRepository {
   /// Create order with payment (follows /api/app/payments/create-order)
   /// Returns order details and razorpay information (if applicable)
   Future<Either<Failure, CreateOrderResponse>> createOrder({
-    required List<Map<String, dynamic>> items,
+    required List<OrderItem> items,
     required String deliveryAddress,
     required List<String> contactNumbers,
     required String paymentMethod,
