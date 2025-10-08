@@ -30,6 +30,8 @@ import 'package:one_atta/features/profile/presentation/pages/profile_page.dart';
 import 'package:one_atta/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:one_atta/features/payment/presentation/pages/payment_method_selection_page.dart';
 import 'package:one_atta/features/payment/presentation/pages/payment_process_page.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
+import 'package:one_atta/features/payment/domain/entities/razorpay_details_entity.dart';
 import 'package:one_atta/features/orders/presentation/pages/order_confirmation_page.dart';
 
 class AppRouter {
@@ -251,8 +253,8 @@ class AppRouter {
           name: 'payment-process',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
-            final order = extra['order'] as Map<String, dynamic>? ?? {};
-            final razorpay = extra['razorpay'] as Map<String, dynamic>? ?? {};
+            final order = extra['order'] as OrderEntity;
+            final razorpay = extra['razorpay'] as RazorpayDetailsEntity;
 
             return PaymentProcessPage(order: order, razorpay: razorpay);
           },

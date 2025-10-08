@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
+import 'package:one_atta/features/payment/domain/entities/razorpay_details_entity.dart';
 
 abstract class PaymentState extends Equatable {
   const PaymentState();
@@ -38,8 +40,8 @@ class PaymentMethodsLoaded extends PaymentState {
 
 /// Order created successfully (with Razorpay details if online payment)
 class OrderCreated extends PaymentState {
-  final Map<String, dynamic> order;
-  final Map<String, dynamic>? razorpay; // null for COD
+  final OrderEntity order;
+  final RazorpayDetailsEntity? razorpay;
 
   const OrderCreated({required this.order, this.razorpay});
 
@@ -59,7 +61,7 @@ class PaymentProcessing extends PaymentState {
 
 /// Payment/Order completed successfully
 class PaymentCompleted extends PaymentState {
-  final Map<String, dynamic> order;
+  final OrderEntity order;
 
   const PaymentCompleted(this.order);
 
@@ -70,7 +72,7 @@ class PaymentCompleted extends PaymentState {
 /// Payment failed
 class PaymentFailed extends PaymentState {
   final String message;
-  final Map<String, dynamic>? order;
+  final OrderEntity? order;
 
   const PaymentFailed({required this.message, this.order});
 

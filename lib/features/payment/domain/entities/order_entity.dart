@@ -1,0 +1,82 @@
+import 'package:equatable/equatable.dart';
+
+/// Entity representing an order from the payment system
+class OrderEntity extends Equatable {
+  final String id;
+  final String userId;
+  final String
+  status; // 'pending', 'accepted', 'processing', 'shipped', 'delivered', 'cancelled', 'rejected'
+  final String paymentStatus; // 'pending', 'completed', 'failed', 'refunded'
+  final String paymentMethod; // 'Razorpay', 'COD', 'UPI', 'Card', 'Wallet'
+  final String? actualPaymentMethod; // Actual method used (e.g., 'UPI', 'Card')
+  final bool paymentVerified;
+  final String? razorpayOrderId;
+  final String? razorpayPaymentId;
+  final double subtotal;
+  final double discountAmount;
+  final double loyaltyDiscountAmount;
+  final double deliveryCharges;
+  final double codCharges;
+  final double totalAmount;
+  final String deliveryAddressId;
+  final List<String> contactNumbers;
+  final String? couponCode;
+  final int loyaltyPointsUsed;
+  final DateTime? paymentCompletedAt;
+  final String? paymentFailureReason;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+
+  const OrderEntity({
+    required this.id,
+    required this.userId,
+    required this.status,
+    required this.paymentStatus,
+    required this.paymentMethod,
+    this.actualPaymentMethod,
+    required this.paymentVerified,
+    this.razorpayOrderId,
+    this.razorpayPaymentId,
+    required this.subtotal,
+    required this.discountAmount,
+    required this.loyaltyDiscountAmount,
+    required this.deliveryCharges,
+    required this.codCharges,
+    required this.totalAmount,
+    required this.deliveryAddressId,
+    required this.contactNumbers,
+    this.couponCode,
+    required this.loyaltyPointsUsed,
+    this.paymentCompletedAt,
+    this.paymentFailureReason,
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  @override
+  List<Object?> get props => [
+    id,
+    userId,
+    status,
+    paymentStatus,
+    paymentMethod,
+    actualPaymentMethod,
+    paymentVerified,
+    razorpayOrderId,
+    razorpayPaymentId,
+    subtotal,
+    discountAmount,
+    loyaltyDiscountAmount,
+    deliveryCharges,
+    codCharges,
+    totalAmount,
+    deliveryAddressId,
+    contactNumbers,
+    couponCode,
+    loyaltyPointsUsed,
+    paymentCompletedAt,
+    paymentFailureReason,
+    createdAt,
+    updatedAt,
+  ];
+}

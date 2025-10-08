@@ -327,7 +327,7 @@ Future<void> init() async {
 
   // Data sources
   sl.registerLazySingleton<PaymentRemoteDataSource>(
-    () => PaymentRemoteDataSourceImpl(dio: sl()),
+    () => PaymentRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Features - Orders

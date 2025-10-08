@@ -131,20 +131,18 @@ class _PaymentMethodSelectionPageState
               );
             } else {
               // For COD, confirm the order
-              final orderId = order['_id'] as String;
               context.read<PaymentBloc>().add(
-                ConfirmCODOrder(orderId: orderId),
+                ConfirmCODOrder(orderId: order.id),
               );
             }
           } else if (state is PaymentCompleted) {
             // Payment completed successfully
             final order = state.order;
-            final orderId = order['_id'] as String;
 
             // Navigate to order confirmation
             context.go(
               '/order/confirmation',
-              extra: {'orderId': orderId, 'order': order},
+              extra: {'orderId': order.id, 'order': order},
             );
           } else if (state is PaymentError) {
             ScaffoldMessenger.of(context).showSnackBar(

@@ -1,5 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/failures.dart';
+import 'package:one_atta/features/payment/data/models/create_order_response.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
 
 abstract class PaymentRepository {
@@ -8,7 +10,7 @@ abstract class PaymentRepository {
 
   /// Create order with payment (follows /api/app/payments/create-order)
   /// Returns order details and razorpay information (if applicable)
-  Future<Either<Failure, Map<String, dynamic>>> createOrder({
+  Future<Either<Failure, CreateOrderResponse>> createOrder({
     required List<Map<String, dynamic>> items,
     required String deliveryAddress,
     required List<String> contactNumbers,
@@ -20,7 +22,7 @@ abstract class PaymentRepository {
   });
 
   /// Verify Razorpay payment (follows /api/app/payments/verify)
-  Future<Either<Failure, Map<String, dynamic>>> verifyPayment({
+  Future<Either<Failure, OrderEntity>> verifyPayment({
     required String orderId,
     required String razorpayOrderId,
     required String razorpayPaymentId,
@@ -28,12 +30,12 @@ abstract class PaymentRepository {
   });
 
   /// Confirm COD order (follows /api/app/payments/confirm-cod/:orderId)
-  Future<Either<Failure, Map<String, dynamic>>> confirmCODOrder({
+  Future<Either<Failure, OrderEntity>> confirmCODOrder({
     required String orderId,
   });
 
   /// Handle payment failure (follows /api/app/payments/failure)
-  Future<Either<Failure, Map<String, dynamic>>> handlePaymentFailure({
+  Future<Either<Failure, OrderEntity>> handlePaymentFailure({
     required String orderId,
     required String razorpayPaymentId,
     required Map<String, dynamic> error,

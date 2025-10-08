@@ -58,11 +58,8 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       codCharges: event.codCharges,
     );
 
-    result.fold((failure) => emit(PaymentError(failure.message)), (data) {
-      final order = data['order'] as Map<String, dynamic>;
-      final razorpay = data['razorpay'] as Map<String, dynamic>?;
-
-      emit(OrderCreated(order: order, razorpay: razorpay));
+    result.fold((failure) => emit(PaymentError(failure.message)), (response) {
+      emit(OrderCreated(order: response.order, razorpay: response.razorpay));
     });
   }
 

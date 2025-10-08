@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
+import 'package:one_atta/features/payment/domain/entities/razorpay_details_entity.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_bloc.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_event.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_state.dart';
 
 class PaymentProcessPage extends StatefulWidget {
-  final Map<String, dynamic> order;
-  final Map<String, dynamic> razorpay;
+  final OrderEntity order;
+  final RazorpayDetailsEntity razorpay;
 
   const PaymentProcessPage({
     super.key,
@@ -42,17 +44,17 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   void _openRazorpayCheckout() {
     setState(() {
       _isProcessing = true;
-      _currentOrderId = widget.order['_id'] as String;
+      _currentOrderId = widget.order.id;
     });
 
-    final razorpayOrderId = widget.razorpay['order_id'] as String;
-    final amount = widget.razorpay['amount'] as int; // Amount in paise
-    final keyId = widget.razorpay['key_id'] as String;
+    final razorpayOrderId = widget.razorpay.orderId;
+    final amount = widget.razorpay.amount; // Amount in paise
+    final keyId = widget.razorpay.keyId;
 
     final options = {
       'key': keyId,
       'amount': amount,
-      'currency': widget.razorpay['currency'] ?? 'INR',
+      'currency': widget.razorpay.currency,
       'name': 'One Atta',
       'description': 'Order Payment',
       'order_id': razorpayOrderId,
@@ -165,11 +167,10 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
           if (state is PaymentCompleted) {
             // Navigate to order confirmation
             final order = state.order;
-            final orderId = order['_id'] as String;
 
             context.go(
               '/order/confirmation',
-              extra: {'orderId': orderId, 'order': order},
+              extra: {'orderId': order.id, 'order': order},
             );
           } else if (state is PaymentFailed) {
             setState(() {
@@ -239,8 +240,8 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   }
 
   Widget _buildPaymentMethodInfo() {
-    final orderId = widget.order['_id'] as String;
-    final totalAmount = (widget.order['total_amount'] as num).toDouble();
+    final orderId = widget.order.id;
+    final totalAmount = widget.order.totalAmount;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
