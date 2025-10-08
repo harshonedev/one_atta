@@ -339,12 +339,16 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<OrderRepository>(
-    () => OrderRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+    () => OrderRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+      authLocalDataSource: sl(),
+    ),
   );
 
   // Data sources
   sl.registerLazySingleton<OrderRemoteDataSource>(
-    () => OrderRemoteDataSourceImpl(dio: sl()),
+    () => OrderRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Network

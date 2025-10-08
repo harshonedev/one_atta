@@ -12,7 +12,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<LoadUserOrders>(_onLoadUserOrders);
     on<CancelOrder>(_onCancelOrder);
     on<ReorderOrder>(_onReorderOrder);
-    on<ResetOrderState>(_onResetOrderState);
+    on<TrackOrder>(_onTrackOrder);
   }
 
   Future<void> _onCreateOrder(
@@ -58,9 +58,6 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     emit(OrderLoading());
 
     final result = await orderRepository.getUserOrders(
-      status: event.status,
-      startDate: event.startDate,
-      endDate: event.endDate,
       page: event.page,
       limit: event.limit,
     );
@@ -114,7 +111,14 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     );
   }
 
-  void _onResetOrderState(ResetOrderState event, Emitter<OrderState> emit) {
-    emit(OrderInitial());
+  Future<void> _onTrackOrder(TrackOrder event, Emitter<OrderState> emit) async {
+    emit(OrderLoading());
+
+    final result = await orderRepository.trackOrder(event.orderId);
+
+    result.fold(
+      (failure) => emit(OrderError(failure.message)),
+      (trackingData) => emit(OrderTrackingLoaded(trackingData)),
+    );
   }
 }

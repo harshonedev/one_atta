@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/exceptions.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/core/network/network_info.dart';
+import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/orders/data/datasources/order_remote_data_source.dart';
 import 'package:one_atta/features/orders/domain/entities/order_entity.dart';
@@ -10,10 +11,12 @@ import 'package:one_atta/features/orders/domain/repositories/order_repository.da
 class OrderRepositoryImpl implements OrderRepository {
   final OrderRemoteDataSource remoteDataSource;
   final NetworkInfo networkInfo;
+  final AuthLocalDataSource authLocalDataSource;
 
   OrderRepositoryImpl({
     required this.remoteDataSource,
     required this.networkInfo,
+    required this.authLocalDataSource,
   });
 
   @override
@@ -32,7 +35,12 @@ class OrderRepositoryImpl implements OrderRepository {
   }) async {
     if (await networkInfo.isConnected) {
       try {
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(ServerFailure('Authentication required'));
+        }
         final orderModel = await remoteDataSource.createOrder(
+          token: token,
           items: items,
           deliveryAddressId: deliveryAddressId,
           contactNumbers: contactNumbers,
@@ -60,7 +68,11 @@ class OrderRepositoryImpl implements OrderRepository {
   Future<Either<Failure, OrderEntity>> getOrderById(String orderId) async {
     if (await networkInfo.isConnected) {
       try {
-        final orderModel = await remoteDataSource.getOrderById(orderId);
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(ServerFailure('Authentication required'));
+        }
+        final orderModel = await remoteDataSource.getOrderById(token, orderId);
         return Right(orderModel);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
@@ -74,18 +86,17 @@ class OrderRepositoryImpl implements OrderRepository {
 
   @override
   Future<Either<Failure, List<OrderEntity>>> getUserOrders({
-    String? status,
-    DateTime? startDate,
-    DateTime? endDate,
     int page = 1,
     int limit = 20,
   }) async {
     if (await networkInfo.isConnected) {
       try {
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(ServerFailure('Authentication required'));
+        }
         final orderModels = await remoteDataSource.getUserOrders(
-          status: status,
-          startDate: startDate,
-          endDate: endDate,
+          token,
           page: page,
           limit: limit,
         );
@@ -107,11 +118,38 @@ class OrderRepositoryImpl implements OrderRepository {
   }) async {
     if (await networkInfo.isConnected) {
       try {
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(ServerFailure('Authentication required'));
+        }
         final orderModel = await remoteDataSource.cancelOrder(
+          token,
           orderId,
           reason: reason,
         );
         return Right(orderModel);
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure('Unexpected error occurred'));
+      }
+    } else {
+      return Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> trackOrder(
+    String orderId,
+  ) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(ServerFailure('Authentication required'));
+        }
+        final trackingData = await remoteDataSource.trackOrder(token, orderId);
+        return Right(trackingData);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
       } catch (e) {
@@ -131,7 +169,12 @@ class OrderRepositoryImpl implements OrderRepository {
   }) async {
     if (await networkInfo.isConnected) {
       try {
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(ServerFailure('Authentication required'));
+        }
         final orderModel = await remoteDataSource.reorderOrder(
+          token,
           originalOrderId,
           deliveryAddressId: deliveryAddressId,
           paymentMethod: paymentMethod,
@@ -141,10 +184,10 @@ class OrderRepositoryImpl implements OrderRepository {
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
       } catch (e) {
-        return Left(ServerFailure('Unexpected error occurred'));
+        return Left(ServerFailure("Unexpected error occurred"));
       }
     } else {
-      return Left(NetworkFailure('No internet connection'));
+      return Left(NetworkFailure("No internet connection"));
     }
   }
 }

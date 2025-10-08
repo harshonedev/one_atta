@@ -21,9 +21,6 @@ abstract class OrderRepository {
   Future<Either<Failure, OrderEntity>> getOrderById(String orderId);
 
   Future<Either<Failure, List<OrderEntity>>> getUserOrders({
-    String? status,
-    DateTime? startDate,
-    DateTime? endDate,
     int page = 1,
     int limit = 20,
   });
@@ -39,4 +36,6 @@ abstract class OrderRepository {
     String? paymentMethod,
     List<CartItemEntity>? modifyItems,
   });
+
+  Future<Either<Failure, Map<String, dynamic>>> trackOrder(String orderId);
 }

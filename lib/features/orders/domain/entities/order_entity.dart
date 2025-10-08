@@ -11,12 +11,21 @@ class OrderEntity extends Equatable {
   final AddressEntity deliveryAddress;
   final List<String> contactNumbers;
   final String paymentMethod;
+  final String paymentStatus; // 'pending', 'completed', 'failed', 'refunded'
+  final bool paymentVerified;
+  final DateTime? paymentCompletedAt;
+  final String? razorpayOrderId;
+  final String? razorpayPaymentId;
   final double subtotal;
+  final CouponApplied? couponApplied;
   final String? couponCode;
-  final double couponDiscount;
-  final double loyaltyDiscount;
-  final double deliveryFee;
+  final double discountAmount;
+  final int loyaltyPointsUsed;
+  final double loyaltyDiscountAmount;
+  final double deliveryCharges;
+  final double codCharges;
   final double totalAmount;
+  final String? actualPaymentMethod;
   final String? specialInstructions;
   final String? rejectionReason;
   final String? acceptedBy;
@@ -33,12 +42,21 @@ class OrderEntity extends Equatable {
     required this.deliveryAddress,
     required this.contactNumbers,
     required this.paymentMethod,
+    required this.paymentStatus,
+    required this.paymentVerified,
+    this.paymentCompletedAt,
+    this.razorpayOrderId,
+    this.razorpayPaymentId,
     required this.subtotal,
+    this.couponApplied,
     this.couponCode,
-    this.couponDiscount = 0.0,
-    this.loyaltyDiscount = 0.0,
-    this.deliveryFee = 0.0,
+    this.discountAmount = 0.0,
+    this.loyaltyPointsUsed = 0,
+    this.loyaltyDiscountAmount = 0.0,
+    this.deliveryCharges = 0.0,
+    this.codCharges = 0.0,
     required this.totalAmount,
+    this.actualPaymentMethod,
     this.specialInstructions,
     this.rejectionReason,
     this.acceptedBy,
@@ -56,12 +74,21 @@ class OrderEntity extends Equatable {
     AddressEntity? deliveryAddress,
     List<String>? contactNumbers,
     String? paymentMethod,
+    String? paymentStatus,
+    bool? paymentVerified,
+    DateTime? paymentCompletedAt,
+    String? razorpayOrderId,
+    String? razorpayPaymentId,
     double? subtotal,
+    CouponApplied? couponApplied,
     String? couponCode,
-    double? couponDiscount,
-    double? loyaltyDiscount,
-    double? deliveryFee,
+    double? discountAmount,
+    int? loyaltyPointsUsed,
+    double? loyaltyDiscountAmount,
+    double? deliveryCharges,
+    double? codCharges,
     double? totalAmount,
+    String? actualPaymentMethod,
     String? specialInstructions,
     String? rejectionReason,
     String? acceptedBy,
@@ -78,12 +105,22 @@ class OrderEntity extends Equatable {
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       contactNumbers: contactNumbers ?? this.contactNumbers,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      paymentVerified: paymentVerified ?? this.paymentVerified,
+      paymentCompletedAt: paymentCompletedAt ?? this.paymentCompletedAt,
+      razorpayOrderId: razorpayOrderId ?? this.razorpayOrderId,
+      razorpayPaymentId: razorpayPaymentId ?? this.razorpayPaymentId,
       subtotal: subtotal ?? this.subtotal,
+      couponApplied: couponApplied ?? this.couponApplied,
       couponCode: couponCode ?? this.couponCode,
-      couponDiscount: couponDiscount ?? this.couponDiscount,
-      loyaltyDiscount: loyaltyDiscount ?? this.loyaltyDiscount,
-      deliveryFee: deliveryFee ?? this.deliveryFee,
+      discountAmount: discountAmount ?? this.discountAmount,
+      loyaltyPointsUsed: loyaltyPointsUsed ?? this.loyaltyPointsUsed,
+      loyaltyDiscountAmount:
+          loyaltyDiscountAmount ?? this.loyaltyDiscountAmount,
+      deliveryCharges: deliveryCharges ?? this.deliveryCharges,
+      codCharges: codCharges ?? this.codCharges,
       totalAmount: totalAmount ?? this.totalAmount,
+      actualPaymentMethod: actualPaymentMethod ?? this.actualPaymentMethod,
       specialInstructions: specialInstructions ?? this.specialInstructions,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       acceptedBy: acceptedBy ?? this.acceptedBy,
@@ -103,12 +140,21 @@ class OrderEntity extends Equatable {
     deliveryAddress,
     contactNumbers,
     paymentMethod,
+    paymentStatus,
+    paymentVerified,
+    paymentCompletedAt,
+    razorpayOrderId,
+    razorpayPaymentId,
     subtotal,
+    couponApplied,
     couponCode,
-    couponDiscount,
-    loyaltyDiscount,
-    deliveryFee,
+    discountAmount,
+    loyaltyPointsUsed,
+    loyaltyDiscountAmount,
+    deliveryCharges,
+    codCharges,
     totalAmount,
+    actualPaymentMethod,
     specialInstructions,
     rejectionReason,
     acceptedBy,
@@ -117,4 +163,23 @@ class OrderEntity extends Equatable {
     createdAt,
     updatedAt,
   ];
+}
+
+class CouponApplied extends Equatable {
+  final String id;
+  final String code;
+  final String name;
+  final String discountType; // 'percentage' or 'fixed'
+  final double discountValue;
+
+  const CouponApplied({
+    required this.id,
+    required this.code,
+    required this.name,
+    required this.discountType,
+    required this.discountValue,
+  });
+
+  @override
+  List<Object?> get props => [id, code, name, discountType, discountValue];
 }

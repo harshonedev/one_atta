@@ -33,6 +33,7 @@ import 'package:one_atta/features/payment/presentation/pages/payment_process_pag
 import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/razorpay_details_entity.dart';
 import 'package:one_atta/features/orders/presentation/pages/order_confirmation_page.dart';
+import 'package:one_atta/features/orders/presentation/pages/order_detail_page.dart';
 
 class AppRouter {
   static late final GoRouter _router;
@@ -272,6 +273,14 @@ class AppRouter {
               paymentId: null, // No longer needed
               amount: order?['total_amount'] ?? 0.0,
             );
+          },
+        ),
+        GoRoute(
+          path: '/order-details/:orderId',
+          name: 'order-details',
+          builder: (context, state) {
+            final orderId = state.pathParameters['orderId']!;
+            return OrderDetailPage(orderId: orderId);
           },
         ),
       ],

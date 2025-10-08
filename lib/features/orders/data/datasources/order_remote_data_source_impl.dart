@@ -1,16 +1,18 @@
-import 'package:dio/dio.dart';
+import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/error/exceptions.dart';
+import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/orders/data/datasources/order_remote_data_source.dart';
 import 'package:one_atta/features/orders/data/models/order_model.dart';
 
 class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
-  final Dio dio;
+  final ApiRequest apiRequest;
 
-  OrderRemoteDataSourceImpl({required this.dio});
+  OrderRemoteDataSourceImpl({required this.apiRequest});
 
   @override
   Future<OrderModel> createOrder({
+    required String token,
     required List<CartItemEntity> items,
     required String deliveryAddressId,
     required List<String> contactNumbers,
@@ -23,288 +25,216 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     required double totalAmount,
     String? specialInstructions,
   }) async {
-    try {
-      // For development - return mock order
-      final mockOrder = {
-        '_id': 'order_${DateTime.now().millisecondsSinceEpoch}',
-        'user_id': 'user_123',
-        'items': items
-            .map(
-              (item) => {
-                'item_type': item.productType == 'Product'
-                    ? 'Product'
-                    : 'Blend',
-                'item': {
-                  '_id': item.productId,
-                  'name': item.productName,
-                  'sku': 'SKU_${item.productId}',
-                },
-                'quantity': item.quantity,
-                'price_per_kg': item.price,
-                'total_price': item.price * item.quantity,
+    // For development - return mock order
+    final mockOrder = {
+      '_id': 'order_${DateTime.now().millisecondsSinceEpoch}',
+      'user_id': 'user_123',
+      'items': items
+          .map(
+            (item) => {
+              'item_type': item.productType == 'Product' ? 'Product' : 'Blend',
+              'item': {
+                '_id': item.productId,
+                'name': item.productName,
+                'sku': 'SKU_${item.productId}',
               },
-            )
-            .toList(),
-        'status': 'pending',
-        'delivery_address': {
-          '_id': deliveryAddressId,
-          'recipient_name': 'John Doe',
-          'address_line1': '123 Main Street',
-          'city': 'Mumbai',
-          'state': 'Maharashtra',
-          'postal_code': '400001',
-          'country': 'India',
-          'primary_phone': contactNumbers.isNotEmpty
-              ? contactNumbers.first
-              : '',
-        },
-        'contact_numbers': contactNumbers,
-        'payment_method': paymentMethod,
-        'subtotal': subtotal,
-        'coupon_code': couponCode,
-        'discount_amount': couponDiscount,
-        'loyalty_discount': loyaltyDiscount,
-        'delivery_fee': deliveryFee,
-        'total_amount': totalAmount,
-        'special_instructions': specialInstructions,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      };
+              'quantity': item.quantity,
+              'price_per_kg': item.price,
+              'total_price': item.price * item.quantity,
+            },
+          )
+          .toList(),
+      'status': 'pending',
+      'delivery_address': {
+        '_id': deliveryAddressId,
+        'recipient_name': 'John Doe',
+        'address_line1': '123 Main Street',
+        'city': 'Mumbai',
+        'state': 'Maharashtra',
+        'postal_code': '400001',
+        'country': 'India',
+        'primary_phone': contactNumbers.isNotEmpty ? contactNumbers.first : '',
+      },
+      'contact_numbers': contactNumbers,
+      'payment_method': paymentMethod,
+      'subtotal': subtotal,
+      'coupon_code': couponCode,
+      'discount_amount': couponDiscount,
+      'loyalty_discount': loyaltyDiscount,
+      'delivery_fee': deliveryFee,
+      'total_amount': totalAmount,
+      'special_instructions': specialInstructions,
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    };
 
-      return OrderModel.fromJson(mockOrder);
+    return OrderModel.fromJson(mockOrder);
 
-      // Commented out the actual API call for development
-      /*
-      final response = await dio.post(
-        '/api/app/orders',
-        data: {
-          'items': items.map((item) => {
-            'item_type': item.productType == 'Product' ? 'Product' : 'Blend',
-            'item': item.productId,
-            'quantity': item.quantity,
-          }).toList(),
-          'delivery_address': deliveryAddressId,
-          'contact_numbers': contactNumbers,
-          'payment_method': paymentMethod,
-          'subtotal': subtotal,
-          'coupon_code': couponCode,
-          'discount_amount': couponDiscount,
-          'loyalty_discount': loyaltyDiscount,
-          'delivery_fee': deliveryFee,
-          'total_amount': totalAmount,
-          'special_instructions': specialInstructions,
-        },
-      );
-      
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          return OrderModel.fromJson(data['data']);
-        } else {
-          throw ServerException(
-            message: data['message'] ?? 'Failed to create order',
-            statusCode: response.statusCode ?? 500,
-          );
-        }
-      } else {
-        throw ServerException(
-          message: 'Failed to create order',
-          statusCode: response.statusCode ?? 500,
-        );
-      }
-      */
-    } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode ?? 500,
-      );
-    } catch (e) {
-      throw ServerException(
-        message: 'Unexpected error occurred',
-        statusCode: 500,
-      );
-    }
+    // Uncomment below for actual API call
+    /*
+    final requestData = {
+      'items': items.map((item) => {
+        'item_type': item.productType == 'Product' ? 'Product' : 'Blend',
+        'item': item.productId,
+        'quantity': item.quantity,
+      }).toList(),
+      'delivery_address': deliveryAddressId,
+      'contact_numbers': contactNumbers,
+      'payment_method': paymentMethod,
+      'subtotal': subtotal,
+      'coupon_code': couponCode,
+      'discount_amount': couponDiscount,
+      'loyalty_discount': loyaltyDiscount,
+      'delivery_fee': deliveryFee,
+      'total_amount': totalAmount,
+      'special_instructions': specialInstructions,
+    };
+
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '${ApiEndpoints.orders}',
+      token: token,
+      data: requestData,
+    );
+
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? OrderModel.fromJson(response.data['data'])
+            : throw ServerException(
+                message: response.data['message'] ?? 'Failed to create order',
+              ),
+      ApiError() => throw ServerException(
+          message: response.failure.message,
+        ),
+    };
+    */
   }
 
   @override
-  Future<OrderModel> getOrderById(String orderId) async {
-    try {
-      final response = await dio.get('/api/app/orders/$orderId');
+  Future<OrderModel> getOrderById(String token, String orderId) async {
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '${ApiEndpoints.orders}/$orderId',
+      token: token,
+    );
 
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          return OrderModel.fromJson(data['data']);
-        } else {
-          throw ServerException(
-            message: data['message'] ?? 'Order not found',
-            statusCode: response.statusCode ?? 404,
-          );
-        }
-      } else {
-        throw ServerException(
-          message: 'Order not found',
-          statusCode: response.statusCode ?? 404,
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode ?? 500,
-      );
-    } catch (e) {
-      throw ServerException(
-        message: 'Unexpected error occurred',
-        statusCode: 500,
-      );
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? OrderModel.fromJson(response.data['data'])
+            : throw ServerException(
+                message: response.data['message'] ?? 'Order not found',
+              ),
+      ApiError() => throw ServerException(message: response.failure.message),
+    };
   }
 
   @override
-  Future<List<OrderModel>> getUserOrders({
-    String? status,
-    DateTime? startDate,
-    DateTime? endDate,
+  Future<List<OrderModel>> getUserOrders(
+    String token, {
     int page = 1,
     int limit = 20,
   }) async {
-    try {
-      final queryParams = <String, dynamic>{
-        'page': page.toString(),
-        'limit': limit.toString(),
-      };
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '${ApiEndpoints.orders}/my-orders',
+      token: token,
+    );
 
-      if (status != null) queryParams['status'] = status;
-      if (startDate != null) {
-        queryParams['startDate'] = startDate.toIso8601String();
-      }
-      if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
-
-      final response = await dio.get(
-        '/api/app/orders/user/user_123', // TODO: Get actual user ID
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final ordersData = data['data']['orders'] as List;
-          return ordersData.map((order) => OrderModel.fromJson(order)).toList();
-        } else {
-          throw ServerException(
-            message: data['message'] ?? 'Failed to fetch orders',
-            statusCode: response.statusCode ?? 500,
-          );
-        }
-      } else {
-        throw ServerException(
-          message: 'Failed to fetch orders',
-          statusCode: response.statusCode ?? 500,
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode ?? 500,
-      );
-    } catch (e) {
-      throw ServerException(
-        message: 'Unexpected error occurred',
-        statusCode: 500,
-      );
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data'] as List)
+                  .map((order) => OrderModel.fromJson(order))
+                  .toList()
+            : throw ServerException(
+                message: response.data['message'] ?? 'Failed to fetch orders',
+              ),
+      ApiError() => throw ServerException(message: response.failure.message),
+    };
   }
 
   @override
-  Future<OrderModel> cancelOrder(String orderId, {String? reason}) async {
-    try {
-      final response = await dio.delete(
-        '/api/app/orders/$orderId',
-        data: {'reason': reason},
-      );
+  Future<OrderModel> cancelOrder(
+    String token,
+    String orderId, {
+    String? reason,
+  }) async {
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.delete,
+      url: '${ApiEndpoints.orders}/$orderId',
+      token: token,
+      data: {'reason': reason},
+    );
 
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          return OrderModel.fromJson(data['data']);
-        } else {
-          throw ServerException(
-            message: data['message'] ?? 'Failed to cancel order',
-            statusCode: response.statusCode ?? 500,
-          );
-        }
-      } else {
-        throw ServerException(
-          message: 'Failed to cancel order',
-          statusCode: response.statusCode ?? 500,
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode ?? 500,
-      );
-    } catch (e) {
-      throw ServerException(
-        message: 'Unexpected error occurred',
-        statusCode: 500,
-      );
-    }
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? OrderModel.fromJson(response.data['data'])
+            : throw ServerException(
+                message: response.data['message'] ?? 'Failed to cancel order',
+              ),
+      ApiError() => throw ServerException(message: response.failure.message),
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>> trackOrder(String token, String orderId) async {
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '${ApiEndpoints.orders}/$orderId/track',
+      token: token,
+    );
+
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? response.data['data'] as Map<String, dynamic>
+            : throw ServerException(
+                message: response.data['message'] ?? 'Failed to track order',
+              ),
+      ApiError() => throw ServerException(message: response.failure.message),
+    };
   }
 
   @override
   Future<OrderModel> reorderOrder(
+    String token,
     String originalOrderId, {
     String? deliveryAddressId,
     String? paymentMethod,
     List<CartItemEntity>? modifyItems,
   }) async {
-    try {
-      final response = await dio.post(
-        '/api/app/orders/$originalOrderId/reorder',
-        data: {
-          'delivery_address': deliveryAddressId,
-          'payment_method': paymentMethod,
-          'modify_items': modifyItems
-              ?.map(
-                (item) => {
-                  'item_type': item.productType == 'Product'
-                      ? 'Product'
-                      : 'Blend',
-                  'item': item.productId,
-                  'quantity': item.quantity,
-                },
-              )
-              .toList(),
-        },
-      );
+    final requestData = {
+      "delivery_address": deliveryAddressId,
+      "payment_method": paymentMethod,
+      "modify_items": modifyItems
+          ?.map(
+            (item) => {
+              "item_type": item.productType == "Product" ? "Product" : "Blend",
+              "item": item.productId,
+              "quantity": item.quantity,
+            },
+          )
+          .toList(),
+    };
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          return OrderModel.fromJson(data['data']);
-        } else {
-          throw ServerException(
-            message: data['message'] ?? 'Failed to reorder',
-            statusCode: response.statusCode ?? 500,
-          );
-        }
-      } else {
-        throw ServerException(
-          message: 'Failed to reorder',
-          statusCode: response.statusCode ?? 500,
-        );
-      }
-    } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode ?? 500,
-      );
-    } catch (e) {
-      throw ServerException(
-        message: 'Unexpected error occurred',
-        statusCode: 500,
-      );
-    }
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.post,
+      url: '${ApiEndpoints.orders}/$originalOrderId/reorder',
+      token: token,
+      data: requestData,
+    );
+
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? OrderModel.fromJson(response.data['data'])
+            : throw ServerException(
+                message: response.data['message'] ?? 'Failed to reorder',
+              ),
+      ApiError() => throw ServerException(message: response.failure.message),
+    };
   }
 }

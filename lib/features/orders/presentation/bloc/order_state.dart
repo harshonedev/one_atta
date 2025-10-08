@@ -73,3 +73,12 @@ class OrderError extends OrderState {
   @override
   List<Object> get props => [message];
 }
+
+class OrderTrackingLoaded extends OrderState {
+  final Map<String, dynamic> trackingData;
+
+  const OrderTrackingLoaded(this.trackingData);
+
+  @override
+  List<Object> get props => [trackingData];
+}

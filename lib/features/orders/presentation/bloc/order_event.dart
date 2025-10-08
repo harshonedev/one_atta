@@ -61,22 +61,13 @@ class LoadOrder extends OrderEvent {
 }
 
 class LoadUserOrders extends OrderEvent {
-  final String? status;
-  final DateTime? startDate;
-  final DateTime? endDate;
   final int page;
   final int limit;
 
-  const LoadUserOrders({
-    this.status,
-    this.startDate,
-    this.endDate,
-    this.page = 1,
-    this.limit = 20,
-  });
+  const LoadUserOrders({this.page = 1, this.limit = 20});
 
   @override
-  List<Object?> get props => [status, startDate, endDate, page, limit];
+  List<Object?> get props => [page, limit];
 }
 
 class CancelOrder extends OrderEvent {
@@ -111,4 +102,11 @@ class ReorderOrder extends OrderEvent {
   ];
 }
 
-class ResetOrderState extends OrderEvent {}
+class TrackOrder extends OrderEvent {
+  final String orderId;
+
+  const TrackOrder(this.orderId);
+
+  @override
+  List<Object> get props => [orderId];
+}
