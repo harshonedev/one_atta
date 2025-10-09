@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
+import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 
 abstract class CartEvent extends Equatable {
   const CartEvent();
@@ -45,11 +46,16 @@ class LoadCartItemCount extends CartEvent {}
 class ApplyCoupon extends CartEvent {
   final String couponCode;
   final double discountAmount;
+  final CouponEntity? coupon; // CouponEntity
 
-  const ApplyCoupon({required this.couponCode, required this.discountAmount});
+  const ApplyCoupon({
+    required this.couponCode,
+    required this.discountAmount,
+    this.coupon,
+  });
 
   @override
-  List<Object> get props => [couponCode, discountAmount];
+  List<Object> get props => [couponCode, discountAmount, ?coupon];
 }
 
 class RemoveCoupon extends CartEvent {}
@@ -97,3 +103,14 @@ class UpdateItemWeight extends CartEvent {
   @override
   List<Object> get props => [productId, weightInKg];
 }
+
+class SelectAddress extends CartEvent {
+  final dynamic address; // Can be AddressEntity
+
+  const SelectAddress({required this.address});
+
+  @override
+  List<Object> get props => [address];
+}
+
+class ClearSelectedAddress extends CartEvent {}

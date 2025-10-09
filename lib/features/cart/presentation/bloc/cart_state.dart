@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_entity.dart';
+import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 
 abstract class CartState extends Equatable {
   const CartState();
@@ -14,6 +16,7 @@ class CartLoading extends CartState {}
 
 class CartLoaded extends CartState {
   final CartEntity cart;
+  final AddressEntity? selectedAddress;
   final int itemCount;
   final double mrpTotal; // Total MRP value
   final double itemTotal; // Actual item total (with any product discounts)
@@ -22,10 +25,15 @@ class CartLoaded extends CartState {
   final double loyaltyDiscount; // Discount from loyalty points
   final double savingsTotal; // Total savings amount
   final double toPayTotal; // Final amount to pay
+  final bool isDiscountApplied;
+  final DiscountType? discountType;
+  final CouponEntity? appliedCoupon;
+  final int loyaltyPointsRedeemed; // Track redeemed loyalty points
 
   const CartLoaded({
     required this.cart,
     required this.itemCount,
+    this.selectedAddress,
     this.mrpTotal = 0.0,
     this.itemTotal = 0.0,
     this.deliveryFee = 0.0,
@@ -33,6 +41,10 @@ class CartLoaded extends CartState {
     this.loyaltyDiscount = 0.0,
     this.savingsTotal = 0.0,
     this.toPayTotal = 0.0,
+    this.isDiscountApplied = false,
+    this.discountType,
+    this.appliedCoupon,
+    this.loyaltyPointsRedeemed = 0,
   });
   @override
   List<Object?> get props => [
@@ -45,6 +57,11 @@ class CartLoaded extends CartState {
     loyaltyDiscount,
     savingsTotal,
     toPayTotal,
+    selectedAddress,
+    isDiscountApplied,
+    discountType,
+    appliedCoupon,
+    loyaltyPointsRedeemed,
   ];
 
   CartLoaded copyWith({
@@ -57,6 +74,13 @@ class CartLoaded extends CartState {
     double? loyaltyDiscount,
     double? savingsTotal,
     double? toPayTotal,
+    AddressEntity? selectedAddress,
+    bool? clearSelectedAddress,
+    bool? isDiscountApplied,
+    DiscountType? discountType,
+    CouponEntity? appliedCoupon,
+    bool? clearAppliedCoupon,
+    int? loyaltyPointsRedeemed,
   }) {
     return CartLoaded(
       cart: cart ?? this.cart,
@@ -68,6 +92,16 @@ class CartLoaded extends CartState {
       loyaltyDiscount: loyaltyDiscount ?? this.loyaltyDiscount,
       savingsTotal: savingsTotal ?? this.savingsTotal,
       toPayTotal: toPayTotal ?? this.toPayTotal,
+      selectedAddress: clearSelectedAddress == true
+          ? null
+          : (selectedAddress ?? this.selectedAddress),
+      isDiscountApplied: isDiscountApplied ?? this.isDiscountApplied,
+      discountType: discountType ?? this.discountType,
+      appliedCoupon: clearAppliedCoupon == true
+          ? null
+          : (appliedCoupon ?? this.appliedCoupon),
+      loyaltyPointsRedeemed:
+          loyaltyPointsRedeemed ?? this.loyaltyPointsRedeemed,
     );
   }
 }
@@ -107,3 +141,5 @@ class CartCleared extends CartState {
   @override
   List<Object> get props => [message];
 }
+
+enum DiscountType { coupon, loyalty }

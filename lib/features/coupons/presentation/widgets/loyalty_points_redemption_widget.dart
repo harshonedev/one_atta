@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_state.dart';
 import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
 
 class LoyaltyPointsRedemptionWidget extends StatefulWidget {
@@ -23,7 +25,6 @@ class _LoyaltyPointsRedemptionWidgetState
     extends State<LoyaltyPointsRedemptionWidget> {
   int _pointsToRedeem = 0;
   int _availablePoints = 0;
-  bool _isRedeemed = false;
   final _pointsController = TextEditingController();
 
   @override
@@ -34,24 +35,29 @@ class _LoyaltyPointsRedemptionWidgetState
 
   double get _redeemableAmount => _pointsToRedeem * 1.0; // 1 point = ₹1
 
-  int get _maxRedeemablePoints {
+  int _getMaxRedeemablePoints(int availablePoints) {
     final maxByOrder = widget.orderAmount.toInt();
-    final maxByAvailable = _availablePoints;
+    final maxByAvailable = availablePoints;
     return maxByOrder < maxByAvailable ? maxByOrder : maxByAvailable;
   }
 
   void _applyPoints() {
-    if (_pointsToRedeem <= 0 || _pointsToRedeem > _maxRedeemablePoints) return;
+    final cartState = context.read<CartBloc>().state;
+    int availablePoints = _availablePoints;
 
-    setState(() {
-      _isRedeemed = true;
-    });
+    if (cartState is CartLoaded) {
+      // Calculate remaining available points after current redemption
+      availablePoints = _availablePoints - cartState.loyaltyPointsRedeemed;
+    }
+
+    final maxRedeemable = _getMaxRedeemablePoints(availablePoints);
+    if (_pointsToRedeem <= 0 || _pointsToRedeem > maxRedeemable) return;
+
     widget.onPointsRedeemed(_pointsToRedeem, _redeemableAmount);
   }
 
   void _removePoints() {
     setState(() {
-      _isRedeemed = false;
       _pointsToRedeem = 0;
       _pointsController.clear();
     });
@@ -60,70 +66,102 @@ class _LoyaltyPointsRedemptionWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<UserProfileBloc, UserProfileState>(
-      builder: (context, state) {
-        if (state is UserProfileLoaded) {
-          _availablePoints = state.profile.loyaltyPoints;
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, cartState) {
+        // Get redeemed points from cart state
+        final redeemedPointsFromCart = cartState is CartLoaded
+            ? cartState.loyaltyPointsRedeemed
+            : 0;
 
-          // Always show the widget, even with 0 points
-          final isEffectivelyDisabled =
-              widget.isDisabled || _availablePoints <= 0;
+        final isRedeemed = redeemedPointsFromCart > 0;
 
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: widget.isDisabled
-                  ? Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-                  : Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        return BlocBuilder<UserProfileBloc, UserProfileState>(
+          builder: (context, profileState) {
+            if (profileState is UserProfileLoaded) {
+              _availablePoints = profileState.profile.loyaltyPoints;
+
+              // Calculate remaining available points
+              final remainingPoints = _availablePoints - redeemedPointsFromCart;
+
+              // Always show the widget, even with 0 points
+              final isEffectivelyDisabled =
+                  widget.isDisabled || remainingPoints <= 0;
+
+              // Calculate max redeemable points
+              final maxRedeemablePoints = _getMaxRedeemablePoints(
+                remainingPoints,
+              );
+
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: widget.isDisabled
+                      ? Theme.of(context).colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5)
+                      : Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.stars,
-                      color: widget.isDisabled ? Colors.grey : Colors.amber,
-                      size: 20,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.stars,
+                          color: widget.isDisabled ? Colors.grey : Colors.amber,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Atta Points',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: widget.isDisabled
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant
+                                    : null,
+                              ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          isRedeemed
+                              ? '$remainingPoints of $_availablePoints available'
+                              : '$_availablePoints available',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Atta Points',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: widget.isDisabled
-                            ? Theme.of(context).colorScheme.onSurfaceVariant
-                            : null,
+                    const SizedBox(height: 12),
+
+                    if (remainingPoints <= 0 && !isRedeemed) ...[
+                      _buildNoPointsMessage(),
+                    ] else if (isRedeemed) ...[
+                      _buildRedeemedPointsCard(
+                        redeemedPointsFromCart,
+                        cartState,
                       ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '$_availablePoints available',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ] else ...[
+                      _buildPointsInput(
+                        isDisabled: isEffectivelyDisabled,
+                        maxRedeemablePoints: maxRedeemablePoints,
                       ),
-                    ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 12),
+              );
+            }
 
-                if (_availablePoints <= 0) ...[
-                  _buildNoPointsMessage(),
-                ] else if (_isRedeemed) ...[
-                  _buildRedeemedPointsCard(),
-                ] else ...[
-                  _buildPointsInput(isDisabled: isEffectivelyDisabled),
-                ],
-              ],
-            ),
-          );
-        }
-
-        return const SizedBox.shrink();
+            return const SizedBox.shrink();
+          },
+        );
       },
     );
   }
@@ -152,12 +190,15 @@ class _LoyaltyPointsRedemptionWidgetState
     );
   }
 
-  Widget _buildPointsInput({bool isDisabled = false}) {
+  Widget _buildPointsInput({
+    bool isDisabled = false,
+    required int maxRedeemablePoints,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Redeem up to $_maxRedeemablePoints points (₹$_maxRedeemablePoints)',
+          'Redeem up to $maxRedeemablePoints points (₹$maxRedeemablePoints)',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -212,7 +253,7 @@ class _LoyaltyPointsRedemptionWidgetState
               onPressed:
                   (!isDisabled &&
                       _pointsToRedeem > 0 &&
-                      _pointsToRedeem <= _maxRedeemablePoints)
+                      _pointsToRedeem <= maxRedeemablePoints)
                   ? _applyPoints
                   : null,
               style: FilledButton.styleFrom(
@@ -236,15 +277,15 @@ class _LoyaltyPointsRedemptionWidgetState
             children: [
               Chip(
                 label: Text(
-                  'Use $_maxRedeemablePoints points',
+                  'Use $maxRedeemablePoints points',
                   style: const TextStyle(fontSize: 12),
                 ),
                 backgroundColor: Colors.amber.withOpacity(0.1),
                 side: BorderSide(color: Colors.amber),
                 onDeleted: () {
                   setState(() {
-                    _pointsToRedeem = _maxRedeemablePoints;
-                    _pointsController.text = _maxRedeemablePoints.toString();
+                    _pointsToRedeem = maxRedeemablePoints;
+                    _pointsController.text = maxRedeemablePoints.toString();
                   });
                 },
                 deleteIcon: const Icon(Icons.add, size: 16),
@@ -273,7 +314,12 @@ class _LoyaltyPointsRedemptionWidgetState
     );
   }
 
-  Widget _buildRedeemedPointsCard() {
+  Widget _buildRedeemedPointsCard(int redeemedPoints, CartState cartState) {
+    final redeemableAmount = redeemedPoints * 1.0;
+    final loyaltyDiscount = cartState is CartLoaded
+        ? cartState.loyaltyDiscount
+        : redeemableAmount;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -290,14 +336,14 @@ class _LoyaltyPointsRedemptionWidgetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$_pointsToRedeem points redeemed',
+                  '$redeemedPoints points redeemed',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: Colors.amber.shade700,
                   ),
                 ),
                 Text(
-                  'Saved ₹${_redeemableAmount.toInt()}',
+                  'Saved ₹${loyaltyDiscount.toInt()}',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: Colors.amber.shade600),

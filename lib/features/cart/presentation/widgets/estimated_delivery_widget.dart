@@ -32,9 +32,6 @@ class EstimatedDeliveryWidget extends StatelessWidget {
         final formatMaxDate = DateFormat('d MMM').format(maxDate);
         final String maxDateStr =
             "Your order will be deliver at $formatMaxDate";
-
-        print('Current State: ${state.runtimeType}');
-        print('Estimated Delivery Time: $estimatedTime days');
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
@@ -48,7 +45,7 @@ class EstimatedDeliveryWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
+                    color: primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(

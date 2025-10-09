@@ -15,6 +15,7 @@ import 'package:one_atta/features/cart/presentation/bloc/delivery_event.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_state.dart';
 import 'package:one_atta/features/cart/presentation/widgets/cart_address_selection_widget.dart';
 import 'package:one_atta/features/cart/presentation/widgets/cart_item_card.dart';
+import 'package:one_atta/features/cart/presentation/widgets/empty_cart_widget.dart';
 import 'package:one_atta/features/cart/presentation/widgets/estimated_delivery_widget.dart';
 import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 import 'package:one_atta/features/coupons/presentation/widgets/coupon_input_widget.dart';
@@ -29,11 +30,8 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  AddressEntity? _selectedAddress;
-  CouponEntity? _appliedCoupon;
-  int _loyaltyPointsToRedeem = 0;
-  double _loyaltyDiscountAmount = 0.0;
   bool _isProcessingOrder = false;
+  bool _addressNotDeliverable = false;
 
   @override
   void initState() {
@@ -43,21 +41,23 @@ class _CartPageState extends State<CartPage> {
 
     final addressState = context.read<AddressBloc>().state;
     if (addressState is AddressesLoaded && addressState.addresses.isNotEmpty) {
-      _selectedAddress = addressState.addresses.firstWhere(
+      final defaultAddress = addressState.addresses.firstWhere(
         (addr) => addr.isDefault,
         orElse: () => addressState.addresses.first,
       );
+      // Select the default address in cart state
+      context.read<CartBloc>().add(SelectAddress(address: defaultAddress));
       // Check delivery availability for the selected address
-      _onCheckDeliveryAvailability(_selectedAddress!.postalCode);
+      _onCheckDeliveryAvailability(defaultAddress.postalCode);
     }
   }
 
   void _onAddressSelected(AddressEntity? address) {
-    setState(() {
-      _selectedAddress = address;
-    });
     if (address != null) {
+      context.read<CartBloc>().add(SelectAddress(address: address));
       _onCheckDeliveryAvailability(address.postalCode);
+    } else {
+      context.read<CartBloc>().add(ClearSelectedAddress());
     }
   }
 
@@ -76,8 +76,11 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _onCouponApplied(CouponEntity? coupon, double discount) {
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is! CartLoaded) return;
+
     // Don't allow coupon if loyalty points are applied
-    if (coupon != null && _loyaltyPointsToRedeem > 0) {
+    if (coupon != null && cartState.loyaltyPointsRedeemed > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Remove Atta Points to apply coupon'),
@@ -87,30 +90,30 @@ class _CartPageState extends State<CartPage> {
       return;
     }
 
-    setState(() {
-      _appliedCoupon = coupon;
-    });
-
     if (coupon != null) {
       context.read<CartBloc>().add(
-        ApplyCoupon(couponCode: coupon.code, discountAmount: discount),
+        ApplyCoupon(
+          couponCode: coupon.code,
+          discountAmount: discount,
+          coupon: coupon,
+        ),
       );
     } else {
       context.read<CartBloc>().add(RemoveCoupon());
     }
 
     // Recalculate delivery with updated cart total
-    if (_selectedAddress != null) {
-      final cartState = context.read<CartBloc>().state;
-      if (cartState is CartLoaded) {
-        _onCheckDeliveryAvailability(_selectedAddress!.postalCode);
-      }
+    if (cartState.selectedAddress != null) {
+      _onCheckDeliveryAvailability(cartState.selectedAddress!.postalCode);
     }
   }
 
   void _onLoyaltyPointsRedeemed(int points, double discountAmount) {
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is! CartLoaded) return;
+
     // Don't allow loyalty points if coupon is applied
-    if (points > 0 && _appliedCoupon != null) {
+    if (points > 0 && cartState.appliedCoupon != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Remove coupon to use Atta Points'),
@@ -120,35 +123,36 @@ class _CartPageState extends State<CartPage> {
       return;
     }
 
-    setState(() {
-      _loyaltyPointsToRedeem = points;
-      _loyaltyDiscountAmount = discountAmount;
-    });
-
     // Apply loyalty discount to cart
-    context.read<CartBloc>().add(
-      ApplyLoyaltyPoints(points: points, discountAmount: discountAmount),
-    );
+    if (points > 0) {
+      context.read<CartBloc>().add(
+        ApplyLoyaltyPoints(points: points, discountAmount: discountAmount),
+      );
+    } else {
+      context.read<CartBloc>().add(RemoveLoyaltyPoints());
+    }
 
     // Recalculate delivery with updated cart total (after loyalty discount)
-    if (_selectedAddress != null) {
-      final cartState = context.read<CartBloc>().state;
-      if (cartState is CartLoaded) {
-        // Use amount after loyalty discount for delivery calculation
-        final amountForDelivery = cartState.itemTotal - discountAmount;
-        context.read<DeliveryBloc>().add(
-          CheckDeliveryAvailability(
-            pincode: _selectedAddress!.postalCode,
-            orderValue: amountForDelivery,
-            isExpress: false,
-          ),
-        );
-      }
+    if (cartState.selectedAddress != null) {
+      // Use amount after loyalty discount for delivery calculation
+      final amountForDelivery = cartState.itemTotal - discountAmount;
+      context.read<DeliveryBloc>().add(
+        CheckDeliveryAvailability(
+          pincode: cartState.selectedAddress!.postalCode,
+          orderValue: amountForDelivery,
+          isExpress: false,
+        ),
+      );
     }
   }
 
   void _proceedToCheckout() {
-    if (_selectedAddress == null) {
+    final cartState = context.read<CartBloc>().state;
+    if (cartState is! CartLoaded) return;
+
+    if (_addressNotDeliverable) return;
+
+    if (cartState.selectedAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a delivery address'),
@@ -163,64 +167,53 @@ class _CartPageState extends State<CartPage> {
     });
 
     // Create order first
-    final cartState = context.read<CartBloc>().state;
     final authState = context.read<AuthBloc>().state;
     final email = (authState is AuthAuthenticated) ? authState.user.email : '';
-    if (cartState is CartLoaded) {
-      // Navigate to payment method selection with order data
-      final orderData = {
-        'items': cartState.cart.items
-            .map(
-              (item) => {
-                'item_type': item.productType.toLowerCase() == 'product'
-                    ? 'Product'
-                    : 'Blend',
-                'item': item.productId,
-                'quantity': item.quantity,
-              },
-            )
-            .toList(),
-        'delivery_address': _selectedAddress!.id,
-        'contact_numbers': [_selectedAddress!.primaryPhone],
-        'subtotal': cartState.itemTotal,
-        'coupon_code': _appliedCoupon?.code,
-        'coupon_discount': cartState.couponDiscount,
-        'loyalty_discount': cartState.loyaltyDiscount,
-        'delivery_fee': cartState.deliveryFee,
-        'total_amount': cartState.toPayTotal,
-        'phone': _selectedAddress!.primaryPhone,
-        'email': email,
-        'address_details': {
-          'recipient_name': _selectedAddress!.recipientName,
-          'full_address': _selectedAddress!.fullAddress,
-          'primary_phone': _selectedAddress!.primaryPhone,
-          'city': _selectedAddress!.city,
-          'state': _selectedAddress!.state,
-          'postal_code': _selectedAddress!.postalCode,
-        },
-      };
+    final selectedAddress = cartState.selectedAddress!;
 
-      setState(() {
-        _isProcessingOrder = false;
-      });
+    // Navigate to payment method selection with order data
+    final orderData = {
+      'items': cartState.cart.items
+          .map(
+            (item) => {
+              'item_type': item.productType.toLowerCase() == 'product'
+                  ? 'Product'
+                  : 'Blend',
+              'item': item.productId,
+              'quantity': item.quantity,
+              'weight_in_kg': item.weightInKg,
+            },
+          )
+          .toList(),
+      'delivery_address': selectedAddress.id,
+      'contact_numbers': [selectedAddress.primaryPhone],
+      'subtotal': cartState.itemTotal,
+      'coupon_code': cartState.appliedCoupon?.code,
+      'coupon_discount': cartState.couponDiscount,
+      'loyalty_discount': cartState.loyaltyDiscount,
+      'delivery_fee': cartState.deliveryFee,
+      'total_amount': cartState.toPayTotal,
+      'phone': selectedAddress.primaryPhone,
+      'email': email,
+      'address_details': {
+        'recipient_name': selectedAddress.recipientName,
+        'full_address': selectedAddress.fullAddress,
+        'primary_phone': selectedAddress.primaryPhone,
+        'city': selectedAddress.city,
+        'state': selectedAddress.state,
+        'postal_code': selectedAddress.postalCode,
+      },
+    };
 
-      // Navigate to payment method selection
-      context.push(
-        '/payment/methods',
-        extra: {'orderData': orderData, 'amount': cartState.toPayTotal},
-      );
-    } else {
-      setState(() {
-        _isProcessingOrder = false;
-      });
+    setState(() {
+      _isProcessingOrder = false;
+    });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to process order. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    // Navigate to payment method selection
+    context.push(
+      '/payment/methods',
+      extra: {'orderData': orderData, 'amount': cartState.toPayTotal},
+    );
   }
 
   @override
@@ -251,6 +244,23 @@ class _CartPageState extends State<CartPage> {
               } else if (deliveryState is DeliveryNotAvailable ||
                   deliveryState is DeliveryError) {
                 // Set delivery charges to 0 if delivery not available or error
+                setState(() {
+                  _addressNotDeliverable = true;
+                });
+
+                // show snackbar
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      deliveryState is DeliveryNotAvailable
+                          ? 'Delivery not available to the selected address'
+                          : 'Error checking delivery availability',
+                    ),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+
                 context.read<CartBloc>().add(
                   const UpdateDeliveryCharges(deliveryCharges: 0.0),
                 );
@@ -258,23 +268,30 @@ class _CartPageState extends State<CartPage> {
             },
           ),
           BlocListener<CartBloc, CartState>(
-            listener: (context, cartState) {
-              // When cart total changes, recheck delivery availability
-              if (cartState is CartLoaded && _selectedAddress != null) {
-                final deliveryState = context.read<DeliveryBloc>().state;
+            listener: (context, state) {
+              if (state is CartLoaded) {
+                // check orderamout with delivery threshold
+                final deliverState = context.read<DeliveryBloc>().state;
+                if (deliverState is DeliveryLoaded) {
+                  final itemTotal = state.discountType == DiscountType.loyalty
+                      ? state.itemTotal - state.loyaltyDiscount
+                      : state.itemTotal;
+                  final threshold = deliverState.freeDeliveryThreshold;
+                  final isFree =
+                      deliverState.isFreeDelivery || itemTotal >= threshold;
 
-                // Recalculate delivery if order value changed
-                // Use amount after loyalty discount for delivery calculation
-                if (deliveryState is DeliveryLoaded) {
-                  final amountForDelivery =
-                      cartState.itemTotal - _loyaltyDiscountAmount;
-                  context.read<DeliveryBloc>().add(
-                    CheckDeliveryAvailability(
-                      pincode: _selectedAddress!.postalCode,
-                      orderValue: amountForDelivery,
-                      isExpress: deliveryState.isExpressDelivery,
-                    ),
-                  );
+                  if (isFree && deliverState.deliveryCharges != 0.0) {
+                    // Update delivery charges to 0 in cart
+                    context.read<CartBloc>().add(
+                      const UpdateDeliveryCharges(deliveryCharges: 0.0),
+                    );
+                  } else {
+                    context.read<CartBloc>().add(
+                      UpdateDeliveryCharges(
+                        deliveryCharges: deliverState.deliveryCharges,
+                      ),
+                    );
+                  }
                 }
               }
             },
@@ -323,7 +340,7 @@ class _CartPageState extends State<CartPage> {
 
             if (cartState is CartLoaded) {
               if (cartState.cart.items.isEmpty) {
-                return _buildEmptyCart();
+                return EmptyCartWidget();
               }
               return _buildCartContent(cartState.cart.items);
             }
@@ -331,36 +348,6 @@ class _CartPageState extends State<CartPage> {
             return const SizedBox.shrink();
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyCart() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 100,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Your cart is empty',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Add some items to get started',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -394,9 +381,11 @@ class _CartPageState extends State<CartPage> {
                 BlocBuilder<CartBloc, CartState>(
                   builder: (context, state) {
                     double orderAmount = 0.0;
+                    bool isDisabled = false;
 
                     if (state is CartLoaded) {
                       orderAmount = state.itemTotal;
+                      isDisabled = state.appliedCoupon != null;
                     } else {
                       orderAmount = cartItems.fold(
                         0.0,
@@ -407,49 +396,58 @@ class _CartPageState extends State<CartPage> {
                     return LoyaltyPointsRedemptionWidget(
                       orderAmount: orderAmount,
                       onPointsRedeemed: _onLoyaltyPointsRedeemed,
-                      isDisabled: _appliedCoupon != null,
+                      isDisabled: isDisabled,
                     );
                   },
                 ),
 
                 // Show message if loyalty points are applied
-                if (_loyaltyPointsToRedeem > 0)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Colors.orange.shade700,
+                BlocBuilder<CartBloc, CartState>(
+                  builder: (context, state) {
+                    if (state is CartLoaded &&
+                        state.loyaltyPointsRedeemed > 0) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Atta Points applied. You cannot use a coupon.',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.orange.shade700),
-                          ),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                      ],
-                    ),
-                  ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Colors.orange.shade700,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Atta Points applied. You cannot use a coupon.',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: Colors.orange.shade700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
 
                 // Coupon Section
                 BlocBuilder<CartBloc, CartState>(
                   builder: (context, state) {
                     double orderAmount = 0.0;
+                    bool isDisabled = false;
 
                     if (state is CartLoaded) {
                       orderAmount = state.itemTotal;
+                      isDisabled = state.loyaltyPointsRedeemed > 0;
                     } else {
                       orderAmount = cartItems.fold(
                         0.0,
@@ -471,41 +469,47 @@ class _CartPageState extends State<CartPage> {
                           )
                           .toList(),
                       onCouponApplied: _onCouponApplied,
-                      isDisabled: _loyaltyPointsToRedeem > 0,
+                      isDisabled: isDisabled,
                     );
                   },
                 ),
 
                 // Show message if coupon is applied
-                if (_appliedCoupon != null)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Colors.orange.shade700,
+                BlocBuilder<CartBloc, CartState>(
+                  builder: (context, state) {
+                    if (state is CartLoaded && state.appliedCoupon != null) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Coupon applied. You cannot use Atta Points.',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.orange.shade700),
-                          ),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                      ],
-                    ),
-                  ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Colors.orange.shade700,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Coupon applied. You cannot use Atta Points.',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: Colors.orange.shade700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
 
                 Divider(
                   color: Theme.of(
@@ -519,8 +523,8 @@ class _CartPageState extends State<CartPage> {
                     if (state is CartLoaded) {
                       return EnhancedCartSummaryWidget(
                         cartItems: cartItems,
-                        appliedCoupon: _appliedCoupon,
-                        loyaltyPointsRedeemed: _loyaltyPointsToRedeem,
+                        appliedCoupon: state.appliedCoupon,
+                        loyaltyPointsRedeemed: state.loyaltyPointsRedeemed,
                         mrpTotal: state.mrpTotal,
                         itemTotal: state.itemTotal,
                         deliveryFee: state.deliveryFee,
@@ -533,8 +537,8 @@ class _CartPageState extends State<CartPage> {
                       // Fallback to using the EnhancedCartSummaryWidget's own calculations
                       return EnhancedCartSummaryWidget(
                         cartItems: cartItems,
-                        appliedCoupon: _appliedCoupon,
-                        loyaltyPointsRedeemed: _loyaltyPointsToRedeem,
+                        appliedCoupon: null,
+                        loyaltyPointsRedeemed: 0,
                       );
                     }
                   },
@@ -594,9 +598,12 @@ class _CartPageState extends State<CartPage> {
             if (cartState is! CartLoaded) {
               return const SizedBox.shrink();
             }
-            final itemTotal = cartState.itemTotal;
+            final itemTotal = cartState.discountType == DiscountType.loyalty
+                ? cartState.itemTotal - cartState.loyaltyDiscount
+                : cartState.itemTotal;
             final threshold = deliveryState.freeDeliveryThreshold;
-            final isFree = deliveryState.isFreeDelivery;
+            final isFree =
+                deliveryState.isFreeDelivery || itemTotal >= threshold;
             final deliveryFee = deliveryState.deliveryCharges;
 
             // If already free delivery
@@ -747,7 +754,9 @@ class _CartPageState extends State<CartPage> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
-                    onPressed: _isProcessingOrder ? null : _proceedToCheckout,
+                    onPressed: _isProcessingOrder || _addressNotDeliverable
+                        ? null
+                        : _proceedToCheckout,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

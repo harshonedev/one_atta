@@ -24,6 +24,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   double _couponDiscount = 0.0;
   double _loyaltyDiscount = 0.0;
   double _deliveryCharges = 0.0;
+  int _loyaltyPointsRedeemed = 0;
 
   CartBloc({
     required this.getCartUseCase,
@@ -47,6 +48,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<RemoveLoyaltyPoints>(_onRemoveLoyaltyPoints);
     on<UpdateCartPricing>(_onUpdateCartPricing);
     on<UpdateDeliveryCharges>(_onUpdateDeliveryCharges);
+    on<SelectAddress>(_onSelectAddress);
+    on<ClearSelectedAddress>(_onClearSelectedAddress);
   }
 
   Future<void> _onLoadCart(LoadCart event, Emitter<CartState> emit) async {
@@ -66,7 +69,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   // Helper method to calculate all cart totals
-  CartLoaded _calculateCartTotals(CartEntity cart, int count) {
+  CartLoaded _calculateCartTotals(
+    CartEntity cart,
+    int count, {
+    dynamic selectedAddress,
+    dynamic appliedCoupon,
+  }) {
     final mrpTotal = _calculateMrpTotal(cart.items);
     final itemTotal = _calculateItemTotal(cart.items);
     final deliveryFee =
@@ -75,6 +83,9 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final totalSavings = savingsFromMrp + _couponDiscount + _loyaltyDiscount;
     final toPayTotal =
         itemTotal + deliveryFee - _couponDiscount - _loyaltyDiscount;
+
+    // Preserve existing state values
+    final currentState = state is CartLoaded ? state as CartLoaded : null;
 
     return CartLoaded(
       cart: cart,
@@ -86,6 +97,13 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       loyaltyDiscount: _loyaltyDiscount,
       savingsTotal: totalSavings,
       toPayTotal: toPayTotal < 0 ? 0 : toPayTotal,
+      selectedAddress: selectedAddress ?? currentState?.selectedAddress,
+      appliedCoupon: appliedCoupon ?? currentState?.appliedCoupon,
+      loyaltyPointsRedeemed: _loyaltyPointsRedeemed,
+      isDiscountApplied: _couponDiscount > 0 || _loyaltyDiscount > 0,
+      discountType: _couponDiscount > 0
+          ? DiscountType.coupon
+          : (_loyaltyDiscount > 0 ? DiscountType.loyalty : null),
     );
   }
 
@@ -189,7 +207,13 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
-      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+      emit(
+        _calculateCartTotals(
+          currentState.cart,
+          currentState.itemCount,
+          appliedCoupon: event.coupon,
+        ),
+      );
     }
   }
 
@@ -201,7 +225,13 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
-      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+      emit(
+        _calculateCartTotals(
+          currentState.cart,
+          currentState.itemCount,
+          appliedCoupon: null,
+        ),
+      );
     }
   }
 
@@ -210,6 +240,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     _loyaltyDiscount = event.discountAmount;
+    _loyaltyPointsRedeemed = event.points;
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
@@ -222,6 +253,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     _loyaltyDiscount = 0.0;
+    _loyaltyPointsRedeemed = 0;
 
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
@@ -256,6 +288,38 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
       emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+    }
+  }
+
+  Future<void> _onSelectAddress(
+    SelectAddress event,
+    Emitter<CartState> emit,
+  ) async {
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(
+        _calculateCartTotals(
+          currentState.cart,
+          currentState.itemCount,
+          selectedAddress: event.address,
+        ),
+      );
+    }
+  }
+
+  Future<void> _onClearSelectedAddress(
+    ClearSelectedAddress event,
+    Emitter<CartState> emit,
+  ) async {
+    if (state is CartLoaded) {
+      final currentState = state as CartLoaded;
+      emit(
+        _calculateCartTotals(
+          currentState.cart,
+          currentState.itemCount,
+          selectedAddress: null,
+        ),
+      );
     }
   }
 }

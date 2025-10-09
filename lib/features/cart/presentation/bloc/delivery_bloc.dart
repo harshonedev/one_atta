@@ -41,6 +41,11 @@ class DeliveryBloc extends Bloc<DeliveryEvent, DeliveryState> {
             actualEta = zoneInfo.expressDelivery.etaDisplay;
           }
 
+          // If free delivery is applicable, set delivery charges to 0
+          if (zoneInfo.isFreeDelivery) {
+            actualDeliveryCharges = 0.0;
+          }
+
           emit(
             DeliveryLoaded(
               pincode: event.pincode,
