@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_entity.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/domain/usecases/add_to_cart_usecase.dart';
@@ -10,6 +11,7 @@ import 'package:one_atta/features/cart/domain/usecases/update_cart_item_quantity
 import 'package:one_atta/features/cart/domain/usecases/update_cart_item_weight_usecase.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_state.dart';
+import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
   final GetCartUseCase getCartUseCase;
@@ -19,12 +21,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final UpdateCartItemWeightUseCase updateCartItemWeightUseCase;
   final ClearCartUseCase clearCartUseCase;
   final GetCartItemCountUseCase getCartItemCountUseCase;
-
-  // Track current pricing state
-  double _couponDiscount = 0.0;
-  double _loyaltyDiscount = 0.0;
-  double _deliveryCharges = 0.0;
-  int _loyaltyPointsRedeemed = 0;
 
   CartBloc({
     required this.getCartUseCase,
@@ -46,10 +42,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     on<RemoveCoupon>(_onRemoveCoupon);
     on<ApplyLoyaltyPoints>(_onApplyLoyaltyPoints);
     on<RemoveLoyaltyPoints>(_onRemoveLoyaltyPoints);
-    on<UpdateCartPricing>(_onUpdateCartPricing);
     on<UpdateDeliveryCharges>(_onUpdateDeliveryCharges);
     on<SelectAddress>(_onSelectAddress);
     on<ClearSelectedAddress>(_onClearSelectedAddress);
+    on<ReloadCart>(_onReloadCart);
   }
 
   Future<void> _onLoadCart(LoadCart event, Emitter<CartState> emit) async {
@@ -68,21 +64,75 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     });
   }
 
+  Future<void> _onReloadCart(ReloadCart event, Emitter<CartState> emit) async {
+    if (state is! CartLoaded) {
+      return;
+    }
+
+    final cartResult = await getCartUseCase();
+    final countResult = await getCartItemCountUseCase();
+
+    cartResult.fold((failure) => emit(CartError(message: failure.message)), (
+      cart,
+    ) {
+      countResult.fold((failure) => emit(CartError(message: failure.message)), (
+        count,
+      ) {
+        final currentState = state as CartLoaded;
+
+        emit(
+          _calculateCartTotals(
+            cart,
+            count,
+            selectedAddress: currentState.selectedAddress,
+            appliedCoupon: currentState.appliedCoupon,
+            couponDiscount: currentState.couponDiscount,
+            loyaltyDiscount: currentState.loyaltyDiscount,
+            loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+            deliveryFee: currentState.deliveryFee,
+            deliveryInfo: currentState.deliveryInfo,
+          ),
+        );
+      });
+    });
+  }
+
   // Helper method to calculate all cart totals
   CartLoaded _calculateCartTotals(
     CartEntity cart,
     int count, {
-    dynamic selectedAddress,
-    dynamic appliedCoupon,
+    AddressEntity? selectedAddress,
+    CouponEntity? appliedCoupon,
+    double couponDiscount = 0.0,
+    double loyaltyDiscount = 0.0,
+    int loyaltyPointsRedeemed = 0,
+    double? deliveryFee,
+    DeliveryInfo? deliveryInfo,
   }) {
     final mrpTotal = _calculateMrpTotal(cart.items);
     final itemTotal = _calculateItemTotal(cart.items);
-    final deliveryFee =
-        _deliveryCharges; // Use delivery charges from delivery bloc
     final savingsFromMrp = mrpTotal - itemTotal;
-    final totalSavings = savingsFromMrp + _couponDiscount + _loyaltyDiscount;
+    final totalSavings = savingsFromMrp + (couponDiscount) + (loyaltyDiscount);
+
+    double updatedDeliveryFee = deliveryFee ?? 0.0;
+    if (deliveryFee != null && deliveryInfo != null) {
+      final deliveryItemTotal = loyaltyDiscount > 0
+          ? itemTotal - loyaltyDiscount
+          : itemTotal; // Adjust item total if loyalty discount applied
+
+      final isFree =
+          deliveryInfo.isDeliveryFree ||
+          deliveryItemTotal >= deliveryInfo.deliveryThreshold;
+
+      updatedDeliveryFee = isFree ? 0.0 : deliveryInfo.deliveryFee;
+
+      print(
+        'Delivery Free: $isFree, Item Total: $deliveryItemTotal, Loyalty Discount: $loyaltyDiscount, Delivery Threshold: ${deliveryInfo.deliveryThreshold}, Updated Delivery Fee: $updatedDeliveryFee',
+      );
+    }
+
     final toPayTotal =
-        itemTotal + deliveryFee - _couponDiscount - _loyaltyDiscount;
+        itemTotal + (updatedDeliveryFee) - (couponDiscount) - (loyaltyDiscount);
 
     // Preserve existing state values
     final currentState = state is CartLoaded ? state as CartLoaded : null;
@@ -92,18 +142,19 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       itemCount: count,
       mrpTotal: mrpTotal,
       itemTotal: itemTotal,
-      deliveryFee: deliveryFee,
-      couponDiscount: _couponDiscount,
-      loyaltyDiscount: _loyaltyDiscount,
+      deliveryFee: updatedDeliveryFee,
+      deliveryInfo: deliveryInfo,
+      couponDiscount: couponDiscount,
+      loyaltyDiscount: loyaltyDiscount,
       savingsTotal: totalSavings,
       toPayTotal: toPayTotal < 0 ? 0 : toPayTotal,
       selectedAddress: selectedAddress ?? currentState?.selectedAddress,
       appliedCoupon: appliedCoupon ?? currentState?.appliedCoupon,
-      loyaltyPointsRedeemed: _loyaltyPointsRedeemed,
-      isDiscountApplied: _couponDiscount > 0 || _loyaltyDiscount > 0,
-      discountType: _couponDiscount > 0
+      loyaltyPointsRedeemed: loyaltyPointsRedeemed,
+      isDiscountApplied: couponDiscount > 0 || loyaltyDiscount > 0,
+      discountType: couponDiscount > 0
           ? DiscountType.coupon
-          : (_loyaltyDiscount > 0 ? DiscountType.loyalty : null),
+          : (loyaltyDiscount > 0 ? DiscountType.loyalty : null),
     );
   }
 
@@ -118,9 +169,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
   }
 
-  // Removed: Delivery fee is now managed by delivery bloc
-  // and updated via UpdateDeliveryCharges event
-
   Future<void> _onAddItemToCart(
     AddItemToCart event,
     Emitter<CartState> emit,
@@ -128,8 +176,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final result = await addToCartUseCase(event.item);
 
     result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      emit(const CartItemAdded(message: 'Item added to cart'));
-      add(LoadCart()); // Reload cart to update UI
+      add(ReloadCart()); // Reload cart to update UI
     });
   }
 
@@ -140,8 +187,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final result = await removeFromCartUseCase(event.productId);
 
     result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      emit(const CartItemRemoved(message: 'Item removed from cart'));
-      add(LoadCart()); // Reload cart to update UI
+      add(ReloadCart()); // Reload cart to update UI
     });
   }
 
@@ -155,7 +201,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
 
     result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      add(LoadCart()); // Reload cart to update UI
+      add(ReloadCart()); // Reload cart to update UI
     });
   }
 
@@ -169,7 +215,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     );
 
     result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      add(LoadCart()); // Reload cart to update UI
+      add(ReloadCart()); // Reload cart to update UI
     });
   }
 
@@ -178,7 +224,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
     result.fold((failure) => emit(CartError(message: failure.message)), (_) {
       emit(const CartCleared(message: 'Cart cleared'));
-      add(LoadCart()); // Reload cart to update UI
+      add(ReloadCart()); // Reload cart to update UI
     });
   }
 
@@ -194,7 +240,19 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       // If current state is CartLoaded, update only the count
       if (state is CartLoaded) {
         final currentState = state as CartLoaded;
-        emit(_calculateCartTotals(currentState.cart, count));
+        emit(
+          _calculateCartTotals(
+            currentState.cart,
+            count,
+            selectedAddress: currentState.selectedAddress,
+            appliedCoupon: currentState.appliedCoupon,
+            couponDiscount: currentState.couponDiscount,
+            loyaltyDiscount: currentState.loyaltyDiscount,
+            loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+            deliveryFee: currentState.deliveryFee,
+            deliveryInfo: currentState.deliveryInfo,
+          ),
+        );
       }
     });
   }
@@ -203,8 +261,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     ApplyCoupon event,
     Emitter<CartState> emit,
   ) async {
-    _couponDiscount = event.discountAmount;
-
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
       emit(
@@ -212,6 +268,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           currentState.cart,
           currentState.itemCount,
           appliedCoupon: event.coupon,
+          couponDiscount: event.discountAmount,
+          loyaltyDiscount: currentState.loyaltyDiscount,
+          loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+          selectedAddress: currentState.selectedAddress,
+          deliveryFee: currentState.deliveryFee,
+          deliveryInfo: currentState.deliveryInfo,
         ),
       );
     }
@@ -221,8 +283,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     RemoveCoupon event,
     Emitter<CartState> emit,
   ) async {
-    _couponDiscount = 0.0;
-
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
       emit(
@@ -230,6 +290,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           currentState.cart,
           currentState.itemCount,
           appliedCoupon: null,
+          couponDiscount: 0.0,
+          loyaltyDiscount: currentState.loyaltyDiscount,
+          loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+          selectedAddress: currentState.selectedAddress,
+          deliveryFee: currentState.deliveryFee,
+          deliveryInfo: currentState.deliveryInfo,
         ),
       );
     }
@@ -239,12 +305,21 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     ApplyLoyaltyPoints event,
     Emitter<CartState> emit,
   ) async {
-    _loyaltyDiscount = event.discountAmount;
-    _loyaltyPointsRedeemed = event.points;
-
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
-      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+      emit(
+        _calculateCartTotals(
+          currentState.cart,
+          currentState.itemCount,
+          appliedCoupon: currentState.appliedCoupon,
+          couponDiscount: currentState.couponDiscount,
+          loyaltyDiscount: event.discountAmount,
+          loyaltyPointsRedeemed: event.points,
+          selectedAddress: currentState.selectedAddress,
+          deliveryFee: currentState.deliveryFee,
+          deliveryInfo: currentState.deliveryInfo,
+        ),
+      );
     }
   }
 
@@ -252,30 +327,21 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     RemoveLoyaltyPoints event,
     Emitter<CartState> emit,
   ) async {
-    _loyaltyDiscount = 0.0;
-    _loyaltyPointsRedeemed = 0;
-
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
-      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
-    }
-  }
-
-  Future<void> _onUpdateCartPricing(
-    UpdateCartPricing event,
-    Emitter<CartState> emit,
-  ) async {
-    if (event.couponDiscount != null) {
-      _couponDiscount = event.couponDiscount!;
-    }
-
-    if (event.loyaltyDiscount != null) {
-      _loyaltyDiscount = event.loyaltyDiscount!;
-    }
-
-    if (state is CartLoaded) {
-      final currentState = state as CartLoaded;
-      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+      emit(
+        _calculateCartTotals(
+          currentState.cart,
+          currentState.itemCount,
+          appliedCoupon: currentState.appliedCoupon,
+          couponDiscount: currentState.couponDiscount,
+          loyaltyDiscount: 0.0,
+          loyaltyPointsRedeemed: 0,
+          selectedAddress: currentState.selectedAddress,
+          deliveryFee: currentState.deliveryFee,
+          deliveryInfo: currentState.deliveryInfo,
+        ),
+      );
     }
   }
 
@@ -283,11 +349,31 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     UpdateDeliveryCharges event,
     Emitter<CartState> emit,
   ) async {
-    _deliveryCharges = event.deliveryCharges;
-
     if (state is CartLoaded) {
       final currentState = state as CartLoaded;
-      emit(_calculateCartTotals(currentState.cart, currentState.itemCount));
+      DeliveryInfo? deliveryInfo;
+      if (event.deliveryCharges != null &&
+          event.deliveryThreshold != null &&
+          event.isDeliveryFree != null) {
+        deliveryInfo = DeliveryInfo(
+          deliveryFee: event.deliveryCharges!,
+          isDeliveryFree: event.isDeliveryFree!,
+          deliveryThreshold: event.deliveryThreshold!,
+        );
+      }
+      emit(
+        _calculateCartTotals(
+          currentState.cart,
+          currentState.itemCount,
+          deliveryFee: event.deliveryCharges,
+          deliveryInfo: deliveryInfo,
+          selectedAddress: currentState.selectedAddress,
+          appliedCoupon: currentState.appliedCoupon,
+          couponDiscount: currentState.couponDiscount,
+          loyaltyDiscount: currentState.loyaltyDiscount,
+          loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+        ),
+      );
     }
   }
 
@@ -302,6 +388,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           currentState.cart,
           currentState.itemCount,
           selectedAddress: event.address,
+          appliedCoupon: currentState.appliedCoupon,
+          couponDiscount: currentState.couponDiscount,
+          loyaltyDiscount: currentState.loyaltyDiscount,
+          loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+          deliveryFee: currentState.deliveryFee,
+          deliveryInfo: currentState.deliveryInfo,
         ),
       );
     }
@@ -318,6 +410,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           currentState.cart,
           currentState.itemCount,
           selectedAddress: null,
+          appliedCoupon: currentState.appliedCoupon,
+          couponDiscount: currentState.couponDiscount,
+          loyaltyDiscount: currentState.loyaltyDiscount,
+          loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+          deliveryFee: currentState.deliveryFee,
+          deliveryInfo: currentState.deliveryInfo,
         ),
       );
     }

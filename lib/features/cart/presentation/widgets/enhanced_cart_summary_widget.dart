@@ -1,127 +1,139 @@
 import 'package:flutter/material.dart';
-import 'package:one_atta/features/cart/domain/entities/cart_entity.dart';
+import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 
 class EnhancedCartSummaryWidget extends StatelessWidget {
-  final CartEntity cart;
+  final List<CartItemEntity> cartItems;
   final CouponEntity? appliedCoupon;
-  final double couponDiscount;
-  final int redeemedPoints;
-  final double pointsDiscount;
-  final double deliveryCharges;
-  final VoidCallback onCheckout;
+  final int loyaltyPointsRedeemed;
+
+  // New price parameters
+  final double? mrpTotal;
+  final double? itemTotal;
+  final double? deliveryFee;
+  final double? couponDiscount;
+  final double? loyaltyDiscount;
+  final double? savingsTotal;
+  final double? toPayTotal;
 
   const EnhancedCartSummaryWidget({
     super.key,
-    required this.cart,
+    required this.cartItems,
     this.appliedCoupon,
-    this.couponDiscount = 0.0,
-    this.redeemedPoints = 0,
-    this.pointsDiscount = 0.0,
-    this.deliveryCharges = 0.0,
-    required this.onCheckout,
+    this.loyaltyPointsRedeemed = 0,
+    this.mrpTotal,
+    this.itemTotal,
+    this.deliveryFee,
+    this.couponDiscount,
+    this.loyaltyDiscount,
+    this.savingsTotal,
+    this.toPayTotal,
   });
-
-  double get subtotal => cart.totalPrice;
-
-  double get totalDiscount => couponDiscount + pointsDiscount;
-
-  double get finalTotal =>
-      (subtotal + deliveryCharges - totalDiscount).clamp(0.0, double.infinity);
 
   @override
   Widget build(BuildContext context) {
+    // Use provided values or calculate if not provided
+    final subtotal = itemTotal ?? _calculateSubtotal();
+    final delFee = deliveryFee ?? _calculateDeliveryFee(subtotal);
+    final coupDiscount = couponDiscount ?? _calculateCouponDiscount(subtotal);
+    final loyalDiscount = loyaltyDiscount ?? loyaltyPointsRedeemed.toDouble();
+    final total =
+        toPayTotal ??
+        _calculateTotal(subtotal, delFee, coupDiscount, loyalDiscount);
+
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildSummaryDetails(context),
-              const SizedBox(height: 16),
-              _buildCheckoutButton(context),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Order Summary',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            // Subtotal
+            _buildSummaryRow(
+              context,
+              'Subtotal',
+              '₹${subtotal.toStringAsFixed(2)}',
+            ),
+
+            // Delivery Fee
+            _buildSummaryRow(
+              context,
+              'Delivery Fee',
+              delFee == 0 ? 'FREE' : '₹${delFee.toStringAsFixed(2)}',
+              isDeliveryFree: deliveryFee == 0,
+            ),
+
+            // Coupon Discount
+            if (appliedCoupon != null && coupDiscount > 0) ...[
+              _buildSummaryRow(
+                context,
+                'Coupon Discount (${appliedCoupon!.code})',
+                '-₹${coupDiscount.toStringAsFixed(2)}',
+                isDiscount: true,
+              ),
             ],
-          ),
+
+            // Loyalty Points Discount
+            if (loyaltyPointsRedeemed > 0) ...[
+              _buildSummaryRow(
+                context,
+                'Atta Points ($loyaltyPointsRedeemed points)',
+                '-₹${loyalDiscount.toStringAsFixed(2)}',
+                isDiscount: true,
+              ),
+            ],
+
+            const Divider(height: 24),
+
+            // Total
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'To Pay',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '₹${total.toStringAsFixed(2)}',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+
+            // Savings summary
+            if (coupDiscount > 0 || loyalDiscount > 0) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'You saved ₹${(coupDiscount + loyalDiscount).toStringAsFixed(2)} on this order!',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryDetails(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          _buildSummaryRow(
-            context,
-            'Subtotal (${cart.totalItems} items)',
-            '₹${subtotal.toInt()}',
-          ),
-
-          if (deliveryCharges > 0) ...[
-            const SizedBox(height: 8),
-            _buildSummaryRow(
-              context,
-              'Delivery charges',
-              '₹${deliveryCharges.toInt()}',
-            ),
-          ],
-
-          if (couponDiscount > 0) ...[
-            const SizedBox(height: 8),
-            _buildSummaryRow(
-              context,
-              'Coupon discount (${appliedCoupon?.code})',
-              '-₹${couponDiscount.toInt()}',
-              isDiscount: true,
-            ),
-          ],
-
-          if (pointsDiscount > 0) ...[
-            const SizedBox(height: 8),
-            _buildSummaryRow(
-              context,
-              'Points discount ($redeemedPoints points)',
-              '-₹${pointsDiscount.toInt()}',
-              isDiscount: true,
-            ),
-          ],
-
-          if (totalDiscount > 0) ...[
-            const Divider(),
-            _buildSummaryRow(
-              context,
-              'Total savings',
-              '₹${totalDiscount.toInt()}',
-              isHighlight: true,
-              color: Colors.green,
-            ),
-          ],
-
-          const Divider(),
-          _buildSummaryRow(
-            context,
-            'Total Amount',
-            '₹${finalTotal.toInt()}',
-            isTotal: true,
-          ),
-        ],
       ),
     );
   }
@@ -131,78 +143,58 @@ class EnhancedCartSummaryWidget extends StatelessWidget {
     String label,
     String value, {
     bool isDiscount = false,
-    bool isTotal = false,
-    bool isHighlight = false,
-    Color? color,
+    bool isDeliveryFree = false,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color:
-                color ??
-                (isTotal
-                    ? Theme.of(context).colorScheme.onSurface
-                    : Theme.of(context).colorScheme.onSurfaceVariant),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
-        ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: isTotal || isHighlight
-                ? FontWeight.bold
-                : FontWeight.w600,
-            color:
-                color ??
-                (isDiscount
-                    ? Colors.green
-                    : isTotal
-                    ? Theme.of(context).colorScheme.onSurface
-                    : Theme.of(context).colorScheme.onSurfaceVariant),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: isDiscount
+                  ? Colors.green
+                  : isDeliveryFree
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildCheckoutButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: cart.isEmpty ? null : onCheckout,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Proceed to Checkout',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '₹${finalTotal.toInt()}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  double _calculateSubtotal() {
+    return cartItems.fold(0.0, (total, item) => total + item.totalPrice);
+  }
+
+  double _calculateDeliveryFee(double subtotal) {
+    // Free delivery for orders above ₹299
+    return subtotal >= 299 ? 0.0 : 49.0;
+  }
+
+  double _calculateCouponDiscount(double subtotal) {
+    if (appliedCoupon == null) return 0.0;
+    return appliedCoupon!.getDiscountAmount(subtotal);
+  }
+
+  double _calculateTotal(
+    double subtotal,
+    double deliveryFee,
+    double couponDiscount,
+    double loyaltyDiscount,
+  ) {
+    final total = subtotal + deliveryFee - couponDiscount - loyaltyDiscount;
+    return total < 0 ? 0 : total;
   }
 }

@@ -11,6 +11,8 @@ abstract class CartEvent extends Equatable {
 
 class LoadCart extends CartEvent {}
 
+class ReloadCart extends CartEvent {}
+
 class AddItemToCart extends CartEvent {
   final CartItemEntity item;
 
@@ -75,23 +77,23 @@ class ApplyLoyaltyPoints extends CartEvent {
 
 class RemoveLoyaltyPoints extends CartEvent {}
 
-class UpdateCartPricing extends CartEvent {
-  final double? couponDiscount;
-  final double? loyaltyDiscount;
-
-  const UpdateCartPricing({this.couponDiscount, this.loyaltyDiscount});
-
-  @override
-  List<Object> get props => [couponDiscount ?? 0.0, loyaltyDiscount ?? 0.0];
-}
-
 class UpdateDeliveryCharges extends CartEvent {
-  final double deliveryCharges;
+  final double? deliveryCharges;
+  final bool? isDeliveryFree;
+  final double? deliveryThreshold;
 
-  const UpdateDeliveryCharges({required this.deliveryCharges});
+  const UpdateDeliveryCharges({
+    this.deliveryCharges,
+    this.isDeliveryFree,
+    this.deliveryThreshold,
+  });
 
   @override
-  List<Object> get props => [deliveryCharges];
+  List<Object> get props => [
+    ?deliveryCharges,
+    ?isDeliveryFree,
+    ?deliveryThreshold,
+  ];
 }
 
 class UpdateItemWeight extends CartEvent {

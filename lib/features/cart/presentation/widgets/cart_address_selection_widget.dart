@@ -52,15 +52,14 @@ class _CartAddressSelectionWidgetState
       listener: (context, state) {
         if (state is AddressesLoaded && _selectedAddress == null) {
           // Auto-select default address if available
-          final defaultAddress = state.addresses
-              .where((addr) => addr.isDefault && !addr.deleted)
-              .firstOrNull;
-          if (defaultAddress != null) {
-            setState(() {
-              _selectedAddress = defaultAddress;
-            });
-            widget.onAddressSelected(defaultAddress);
-          }
+          final defaultAddress = state.addresses.firstWhere(
+            (addr) => addr.isDefault && !addr.deleted,
+            orElse: () => state.addresses.first,
+          );
+          setState(() {
+            _selectedAddress = defaultAddress;
+          });
+          widget.onAddressSelected(defaultAddress);
         }
       },
       child: Container(

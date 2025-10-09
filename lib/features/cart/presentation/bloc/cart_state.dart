@@ -20,7 +20,8 @@ class CartLoaded extends CartState {
   final int itemCount;
   final double mrpTotal; // Total MRP value
   final double itemTotal; // Actual item total (with any product discounts)
-  final double deliveryFee; // Delivery fee
+  final double? deliveryFee; // Delivery fee
+  final DeliveryInfo? deliveryInfo;
   final double couponDiscount; // Discount from coupons
   final double loyaltyDiscount; // Discount from loyalty points
   final double savingsTotal; // Total savings amount
@@ -36,7 +37,8 @@ class CartLoaded extends CartState {
     this.selectedAddress,
     this.mrpTotal = 0.0,
     this.itemTotal = 0.0,
-    this.deliveryFee = 0.0,
+    this.deliveryFee,
+    this.deliveryInfo,
     this.couponDiscount = 0.0,
     this.loyaltyDiscount = 0.0,
     this.savingsTotal = 0.0,
@@ -62,6 +64,7 @@ class CartLoaded extends CartState {
     discountType,
     appliedCoupon,
     loyaltyPointsRedeemed,
+    deliveryInfo,
   ];
 
   CartLoaded copyWith({
@@ -81,6 +84,7 @@ class CartLoaded extends CartState {
     CouponEntity? appliedCoupon,
     bool? clearAppliedCoupon,
     int? loyaltyPointsRedeemed,
+    DeliveryInfo? deliveryInfo,
   }) {
     return CartLoaded(
       cart: cart ?? this.cart,
@@ -102,6 +106,7 @@ class CartLoaded extends CartState {
           : (appliedCoupon ?? this.appliedCoupon),
       loyaltyPointsRedeemed:
           loyaltyPointsRedeemed ?? this.loyaltyPointsRedeemed,
+      deliveryInfo: deliveryInfo ?? this.deliveryInfo,
     );
   }
 }
@@ -115,24 +120,6 @@ class CartError extends CartState {
   List<Object> get props => [message];
 }
 
-class CartItemAdded extends CartState {
-  final String message;
-
-  const CartItemAdded({required this.message});
-
-  @override
-  List<Object> get props => [message];
-}
-
-class CartItemRemoved extends CartState {
-  final String message;
-
-  const CartItemRemoved({required this.message});
-
-  @override
-  List<Object> get props => [message];
-}
-
 class CartCleared extends CartState {
   final String message;
 
@@ -140,6 +127,21 @@ class CartCleared extends CartState {
 
   @override
   List<Object> get props => [message];
+}
+
+class DeliveryInfo extends Equatable {
+  final double deliveryFee;
+  final bool isDeliveryFree;
+  final double deliveryThreshold;
+
+  const DeliveryInfo({
+    required this.deliveryFee,
+    required this.isDeliveryFree,
+    required this.deliveryThreshold,
+  });
+
+  @override
+  List<Object?> get props => [deliveryFee, isDeliveryFree, deliveryThreshold];
 }
 
 enum DiscountType { coupon, loyalty }

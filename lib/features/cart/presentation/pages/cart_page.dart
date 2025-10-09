@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/address/domain/entities/address_entity.dart';
-import 'package:one_atta/features/address/presentation/bloc/address_bloc.dart';
-import 'package:one_atta/features/address/presentation/bloc/address_state.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
@@ -18,9 +16,9 @@ import 'package:one_atta/features/cart/presentation/widgets/cart_item_card.dart'
 import 'package:one_atta/features/cart/presentation/widgets/empty_cart_widget.dart';
 import 'package:one_atta/features/cart/presentation/widgets/estimated_delivery_widget.dart';
 import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
-import 'package:one_atta/features/coupons/presentation/widgets/coupon_input_widget.dart';
-import 'package:one_atta/features/coupons/presentation/widgets/enhanced_cart_summary_widget.dart';
-import 'package:one_atta/features/coupons/presentation/widgets/loyalty_points_redemption_widget.dart';
+import 'package:one_atta/features/cart/presentation/widgets/coupon_input_widget.dart';
+import 'package:one_atta/features/cart/presentation/widgets/enhanced_cart_summary_widget.dart';
+import 'package:one_atta/features/cart/presentation/widgets/loyalty_points_redemption_widget.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -38,18 +36,6 @@ class _CartPageState extends State<CartPage> {
     super.initState();
     // Load initial data
     context.read<CartBloc>().add(LoadCart());
-
-    final addressState = context.read<AddressBloc>().state;
-    if (addressState is AddressesLoaded && addressState.addresses.isNotEmpty) {
-      final defaultAddress = addressState.addresses.firstWhere(
-        (addr) => addr.isDefault,
-        orElse: () => addressState.addresses.first,
-      );
-      // Select the default address in cart state
-      context.read<CartBloc>().add(SelectAddress(address: defaultAddress));
-      // Check delivery availability for the selected address
-      _onCheckDeliveryAvailability(defaultAddress.postalCode);
-    }
   }
 
   void _onAddressSelected(AddressEntity? address) {
@@ -62,17 +48,13 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _onCheckDeliveryAvailability(String pincode) {
-    final cartState = context.read<CartBloc>().state;
-    if (cartState is CartLoaded) {
-      context.read<DeliveryBloc>().add(
-        CheckDeliveryAvailability(
-          pincode: pincode,
-          orderValue:
-              cartState.itemTotal, // Use itemTotal for delivery calculation
-          isExpress: false, // Ignoring express delivery for now
-        ),
-      );
-    }
+    context.read<DeliveryBloc>().add(
+      CheckDeliveryAvailability(
+        pincode: pincode,
+        orderValue: 0,
+        isExpress: false, // Ignoring express delivery for now
+      ),
+    );
   }
 
   void _onCouponApplied(CouponEntity? coupon, double discount) {
@@ -102,10 +84,8 @@ class _CartPageState extends State<CartPage> {
       context.read<CartBloc>().add(RemoveCoupon());
     }
 
-    // Recalculate delivery with updated cart total
-    if (cartState.selectedAddress != null) {
-      _onCheckDeliveryAvailability(cartState.selectedAddress!.postalCode);
-    }
+    // No need to call CheckDeliveryAvailability - delivery will be recalculated
+    // automatically in the CartBloc listener based on existing delivery state
   }
 
   void _onLoyaltyPointsRedeemed(int points, double discountAmount) {
@@ -132,18 +112,8 @@ class _CartPageState extends State<CartPage> {
       context.read<CartBloc>().add(RemoveLoyaltyPoints());
     }
 
-    // Recalculate delivery with updated cart total (after loyalty discount)
-    if (cartState.selectedAddress != null) {
-      // Use amount after loyalty discount for delivery calculation
-      final amountForDelivery = cartState.itemTotal - discountAmount;
-      context.read<DeliveryBloc>().add(
-        CheckDeliveryAvailability(
-          pincode: cartState.selectedAddress!.postalCode,
-          orderValue: amountForDelivery,
-          isExpress: false,
-        ),
-      );
-    }
+    // No need to call CheckDeliveryAvailability - delivery will be recalculated
+    // automatically in the CartBloc listener based on existing delivery state
   }
 
   void _proceedToCheckout() {
@@ -234,11 +204,13 @@ class _CartPageState extends State<CartPage> {
         listeners: [
           BlocListener<DeliveryBloc, DeliveryState>(
             listener: (context, deliveryState) {
-              // Update cart bloc when delivery charges change
+              // When delivery info comes from network, update cart with initial charges
               if (deliveryState is DeliveryLoaded) {
                 context.read<CartBloc>().add(
                   UpdateDeliveryCharges(
                     deliveryCharges: deliveryState.deliveryCharges,
+                    isDeliveryFree: deliveryState.isFreeDelivery,
+                    deliveryThreshold: deliveryState.freeDeliveryThreshold,
                   ),
                 );
               } else if (deliveryState is DeliveryNotAvailable ||
@@ -261,38 +233,7 @@ class _CartPageState extends State<CartPage> {
                   ),
                 );
 
-                context.read<CartBloc>().add(
-                  const UpdateDeliveryCharges(deliveryCharges: 0.0),
-                );
-              }
-            },
-          ),
-          BlocListener<CartBloc, CartState>(
-            listener: (context, state) {
-              if (state is CartLoaded) {
-                // check orderamout with delivery threshold
-                final deliverState = context.read<DeliveryBloc>().state;
-                if (deliverState is DeliveryLoaded) {
-                  final itemTotal = state.discountType == DiscountType.loyalty
-                      ? state.itemTotal - state.loyaltyDiscount
-                      : state.itemTotal;
-                  final threshold = deliverState.freeDeliveryThreshold;
-                  final isFree =
-                      deliverState.isFreeDelivery || itemTotal >= threshold;
-
-                  if (isFree && deliverState.deliveryCharges != 0.0) {
-                    // Update delivery charges to 0 in cart
-                    context.read<CartBloc>().add(
-                      const UpdateDeliveryCharges(deliveryCharges: 0.0),
-                    );
-                  } else {
-                    context.read<CartBloc>().add(
-                      UpdateDeliveryCharges(
-                        deliveryCharges: deliverState.deliveryCharges,
-                      ),
-                    );
-                  }
-                }
+                context.read<CartBloc>().add(const UpdateDeliveryCharges());
               }
             },
           ),
@@ -598,7 +539,10 @@ class _CartPageState extends State<CartPage> {
             if (cartState is! CartLoaded) {
               return const SizedBox.shrink();
             }
-            final itemTotal = cartState.discountType == DiscountType.loyalty
+            // Use same logic as _onCheckDeliveryAvailability
+            // For loyalty discount, subtract from itemTotal
+            // For coupon discount, use itemTotal directly
+            final itemTotal = cartState.loyaltyDiscount > 0
                 ? cartState.itemTotal - cartState.loyaltyDiscount
                 : cartState.itemTotal;
             final threshold = deliveryState.freeDeliveryThreshold;
