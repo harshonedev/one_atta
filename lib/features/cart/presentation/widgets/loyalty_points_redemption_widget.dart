@@ -245,7 +245,7 @@ class _LoyaltyPointsRedemptionWidgetState
                     borderSide: BorderSide(
                       color: Theme.of(
                         context,
-                      ).colorScheme.outline.withOpacity(0.3),
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
@@ -253,7 +253,7 @@ class _LoyaltyPointsRedemptionWidgetState
                     borderSide: BorderSide(
                       color: Theme.of(
                         context,
-                      ).colorScheme.outline.withOpacity(0.3),
+                      ).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -299,7 +299,7 @@ class _LoyaltyPointsRedemptionWidgetState
                   'Use $maxRedeemablePoints points',
                   style: const TextStyle(fontSize: 12),
                 ),
-                backgroundColor: Colors.amber.withOpacity(0.1),
+                backgroundColor: Colors.amber.withValues(alpha: 0.1),
                 side: BorderSide(color: Colors.amber),
                 onDeleted: () {
                   setState(() {
@@ -317,7 +317,7 @@ class _LoyaltyPointsRedemptionWidgetState
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.1),
+              color: Colors.amber.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -346,9 +346,9 @@ class _LoyaltyPointsRedemptionWidgetState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.amber.withOpacity(0.1),
+        color: Colors.amber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

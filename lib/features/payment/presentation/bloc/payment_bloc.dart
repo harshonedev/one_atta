@@ -40,8 +40,6 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     }
   }
 
-  /// Create order with payment (POST /api/app/payments/create-order)
-  /// NEW: All calculations done on frontend
   Future<void> _onCreateOrder(
     CreateOrder event,
     Emitter<PaymentState> emit,
@@ -83,10 +81,23 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       razorpaySignature: event.razorpaySignature,
     );
 
-    result.fold(
-      (failure) => emit(PaymentFailed(message: failure.message)),
-      (order) => emit(PaymentCompleted(order)),
-    );
+    result.fold((failure) {
+      emit(PaymentFailed(message: failure.message));
+      final error = {
+        'code': 'PAYMENT_FAILED',
+        'description': failure.message,
+        'source': 'razorpay',
+        'step': 'verify_payment',
+        'reason': 'payment_failed',
+      };
+      add(
+        HandlePaymentFailure(
+          orderId: event.orderId,
+          razorpayPaymentId: event.razorpayPaymentId,
+          error: error,
+        ),
+      );
+    }, (order) => emit(PaymentCompleted(order)));
   }
 
   /// Confirm COD order (POST /api/app/payments/confirm-cod/:orderId)

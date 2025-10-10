@@ -236,7 +236,7 @@ class AppRouter {
           name: 'payment-methods',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
-            final orderData = extra['orderData'] as Map<String, dynamic>?;
+            final orderData = extra['orderData'] as OrderData?;
             final amount = extra['amount'] as double? ?? 0.0;
 
             // Create a temporary order ID for payment flow
@@ -246,9 +246,7 @@ class AppRouter {
             return PaymentMethodSelectionPage(
               orderId: tempOrderId,
               amount: amount,
-              orderData: orderData != null
-                  ? OrderData.fromJson(orderData)
-                  : null,
+              orderData: orderData,
             );
           },
         ),

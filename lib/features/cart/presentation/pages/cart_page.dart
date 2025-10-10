@@ -162,7 +162,7 @@ class _CartPageState extends State<CartPage> {
     // Navigate to payment method selection
     context.push(
       '/payment/methods',
-      extra: {'orderData': orderData.toJson(), 'amount': cartState.toPayTotal},
+      extra: {'orderData': orderData, 'amount': cartState.toPayTotal},
     );
   }
 

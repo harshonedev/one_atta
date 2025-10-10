@@ -70,7 +70,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       'name': 'One Atta',
       'description': 'Order Payment',
       'order_id': razorpayOrderId,
-      'prefill': {'contact': '', 'email': ''},
+      'prefill': {'contact': widget.order.contactNumbers.first, 'email': ''},
       'theme': {
         'color':
             '#${Theme.of(context).colorScheme.primary.value.toRadixString(16).substring(2)}',
@@ -129,14 +129,15 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       setState(() {
         _isProcessing = false;
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(response.message ?? 'Payment failed'),
+          content: Text(
+            'Payment failed: ${response.message ?? 'Unknown error occurred'}',
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
         ),
       );
-
       // Go back to payment selection
       context.pop();
     }
@@ -146,6 +147,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('External Wallet Selected: ${response.walletName}'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -188,17 +190,16 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
             setState(() {
               _isProcessing = false;
             });
-
-            _showErrorDialog(state.message);
           } else if (state is PaymentError) {
             setState(() {
               _isProcessing = false;
             });
-
-            _showErrorDialog(state.message);
           }
         },
         builder: (context, state) {
+          if (state is PaymentFailed || state is PaymentError) {
+            return _buildPaymentFailedLayout();
+          }
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -226,11 +227,11 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
                   ),
                 ] else ...[
                   // Retry Button
-                  ElevatedButton.icon(
+                  FilledButton.icon(
                     onPressed: _openRazorpayCheckout,
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry Payment'),
-                    style: ElevatedButton.styleFrom(
+                    style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 12,
@@ -251,6 +252,64 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
     );
   }
 
+  Widget _buildPaymentFailedLayout() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Payment Failed',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Something went wrong during the payment process.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _openRazorpayCheckout,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry Payment'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // change payment method button
+            TextButton(
+              onPressed: () => context.pop(),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Change Payment Method'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPaymentMethodInfo() {
     final orderId = widget.order.id;
     final totalAmount = widget.order.totalAmount;
@@ -258,23 +317,16 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
-      ),
       child: Column(
         children: [
           Icon(
-            Icons.payment,
+            Icons.payment_rounded,
             size: 48,
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: 16),
           Text(
-            'Razorpay Payment',
+            'Payment',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -334,32 +386,5 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       return 'Verifying Payment...';
     }
     return 'Processing Payment...';
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Payment Failed'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.pop(); // Go back to payment method selection
-            },
-            child: const Text('Change Payment Method'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _openRazorpayCheckout();
-            },
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
   }
 }
