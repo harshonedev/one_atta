@@ -49,8 +49,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
       productName: savedBlend.name,
       productType: 'blend',
       quantity: 1,
-      price: savedBlend.pricePerKg,
-      mrp: savedBlend.pricePerKg * 1.2, // Assume 20% markup from MRP
+      price: savedBlend.pricePerKg * savedBlend.weightKg,
+      pricePerKg: savedBlend.pricePerKg,
+      mrp:
+          savedBlend.pricePerKg *
+          1.2 *
+          savedBlend.weightKg, // Assume 20% markup from MRP
       imageUrl: null, // Custom blends might not have images
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

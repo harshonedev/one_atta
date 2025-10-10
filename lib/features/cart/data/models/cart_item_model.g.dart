@@ -23,6 +23,7 @@ class CartItemModelAdapter extends TypeAdapter<CartItemModel> {
       productType: fields[3] as String,
       quantity: fields[4] as int,
       price: fields[5] as double,
+      pricePerKg: fields[12] as double,
       mrp: fields[10] == null ? 0.0 : fields[10] as double,
       imageUrl: fields[6] as String?,
       createdAt: fields[7] as DateTime,
@@ -35,7 +36,7 @@ class CartItemModelAdapter extends TypeAdapter<CartItemModel> {
   @override
   void write(BinaryWriter writer, CartItemModel obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class CartItemModelAdapter extends TypeAdapter<CartItemModel> {
       ..writeByte(9)
       ..write(obj.weightInKg)
       ..writeByte(11)
-      ..write(obj.isCustomBlend);
+      ..write(obj.isCustomBlend)
+      ..writeByte(12)
+      ..write(obj.pricePerKg);
   }
 
   @override

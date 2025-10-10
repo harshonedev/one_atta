@@ -10,6 +10,7 @@ class AddToCartButton extends StatelessWidget {
   final String productType; // 'recipe' or 'blend'
   final double price;
   final String? imageUrl;
+  final double pricePerKg;
   final int quantity;
   final int weightInKg;
   final VoidCallback? onPressed;
@@ -20,6 +21,7 @@ class AddToCartButton extends StatelessWidget {
     required this.productName,
     required this.productType,
     required this.price,
+    required this.pricePerKg,
     required this.weightInKg,
     this.imageUrl,
     this.quantity = 1,
@@ -41,6 +43,7 @@ class AddToCartButton extends StatelessWidget {
             price: price,
             mrp: price,
             imageUrl: imageUrl,
+            pricePerKg: pricePerKg,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
             weightInKg: weightInKg,
@@ -75,6 +78,7 @@ class CompactAddToCartButton extends StatelessWidget {
   final String productName;
   final String productType;
   final double price;
+  final double pricePerKg;
   final String? imageUrl;
   final int quantity;
   final int weightInKg;
@@ -87,6 +91,7 @@ class CompactAddToCartButton extends StatelessWidget {
     required this.productType,
     required this.price,
     required this.weightInKg,
+    required this.pricePerKg,
     this.imageUrl,
     this.quantity = 1,
     this.onPressed,
@@ -104,6 +109,7 @@ class CompactAddToCartButton extends StatelessWidget {
           price: price,
           mrp: price,
           weightInKg: weightInKg,
+          pricePerKg: pricePerKg,
           imageUrl: imageUrl,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),

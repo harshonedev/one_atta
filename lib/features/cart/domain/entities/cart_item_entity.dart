@@ -7,6 +7,7 @@ class CartItemEntity extends Equatable {
   final String productType; // 'product' or 'blend'
   final int quantity;
   final double price;
+  final double pricePerKg;
   final double mrp;
   final String? imageUrl;
   final DateTime createdAt;
@@ -21,6 +22,7 @@ class CartItemEntity extends Equatable {
     required this.productType,
     required this.quantity,
     required this.price,
+    required this.pricePerKg,
     required this.mrp,
     this.imageUrl,
     required this.createdAt,
@@ -38,6 +40,7 @@ class CartItemEntity extends Equatable {
     String? productType,
     int? quantity,
     double? price,
+    double? pricePerKg,
     double? mrp,
     String? imageUrl,
     DateTime? createdAt,
@@ -53,6 +56,7 @@ class CartItemEntity extends Equatable {
       quantity: quantity ?? this.quantity,
       price: price ?? this.price,
       mrp: mrp ?? this.mrp,
+      pricePerKg: pricePerKg ?? this.pricePerKg,
       imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -75,5 +79,6 @@ class CartItemEntity extends Equatable {
     weightInKg,
     mrp,
     isCustomBlend,
+    pricePerKg,
   ];
 }

@@ -41,6 +41,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
   }
 
   /// Create order with payment (POST /api/app/payments/create-order)
+  /// NEW: All calculations done on frontend
   Future<void> _onCreateOrder(
     CreateOrder event,
     Emitter<PaymentState> emit,
@@ -52,10 +53,15 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       deliveryAddress: event.deliveryAddress,
       contactNumbers: event.contactNumbers,
       paymentMethod: event.paymentMethod,
-      couponCode: event.couponCode,
-      loyaltyPointsUsed: event.loyaltyPointsUsed,
+      subtotal: event.subtotal,
+      discountAmount: event.discountAmount,
       deliveryCharges: event.deliveryCharges,
       codCharges: event.codCharges,
+      totalAmount: event.totalAmount,
+      isDiscountAvailed: event.isDiscountAvailed,
+      discountType: event.discountType,
+      couponCode: event.couponCode,
+      loyaltyPointsUsed: event.loyaltyPointsUsed,
     );
 
     result.fold((failure) => emit(PaymentError(failure.message)), (response) {

@@ -39,10 +39,15 @@ class PaymentRepositoryImpl implements PaymentRepository {
     required String deliveryAddress,
     required List<String> contactNumbers,
     required String paymentMethod,
-    String? couponCode,
-    int? loyaltyPointsUsed,
+    required double subtotal,
+    required double discountAmount,
     required double deliveryCharges,
     required double codCharges,
+    required double totalAmount,
+    bool isDiscountAvailed = false,
+    String? discountType,
+    String? couponCode,
+    int loyaltyPointsUsed = 0,
   }) async {
     try {
       final token = await authLocalDataSource.getToken();
@@ -56,10 +61,15 @@ class PaymentRepositoryImpl implements PaymentRepository {
         deliveryAddress: deliveryAddress,
         contactNumbers: contactNumbers,
         paymentMethod: paymentMethod,
-        couponCode: couponCode,
-        loyaltyPointsUsed: loyaltyPointsUsed,
+        subtotal: subtotal,
+        discountAmount: discountAmount,
         deliveryCharges: deliveryCharges,
         codCharges: codCharges,
+        totalAmount: totalAmount,
+        isDiscountAvailed: isDiscountAvailed,
+        discountType: discountType,
+        couponCode: couponCode,
+        loyaltyPointsUsed: loyaltyPointsUsed,
       );
       logger.i('Order created successfully: ${response.order.id}');
       return Right(response);

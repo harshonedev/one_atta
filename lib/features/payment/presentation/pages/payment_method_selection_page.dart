@@ -66,11 +66,8 @@ class _PaymentMethodSelectionPageState
 
     // Get delivery charges from delivery bloc
     final deliveryState = context.read<DeliveryBloc>().state;
-    double deliveryCharges = 0.0;
     double codCharges = 0.0;
-
     if (deliveryState is DeliveryLoaded) {
-      deliveryCharges = deliveryState.deliveryCharges;
       if (_selectedPaymentType == 'COD' && deliveryState.codAvailable) {
         codCharges = deliveryState.codCharges;
       }
@@ -95,9 +92,20 @@ class _PaymentMethodSelectionPageState
         contactNumbers: contactNumbers,
         paymentMethod: _selectedPaymentType!, // 'COD' or 'Razorpay'
         couponCode: couponCode,
-        loyaltyPointsUsed: null, // Can be added later
-        deliveryCharges: deliveryCharges,
+        loyaltyPointsUsed: orderData.loyaltyPointsUsed, // Can be added later
+        deliveryCharges: orderData.deliveryCharges,
         codCharges: codCharges,
+        subtotal: orderData.itemTotal,
+        discountAmount:
+            orderData.couponDiscount + orderData.loyaltyDiscountAmount,
+        totalAmount: orderData.totalAmount + codCharges,
+        isDiscountAvailed:
+            (orderData.couponDiscount + orderData.loyaltyDiscountAmount) > 0,
+        discountType: orderData.loyaltyPointsUsed > 0
+            ? 'loyalty'
+            : (couponCode != null && couponCode.isNotEmpty)
+            ? 'coupon'
+            : null,
       ),
     );
   }

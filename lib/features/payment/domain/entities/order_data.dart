@@ -9,6 +9,7 @@ class OrderData extends Equatable {
   final double couponDiscount;
   final String? couponCode;
   final double loyaltyDiscountAmount;
+  final int loyaltyPointsUsed;
   final double deliveryCharges;
   final double codCharges;
   final double totalAmount;
@@ -21,6 +22,7 @@ class OrderData extends Equatable {
     required this.couponCode,
     required this.loyaltyDiscountAmount,
     required this.deliveryCharges,
+    required this.loyaltyPointsUsed,
     required this.codCharges,
     required this.totalAmount,
   });
@@ -36,6 +38,7 @@ class OrderData extends Equatable {
       'delivery_charges': deliveryCharges,
       'cod_charges': codCharges,
       'total_amount': totalAmount,
+      'loyalty_points_used': loyaltyPointsUsed,
     };
   }
 
@@ -53,6 +56,7 @@ class OrderData extends Equatable {
       deliveryCharges: (json['delivery_charges'] as num).toDouble(),
       codCharges: (json['cod_charges'] as num).toDouble(),
       totalAmount: (json['total_amount'] as num).toDouble(),
+      loyaltyPointsUsed: json['loyalty_points_used'] as int,
     );
   }
 
@@ -64,6 +68,7 @@ class OrderData extends Equatable {
     couponCode,
     loyaltyDiscountAmount,
     deliveryCharges,
+    loyaltyPointsUsed,
     codCharges,
     totalAmount,
   ];

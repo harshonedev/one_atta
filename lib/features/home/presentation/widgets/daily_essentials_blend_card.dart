@@ -367,6 +367,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
       quantity: 1,
       weightInKg: 1,
       price: blendUsed.pricePerKg,
+      pricePerKg: blendUsed.pricePerKg,
       mrp: blendUsed.pricePerKg,
       imageUrl: blendUsed.imageUrl,
       createdAt: DateTime.now(),

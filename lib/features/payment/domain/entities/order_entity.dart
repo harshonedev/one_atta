@@ -14,6 +14,8 @@ class OrderEntity extends Equatable {
   final String? razorpayPaymentId;
   final double subtotal;
   final double discountAmount;
+  final bool isDiscountAvailed; // NEW: Whether discount was applied
+  final String? discountType; // NEW: "loyalty" or "coupon" or null
   final double loyaltyDiscountAmount;
   final double deliveryCharges;
   final double codCharges;
@@ -40,6 +42,8 @@ class OrderEntity extends Equatable {
     this.razorpayPaymentId,
     required this.subtotal,
     required this.discountAmount,
+    this.isDiscountAvailed = false, // NEW: default false
+    this.discountType, // NEW: nullable
     required this.loyaltyDiscountAmount,
     required this.deliveryCharges,
     required this.codCharges,
@@ -69,6 +73,8 @@ class OrderEntity extends Equatable {
       'razorpayPaymentId': razorpayPaymentId,
       'subtotal': subtotal,
       'discountAmount': discountAmount,
+      'isDiscountAvailed': isDiscountAvailed,
+      'discountType': discountType,
       'loyaltyDiscountAmount': loyaltyDiscountAmount,
       'deliveryCharges': deliveryCharges,
       'codCharges': codCharges,
@@ -98,6 +104,8 @@ class OrderEntity extends Equatable {
       razorpayPaymentId: json['razorpayPaymentId'] as String?,
       subtotal: (json['subtotal'] as num).toDouble(),
       discountAmount: (json['discountAmount'] as num).toDouble(),
+      isDiscountAvailed: json['isDiscountAvailed'] as bool? ?? false,
+      discountType: json['discountType'] as String?,
       loyaltyDiscountAmount: (json['loyaltyDiscountAmount'] as num).toDouble(),
       deliveryCharges: (json['deliveryCharges'] as num).toDouble(),
       codCharges: (json['codCharges'] as num).toDouble(),
@@ -137,6 +145,8 @@ class OrderEntity extends Equatable {
     razorpayPaymentId,
     subtotal,
     discountAmount,
+    isDiscountAvailed,
+    discountType,
     loyaltyDiscountAmount,
     deliveryCharges,
     codCharges,
@@ -157,13 +167,17 @@ class OrderItem extends Equatable {
   final String id;
   final String type;
   final int quantity;
-  final int weightInKg;
+  final int weightInKg; 
+  final double pricePerKg; // NEW: Price per kg
+  final double totalPrice; // NEW: Total price for this item
 
   const OrderItem({
     required this.id,
     required this.type,
     required this.quantity,
     required this.weightInKg,
+    required this.pricePerKg,
+    required this.totalPrice,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -171,7 +185,9 @@ class OrderItem extends Equatable {
       id: json['item'] as String,
       type: json['item_type'] as String,
       quantity: json['quantity'] as int,
-      weightInKg: json['weight_in_kg'] as int,
+      weightInKg: (json['weight_in_kg'] as int),
+      pricePerKg: (json['price_per_kg'] as num).toDouble(),
+      totalPrice: (json['total_price'] as num).toDouble(),
     );
   }
 
@@ -181,9 +197,18 @@ class OrderItem extends Equatable {
       'item_type': type,
       'quantity': quantity,
       'weight_in_kg': weightInKg,
+      'price_per_kg': pricePerKg,
+      'total_price': totalPrice,
     };
   }
 
   @override
-  List<Object> get props => [id, type, quantity, weightInKg];
+  List<Object> get props => [
+    id,
+    type,
+    quantity,
+    weightInKg,
+    pricePerKg,
+    totalPrice,
+  ];
 }

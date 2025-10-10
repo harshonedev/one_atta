@@ -13,6 +13,8 @@ class OrderModel extends OrderEntity {
     super.razorpayPaymentId,
     required super.subtotal,
     required super.discountAmount,
+    super.isDiscountAvailed = false, // NEW
+    super.discountType, // NEW
     required super.loyaltyDiscountAmount,
     required super.deliveryCharges,
     required super.codCharges,
@@ -45,6 +47,8 @@ class OrderModel extends OrderEntity {
       razorpayPaymentId: json['razorpay_payment_id'] as String?,
       subtotal: (json['subtotal'] as num).toDouble(),
       discountAmount: (json['discount_amount'] as num?)?.toDouble() ?? 0.0,
+      isDiscountAvailed: json['is_discount_availed'] as bool? ?? false, // NEW
+      discountType: json['discount_type'] as String?, // NEW
       loyaltyDiscountAmount:
           (json['loyalty_discount_amount'] as num?)?.toDouble() ?? 0.0,
       deliveryCharges: (json['delivery_charges'] as num?)?.toDouble() ?? 0.0,
@@ -86,6 +90,8 @@ class OrderModel extends OrderEntity {
       'razorpay_payment_id': razorpayPaymentId,
       'subtotal': subtotal,
       'discount_amount': discountAmount,
+      'is_discount_availed': isDiscountAvailed, // NEW
+      'discount_type': discountType, // NEW
       'loyalty_discount_amount': loyaltyDiscountAmount,
       'delivery_charges': deliveryCharges,
       'cod_charges': codCharges,
@@ -115,6 +121,8 @@ class OrderModel extends OrderEntity {
       razorpayPaymentId: razorpayPaymentId,
       subtotal: subtotal,
       discountAmount: discountAmount,
+      isDiscountAvailed: isDiscountAvailed, // NEW
+      discountType: discountType, // NEW
       loyaltyDiscountAmount: loyaltyDiscountAmount,
       deliveryCharges: deliveryCharges,
       codCharges: codCharges,

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
+import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_event.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_state.dart';
@@ -597,7 +598,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
     );
   }
 
-  void _addBlendToCart(BuildContext context, blendUsed) {
+  void _addBlendToCart(BuildContext context, BlendEntity blendUsed) {
     // Add blend to cart using proper cart bloc
     final cartItem = CartItemEntity(
       productId: blendUsed.id,
@@ -606,6 +607,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
       quantity: 1,
       price: blendUsed.pricePerKg * _selectedWeight,
       mrp: blendUsed.pricePerKg * _selectedWeight,
+      pricePerKg: blendUsed.pricePerKg,
       imageUrl: BlendImages.getImageForBlend(blendUsed.id),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

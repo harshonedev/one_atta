@@ -143,6 +143,8 @@ class _CartPageState extends State<CartPage> {
               type: item.productType,
               quantity: item.quantity,
               weightInKg: item.weightInKg,
+              pricePerKg: item.pricePerKg,
+              totalPrice: item.totalPrice,
             ),
           )
           .toList(),
@@ -151,6 +153,7 @@ class _CartPageState extends State<CartPage> {
       couponDiscount: cartState.couponDiscount,
       couponCode: cartState.appliedCoupon?.code,
       loyaltyDiscountAmount: cartState.loyaltyDiscount,
+      loyaltyPointsUsed: cartState.loyaltyPointsRedeemed,
       deliveryCharges: cartState.deliveryFee!,
       codCharges: 0,
       totalAmount: cartState.toPayTotal,

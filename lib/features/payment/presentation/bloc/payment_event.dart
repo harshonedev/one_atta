@@ -21,25 +21,36 @@ class SelectPaymentMethod extends PaymentEvent {
 }
 
 /// Create order with payment (POST /api/app/payments/create-order)
+/// NEW: All calculations done on frontend
 class CreateOrder extends PaymentEvent {
   final List<OrderItem> items;
   final String deliveryAddress;
   final List<String> contactNumbers;
   final String paymentMethod;
-  final String? couponCode;
-  final int? loyaltyPointsUsed;
+  final double subtotal; // NEW: Pre-calculated
+  final double discountAmount; // NEW: Pre-calculated
   final double deliveryCharges;
   final double codCharges;
+  final double totalAmount; // NEW: Pre-calculated
+  final bool isDiscountAvailed; // NEW
+  final String? discountType; // NEW: "loyalty" or "coupon" or null
+  final String? couponCode;
+  final int loyaltyPointsUsed;
 
   const CreateOrder({
     required this.items,
     required this.deliveryAddress,
     required this.contactNumbers,
     required this.paymentMethod,
-    this.couponCode,
-    this.loyaltyPointsUsed,
+    required this.subtotal,
+    required this.discountAmount,
     required this.deliveryCharges,
     required this.codCharges,
+    required this.totalAmount,
+    this.isDiscountAvailed = false,
+    this.discountType,
+    this.couponCode,
+    this.loyaltyPointsUsed = 0,
   });
 
   @override
@@ -48,10 +59,15 @@ class CreateOrder extends PaymentEvent {
     deliveryAddress,
     contactNumbers,
     paymentMethod,
-    couponCode,
-    loyaltyPointsUsed,
+    subtotal,
+    discountAmount,
     deliveryCharges,
     codCharges,
+    totalAmount,
+    isDiscountAvailed,
+    discountType,
+    couponCode,
+    loyaltyPointsUsed,
   ];
 }
 

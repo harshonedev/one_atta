@@ -67,22 +67,31 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
     required String deliveryAddress,
     required List<String> contactNumbers,
     required String paymentMethod,
-    String? couponCode,
-    int? loyaltyPointsUsed,
+    required double subtotal,
+    required double discountAmount,
     required double deliveryCharges,
     required double codCharges,
+    required double totalAmount,
+    bool isDiscountAvailed = false,
+    String? discountType,
+    String? couponCode,
+    int loyaltyPointsUsed = 0,
   }) async {
     final requestData = {
       'items': items.map((item) => item.toJson()).toList(),
       'delivery_address': deliveryAddress,
       'contact_numbers': contactNumbers,
       'payment_method': paymentMethod,
+      'subtotal': subtotal, // NEW: Required
+      'discount_amount': discountAmount, // NEW: Required
       'delivery_charges': deliveryCharges,
       'cod_charges': codCharges,
+      'total_amount': totalAmount, // NEW: Required
+      'is_discount_availed': isDiscountAvailed, // NEW
+      'discount_type': discountType, // NEW
       if (couponCode != null && couponCode.isNotEmpty)
         'coupon_code': couponCode,
-      if (loyaltyPointsUsed != null && loyaltyPointsUsed > 0)
-        'loyalty_points_used': loyaltyPointsUsed,
+      if (loyaltyPointsUsed > 0) 'loyalty_points_used': loyaltyPointsUsed,
     };
 
     final response = await apiRequest.callRequest(

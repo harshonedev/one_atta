@@ -53,6 +53,10 @@ class CartItemModel extends CartItemEntity {
   @HiveField(11, defaultValue: false)
   final bool isCustomBlend;
 
+  @HiveField(12)
+  @override
+  final double pricePerKg;
+
   const CartItemModel({
     this.id,
     required this.productId,
@@ -60,6 +64,7 @@ class CartItemModel extends CartItemEntity {
     required this.productType,
     required this.quantity,
     required this.price,
+    required this.pricePerKg,
     required this.mrp,
     this.imageUrl,
     required this.createdAt,
@@ -79,6 +84,7 @@ class CartItemModel extends CartItemEntity {
          weightInKg: weightInKg,
          mrp: mrp,
          isCustomBlend: isCustomBlend,
+         pricePerKg: pricePerKg,
        );
 
   factory CartItemModel.fromMap(Map<String, dynamic> map) {
@@ -95,6 +101,7 @@ class CartItemModel extends CartItemEntity {
       weightInKg: map['weight_in_kg'] as int? ?? 1,
       mrp: (map['mrp'] as num).toDouble(),
       isCustomBlend: map['is_custom_blend'] as bool? ?? false,
+      pricePerKg: (map['price_per_kg'] as num).toDouble(),
     );
   }
 
@@ -112,6 +119,7 @@ class CartItemModel extends CartItemEntity {
       'updated_at': updatedAt.toIso8601String(),
       'weight_in_kg': weightInKg,
       'is_custom_blend': isCustomBlend,
+      'price_per_kg': pricePerKg,
     };
   }
 
@@ -129,6 +137,7 @@ class CartItemModel extends CartItemEntity {
       updatedAt: entity.updatedAt,
       weightInKg: entity.weightInKg,
       isCustomBlend: entity.isCustomBlend,
+      pricePerKg: entity.pricePerKg,
     );
   }
 
@@ -146,6 +155,7 @@ class CartItemModel extends CartItemEntity {
     int? weightInKg,
     double? mrp,
     bool? isCustomBlend,
+    double? pricePerKg,
   }) {
     return CartItemModel(
       id: id ?? this.id,
@@ -160,6 +170,7 @@ class CartItemModel extends CartItemEntity {
       weightInKg: weightInKg ?? this.weightInKg,
       mrp: mrp ?? this.mrp,
       isCustomBlend: isCustomBlend ?? this.isCustomBlend,
+      pricePerKg: pricePerKg ?? this.pricePerKg,
     );
   }
 }

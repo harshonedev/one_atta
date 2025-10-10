@@ -57,7 +57,11 @@ class ApplyCoupon extends CartEvent {
   });
 
   @override
-  List<Object> get props => [couponCode, discountAmount, ?coupon];
+  List<Object> get props => [
+    couponCode,
+    discountAmount,
+    if (coupon != null) coupon!,
+  ];
 }
 
 class RemoveCoupon extends CartEvent {}
@@ -90,9 +94,9 @@ class UpdateDeliveryCharges extends CartEvent {
 
   @override
   List<Object> get props => [
-    ?deliveryCharges,
-    ?isDeliveryFree,
-    ?deliveryThreshold,
+    if (deliveryCharges != null) deliveryCharges!,
+    if (isDeliveryFree != null) isDeliveryFree!,
+    if (deliveryThreshold != null) deliveryThreshold!,
   ];
 }
 

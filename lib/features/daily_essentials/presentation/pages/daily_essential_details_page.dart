@@ -725,6 +725,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
       quantity: _quantity,
       mrp: product.originalPrice * _selectedWeight,
       price: product.price * _selectedWeight,
+      pricePerKg: product.price,
       imageUrl: product.imageUrls.first,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
