@@ -224,7 +224,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
     result.fold((failure) => emit(CartError(message: failure.message)), (_) {
       emit(const CartCleared(message: 'Cart cleared'));
-      add(ReloadCart()); // Reload cart to update UI
     });
   }
 

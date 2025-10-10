@@ -266,6 +266,10 @@ class _CartPageState extends State<CartPage> {
               return _buildCartContent(cartState.cart.items);
             }
 
+            if (cartState is CartCleared) {
+              return EmptyCartWidget();
+            }
+
             return const SizedBox.shrink();
           },
         ),

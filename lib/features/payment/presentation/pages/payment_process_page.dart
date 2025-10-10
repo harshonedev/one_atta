@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/razorpay_details_entity.dart';
@@ -70,7 +72,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       'name': 'One Atta',
       'description': 'Order Payment',
       'order_id': razorpayOrderId,
-      'prefill': {'contact': widget.order.contactNumbers.first, 'email': ''},
+      'prefill': {'contact': '', 'email': ''},
       'theme': {
         'color':
             '#${Theme.of(context).colorScheme.primary.value.toRadixString(16).substring(2)}',
@@ -108,6 +110,10 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
+    setState(() {
+      _isProcessing = false;
+    });
+
     if (_currentOrderId != null) {
       // Record payment failure
       final error = {
@@ -126,9 +132,6 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
         ),
       );
     } else {
-      setState(() {
-        _isProcessing = false;
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -152,6 +155,37 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
     );
   }
 
+  Future<bool> _onWillPop() async {
+    if (_isProcessing) {
+      // Show a dialog to confirm if user wants to cancel payment
+      final shouldPop = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Cancel Payment?'),
+          content: const Text(
+            'Payment is in progress. Are you sure you want to cancel?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No, Continue'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Yes, Cancel'),
+            ),
+          ],
+        ),
+      );
+      return shouldPop ?? false;
+    }
+    return true;
+  }
+
   @override
   void dispose() {
     _razorpay.clear();
@@ -160,94 +194,129 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Payment',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
+    return PopScope(
+      canPop: !_isProcessing,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+          title: Text(
+            'Payment',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _isProcessing
+                ? null
+                : () async {
+                    final shouldPop = await _onWillPop();
+                    if (shouldPop && context.mounted) {
+                      context.pop();
+                    }
+                  },
           ),
         ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _isProcessing ? null : () => context.pop(),
-        ),
-      ),
-      body: BlocConsumer<PaymentBloc, PaymentState>(
-        listener: (context, state) {
-          if (state is PaymentCompleted) {
-            // Navigate to order confirmation
-            final order = state.order;
+        body: BlocConsumer<PaymentBloc, PaymentState>(
+          listener: (context, state) {
+            if (state is PaymentCompleted) {
+              setState(() {
+                _isProcessing = false;
+              });
 
-            context.go(
-              '/order/confirmation',
-              extra: {'orderId': order.id, 'order': order.toJson()},
-            );
-          } else if (state is PaymentFailed) {
-            setState(() {
-              _isProcessing = false;
-            });
-          } else if (state is PaymentError) {
-            setState(() {
-              _isProcessing = false;
-            });
-          }
-        },
-        builder: (context, state) {
-          if (state is PaymentFailed || state is PaymentError) {
-            return _buildPaymentFailedLayout();
-          }
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Payment Method Info
-                _buildPaymentMethodInfo(),
-                const SizedBox(height: 32),
+              // Navigate to order confirmation
+              final order = state.order;
 
-                // Processing Indicator
-                if (_isProcessing) ...[
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 24),
-                  Text(
-                    _getProcessingMessage(state),
-                    style: Theme.of(context).textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Please wait while we process your payment...',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+              print("Order completed: ${order.toJson()}");
+
+              context.read<CartBloc>().add(ClearCart());
+
+              context.go(
+                '/order/confirmation',
+                extra: {'order': order.toJson()},
+              );
+            } else if (state is PaymentFailed) {
+              setState(() {
+                _isProcessing = false;
+              });
+            } else if (state is PaymentError) {
+              setState(() {
+                _isProcessing = false;
+              });
+            }
+          },
+          builder: (context, state) {
+            if (state is PaymentFailed || state is PaymentError) {
+              return _buildPaymentFailedLayout();
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Payment Method Info
+                  _buildPaymentMethodInfo(),
+                  const SizedBox(height: 32),
+
+                  // Processing Indicator
+                  if (_isProcessing) ...[
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 24),
+                    Text(
+                      _getProcessingMessage(state),
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ] else ...[
-                  // Retry Button
-                  FilledButton.icon(
-                    onPressed: _openRazorpayCheckout,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry Payment'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please wait while we process your payment...',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Do not press back or close the app',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else ...[
+                    // Retry Button
+                    FilledButton.icon(
+                      onPressed: _openRazorpayCheckout,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry Payment'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
+
+                  const SizedBox(height: 32),
+
+                  // Security Info
+                  _buildSecurityInfo(),
                 ],
-
-                const SizedBox(height: 32),
-
-                // Security Info
-                _buildSecurityInfo(),
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

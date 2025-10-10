@@ -9,6 +9,7 @@ import 'package:one_atta/features/auth/presentation/pages/login_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:one_atta/features/payment/data/models/order_model.dart';
 import 'package:one_atta/features/payment/domain/entities/order_data.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blends_page.dart';
@@ -266,14 +267,17 @@ class AppRouter {
           name: 'order-confirmation',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
-            final orderId = extra['orderId'] as String? ?? '';
-            final order = extra['order'] as Map<String, dynamic>?;
+            final orderJson = extra['order'] as Map<String, dynamic>?;
 
-            return OrderConfirmationPage(
-              orderId: orderId,
-              paymentId: null, // No longer needed
-              amount: order?['total_amount'] ?? 0.0,
-            );
+            if (orderJson == null) {
+              // Fallback if order is not provided
+              return const Scaffold(
+                body: Center(child: Text('Order information not available')),
+              );
+            }
+
+            final order = OrderModel.fromJson(orderJson).toEntity();
+            return OrderConfirmationPage(order: order);
           },
         ),
         GoRoute(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_state.dart';
 import 'package:one_atta/features/payment/domain/entities/order_data.dart';
@@ -28,7 +30,6 @@ class PaymentMethodSelectionPage extends StatefulWidget {
 class _PaymentMethodSelectionPageState
     extends State<PaymentMethodSelectionPage> {
   String? _selectedPaymentType; // 'COD' or 'Razorpay'
-
 
   void _onPaymentMethodSelected(String paymentType) {
     setState(() {
@@ -146,11 +147,10 @@ class _PaymentMethodSelectionPageState
             // Payment completed successfully
             final order = state.order;
 
+            context.read<CartBloc>().add(ClearCart());
+
             // Navigate to order confirmation
-            context.go(
-              '/order/confirmation',
-              extra: {'orderId': order.id, 'order': order.toJson()},
-            );
+            context.go('/order/confirmation', extra: {'order': order.toJson()});
           } else if (state is PaymentError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -489,7 +489,7 @@ class _PaymentMethodSelectionPageState
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: iconColor.withValues(alpha:  0.1),
+            color: iconColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: iconColor, size: 24),

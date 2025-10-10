@@ -4,18 +4,17 @@ import 'package:equatable/equatable.dart';
 class OrderEntity extends Equatable {
   final String id;
   final String userId;
-  final String
-  status; // 'pending', 'accepted', 'processing', 'shipped', 'delivered', 'cancelled', 'rejected'
-  final String paymentStatus; // 'pending', 'completed', 'failed', 'refunded'
-  final String paymentMethod; // 'Razorpay', 'COD', 'UPI', 'Card', 'Wallet'
-  final String? actualPaymentMethod; // Actual method used (e.g., 'UPI', 'Card')
+  final String status;
+  final String paymentStatus;
+  final String paymentMethod;
+  final String? actualPaymentMethod;
   final bool paymentVerified;
   final String? razorpayOrderId;
   final String? razorpayPaymentId;
   final double subtotal;
   final double discountAmount;
-  final bool isDiscountAvailed; // NEW: Whether discount was applied
-  final String? discountType; // NEW: "loyalty" or "coupon" or null
+  final bool isDiscountAvailed;
+  final String? discountType;
   final double loyaltyDiscountAmount;
   final double deliveryCharges;
   final double codCharges;
@@ -42,8 +41,8 @@ class OrderEntity extends Equatable {
     this.razorpayPaymentId,
     required this.subtotal,
     required this.discountAmount,
-    this.isDiscountAvailed = false, // NEW: default false
-    this.discountType, // NEW: nullable
+    this.isDiscountAvailed = false,
+    this.discountType,
     required this.loyaltyDiscountAmount,
     required this.deliveryCharges,
     required this.codCharges,
@@ -59,7 +58,6 @@ class OrderEntity extends Equatable {
     this.items = const [],
   });
 
-  // to json
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -93,36 +91,39 @@ class OrderEntity extends Equatable {
 
   factory OrderEntity.fromJson(Map<String, dynamic> json) {
     return OrderEntity(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      status: json['status'] as String,
-      paymentStatus: json['paymentStatus'] as String,
-      paymentMethod: json['paymentMethod'] as String,
+      id: json['_id'] as String,
+      userId: json['userId'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      paymentStatus: json['paymentStatus'] as String? ?? 'pending',
+      paymentMethod: json['paymentMethod'] as String? ?? '',
       actualPaymentMethod: json['actualPaymentMethod'] as String?,
-      paymentVerified: json['paymentVerified'] as bool,
+      paymentVerified: json['paymentVerified'] as bool? ?? false,
       razorpayOrderId: json['razorpayOrderId'] as String?,
       razorpayPaymentId: json['razorpayPaymentId'] as String?,
-      subtotal: (json['subtotal'] as num).toDouble(),
-      discountAmount: (json['discountAmount'] as num).toDouble(),
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
+      discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0.0,
       isDiscountAvailed: json['isDiscountAvailed'] as bool? ?? false,
       discountType: json['discountType'] as String?,
-      loyaltyDiscountAmount: (json['loyaltyDiscountAmount'] as num).toDouble(),
-      deliveryCharges: (json['deliveryCharges'] as num).toDouble(),
-      codCharges: (json['codCharges'] as num).toDouble(),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      deliveryAddressId: json['deliveryAddressId'] as String,
-      contactNumbers: (json['contactNumbers'] as List)
-          .map((e) => e as String)
-          .toList(),
+      loyaltyDiscountAmount:
+          (json['loyaltyDiscountAmount'] as num?)?.toDouble() ?? 0.0,
+      deliveryCharges: (json['deliveryCharges'] as num?)?.toDouble() ?? 0.0,
+      codCharges: (json['codCharges'] as num?)?.toDouble() ?? 0.0,
+      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      deliveryAddressId: json['deliveryAddressId'] as String? ?? '',
+      contactNumbers:
+          (json['contactNumbers'] as List?)?.map((e) => e as String).toList() ??
+          [],
       couponCode: json['couponCode'] as String?,
-      loyaltyPointsUsed: json['loyaltyPointsUsed'] as int,
+      loyaltyPointsUsed: json['loyaltyPointsUsed'] as int? ?? 0,
       paymentCompletedAt: json['paymentCompletedAt'] != null
-          ? DateTime.parse(json['paymentCompletedAt'] as String)
+          ? DateTime.tryParse(json['paymentCompletedAt'] as String)
           : null,
       paymentFailureReason: json['paymentFailureReason'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
+          ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
       items: json['items'] != null
           ? (json['items'] as List)
@@ -168,8 +169,8 @@ class OrderItem extends Equatable {
   final String type;
   final int quantity;
   final int weightInKg;
-  final double pricePerKg; // NEW: Price per kg
-  final double totalPrice; // NEW: Total price for this item
+  final double pricePerKg;
+  final double totalPrice;
 
   const OrderItem({
     required this.id,
@@ -182,12 +183,12 @@ class OrderItem extends Equatable {
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      id: json['item'] as String,
-      type: json['item_type'] as String,
-      quantity: json['quantity'] as int,
-      weightInKg: (json['weight_in_kg'] as int),
-      pricePerKg: (json['price_per_kg'] as num).toDouble(),
-      totalPrice: (json['total_price'] as num).toDouble(),
+      id: json['item'] as String? ?? '',
+      type: json['item_type'] as String? ?? '',
+      quantity: json['quantity'] as int? ?? 0,
+      weightInKg: json['weight_in_kg'] as int? ?? 0,
+      pricePerKg: (json['price_per_kg'] as num?)?.toDouble() ?? 0.0,
+      totalPrice: (json['total_price'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
