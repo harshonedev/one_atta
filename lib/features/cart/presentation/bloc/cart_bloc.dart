@@ -149,7 +149,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       savingsTotal: totalSavings,
       toPayTotal: toPayTotal < 0 ? 0 : toPayTotal,
       selectedAddress: selectedAddress ?? currentState?.selectedAddress,
-      appliedCoupon: appliedCoupon ?? currentState?.appliedCoupon,
+      appliedCoupon: appliedCoupon,
       loyaltyPointsRedeemed: loyaltyPointsRedeemed,
       isDiscountApplied: couponDiscount > 0 || loyaltyDiscount > 0,
       discountType: couponDiscount > 0

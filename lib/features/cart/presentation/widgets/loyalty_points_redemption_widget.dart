@@ -95,13 +95,7 @@ class _LoyaltyPointsRedemptionWidgetState
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: widget.isDisabled
-                      ? Theme.of(context).colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.5)
-                      : Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -250,12 +244,7 @@ class _LoyaltyPointsRedemptionWidgetState
             ),
             const SizedBox(width: 12),
             FilledButton(
-              onPressed:
-                  (!isDisabled &&
-                      _pointsToRedeem > 0 &&
-                      _pointsToRedeem <= maxRedeemablePoints)
-                  ? _applyPoints
-                  : null,
+              onPressed: (!isDisabled) ? _applyPoints : null,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.amber,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,

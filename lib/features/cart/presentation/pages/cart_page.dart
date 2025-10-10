@@ -83,9 +83,6 @@ class _CartPageState extends State<CartPage> {
     } else {
       context.read<CartBloc>().add(RemoveCoupon());
     }
-
-    // No need to call CheckDeliveryAvailability - delivery will be recalculated
-    // automatically in the CartBloc listener based on existing delivery state
   }
 
   void _onLoyaltyPointsRedeemed(int points, double discountAmount) {
@@ -111,9 +108,6 @@ class _CartPageState extends State<CartPage> {
     } else {
       context.read<CartBloc>().add(RemoveLoyaltyPoints());
     }
-
-    // No need to call CheckDeliveryAvailability - delivery will be recalculated
-    // automatically in the CartBloc listener based on existing delivery state
   }
 
   void _proceedToCheckout() {
@@ -326,7 +320,7 @@ class _CartPageState extends State<CartPage> {
 
                     if (state is CartLoaded) {
                       orderAmount = state.itemTotal;
-                      isDisabled = state.appliedCoupon != null;
+                      isDisabled = state.discountType == DiscountType.coupon;
                     } else {
                       orderAmount = cartItems.fold(
                         0.0,

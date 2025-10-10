@@ -139,14 +139,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: widget.isDisabled
-              ? Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-              : Theme.of(context).colorScheme.surface,
-        ),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
