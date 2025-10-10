@@ -6,6 +6,7 @@ import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/loyalty/data/datasources/loyalty_remote_datasource.dart';
 import 'package:one_atta/features/loyalty/data/repositories/loyalty_repository_impl.dart';
 import 'package:one_atta/features/loyalty/domain/repositories/loyalty_repository.dart';
+import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_bloc.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source_impl.dart';
 import 'package:one_atta/features/recipes/data/repositories/recipes_repository_impl.dart';
@@ -297,6 +298,9 @@ Future<void> init() async {
   sl.registerLazySingleton<LoyaltyRemoteDataSource>(
     () => LoyaltyRemoteDataSourceImpl(apiRequest: sl()),
   );
+
+  // Bloc
+  sl.registerFactory(() => LoyaltyBloc(loyaltyRepository: sl()));
 
   //! Features - Profile
   // BLoCs - Specialized for better separation of concerns

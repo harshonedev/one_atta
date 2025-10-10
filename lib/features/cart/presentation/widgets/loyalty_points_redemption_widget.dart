@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_state.dart';
+import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_bloc.dart';
+import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_event.dart';
+import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_state.dart';
 import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
 
 class LoyaltyPointsRedemptionWidget extends StatefulWidget {
@@ -28,12 +31,25 @@ class _LoyaltyPointsRedemptionWidgetState
   final _pointsController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+
+    context.read<LoyaltyBloc>().add(FetchLoyaltySettings());
+  }
+
+  @override
   void dispose() {
     _pointsController.dispose();
     super.dispose();
   }
 
-  double get _redeemableAmount => _pointsToRedeem * 1.0; // 1 point = ₹1
+  double _redeemableAmount() {
+    final loyaltyState = context.read<LoyaltyBloc>().state;
+    if (loyaltyState is! LoyaltySettingsLoaded) {
+      return _pointsToRedeem * 1.0; // 1 point = ₹1
+    }
+    return _pointsToRedeem * loyaltyState.loyaltySettingsEntity.pointValue;
+  }
 
   int _getMaxRedeemablePoints(int availablePoints) {
     final maxByOrder = widget.orderAmount.toInt();
@@ -53,7 +69,7 @@ class _LoyaltyPointsRedemptionWidgetState
     final maxRedeemable = _getMaxRedeemablePoints(availablePoints);
     if (_pointsToRedeem <= 0 || _pointsToRedeem > maxRedeemable) return;
 
-    widget.onPointsRedeemed(_pointsToRedeem, _redeemableAmount);
+    widget.onPointsRedeemed(_pointsToRedeem, _redeemableAmount());
   }
 
   void _removePoints() {
@@ -75,85 +91,99 @@ class _LoyaltyPointsRedemptionWidgetState
 
         final isRedeemed = redeemedPointsFromCart > 0;
 
-        return BlocBuilder<UserProfileBloc, UserProfileState>(
-          builder: (context, profileState) {
-            if (profileState is UserProfileLoaded) {
-              _availablePoints = profileState.profile.loyaltyPoints;
+        return BlocBuilder<LoyaltyBloc, LoyaltyState>(
+          builder: (context, loyaltyState) {
+            if (loyaltyState is! LoyaltySettingsLoaded) {
+              return const SizedBox.shrink();
+            }
+            return BlocBuilder<UserProfileBloc, UserProfileState>(
+              builder: (context, profileState) {
+                if (profileState is UserProfileLoaded) {
+                  _availablePoints = profileState.profile.loyaltyPoints;
 
-              // Calculate remaining available points
-              final remainingPoints = _availablePoints - redeemedPointsFromCart;
+                  // Calculate remaining available points
+                  final remainingPoints =
+                      _availablePoints - redeemedPointsFromCart;
 
-              // Always show the widget, even with 0 points
-              final isEffectivelyDisabled =
-                  widget.isDisabled || remainingPoints <= 0;
+                  // Always show the widget, even with 0 points
+                  final isEffectivelyDisabled =
+                      widget.isDisabled || remainingPoints <= 0;
 
-              // Calculate max redeemable points
-              final maxRedeemablePoints = _getMaxRedeemablePoints(
-                remainingPoints,
-              );
+                  // Calculate max redeemable points
+                  final maxRedeemablePoints = _getMaxRedeemablePoints(
+                    remainingPoints,
+                  );
 
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: const EdgeInsets.all(16),
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    padding: const EdgeInsets.all(16),
 
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.stars,
-                          color: widget.isDisabled ? Colors.grey : Colors.amber,
-                          size: 20,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.stars,
+                              color: widget.isDisabled
+                                  ? Colors.grey
+                                  : Colors.amber,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Atta Points',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: widget.isDisabled
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant
+                                        : null,
+                                  ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              isRedeemed
+                                  ? '$remainingPoints of $_availablePoints available'
+                                  : '$_availablePoints available',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Atta Points',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: widget.isDisabled
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant
-                                    : null,
-                              ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          isRedeemed
-                              ? '$remainingPoints of $_availablePoints available'
-                              : '$_availablePoints available',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
+                        const SizedBox(height: 12),
+
+                        if (remainingPoints <= 0 && !isRedeemed) ...[
+                          _buildNoPointsMessage(),
+                        ] else if (isRedeemed) ...[
+                          _buildRedeemedPointsCard(
+                            redeemedPointsFromCart,
+                            cartState,
+                            loyaltyState.loyaltySettingsEntity.pointValue,
+                          ),
+                        ] else ...[
+                          _buildPointsInput(
+                            isDisabled: isEffectivelyDisabled,
+                            maxRedeemablePoints: maxRedeemablePoints,
+                          ),
+                        ],
                       ],
                     ),
-                    const SizedBox(height: 12),
+                  );
+                }
 
-                    if (remainingPoints <= 0 && !isRedeemed) ...[
-                      _buildNoPointsMessage(),
-                    ] else if (isRedeemed) ...[
-                      _buildRedeemedPointsCard(
-                        redeemedPointsFromCart,
-                        cartState,
-                      ),
-                    ] else ...[
-                      _buildPointsInput(
-                        isDisabled: isEffectivelyDisabled,
-                        maxRedeemablePoints: maxRedeemablePoints,
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }
-
-            return const SizedBox.shrink();
+                return const SizedBox.shrink();
+              },
+            );
           },
         );
       },
@@ -291,7 +321,7 @@ class _LoyaltyPointsRedemptionWidgetState
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              'You will save ₹${_redeemableAmount.toInt()}',
+              'You will save ₹${_redeemableAmount().toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.amber.shade700,
                 fontWeight: FontWeight.w600,
@@ -303,8 +333,12 @@ class _LoyaltyPointsRedemptionWidgetState
     );
   }
 
-  Widget _buildRedeemedPointsCard(int redeemedPoints, CartState cartState) {
-    final redeemableAmount = redeemedPoints * 1.0;
+  Widget _buildRedeemedPointsCard(
+    int redeemedPoints,
+    CartState cartState,
+    double pointValue,
+  ) {
+    final redeemableAmount = redeemedPoints * pointValue;
     final loyaltyDiscount = cartState is CartLoaded
         ? cartState.loyaltyDiscount
         : redeemableAmount;
