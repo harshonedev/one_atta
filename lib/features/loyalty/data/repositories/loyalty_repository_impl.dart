@@ -4,6 +4,7 @@ import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:one_atta/features/loyalty/data/datasources/loyalty_remote_datasource.dart';
 import 'package:one_atta/features/loyalty/domain/entities/loyalty_points_response_entity.dart';
+import 'package:one_atta/features/loyalty/domain/entities/loyalty_settings_entity.dart';
 import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
 import 'package:one_atta/features/loyalty/domain/repositories/loyalty_repository.dart';
 
@@ -117,6 +118,21 @@ class LoyaltyRepositoryImpl extends LoyaltyRepository {
       return Left(e);
     } catch (e) {
       logger.e('Unexpected error getting loyalty history: $e');
+      return Left(ServerFailure('An unexpected error occurred'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, LoyaltySettingsEntity>> getLoyaltySettings() async {
+    try {
+      logger.i('Fetching loyalty settings from remote');
+      final result = await remoteDataSource.getLoyaltySettings();
+      return Right(result.toEntity());
+    } on Failure catch (e) {
+      logger.e('Error getting loyalty settings: ${e.message}');
+      return Left(e);
+    } catch (e) {
+      logger.e('Unexpected error getting loyalty settings: $e');
       return Left(ServerFailure('An unexpected error occurred'));
     }
   }

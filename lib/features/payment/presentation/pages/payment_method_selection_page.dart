@@ -229,7 +229,7 @@ class _PaymentMethodSelectionPageState
               ),
 
               // Continue Button
-              _buildContinueButton(),
+              _buildContinueButton(isLoading: state is PaymentLoading),
             ],
           );
         },
@@ -416,14 +416,14 @@ class _PaymentMethodSelectionPageState
     );
   }
 
-  Widget _buildContinueButton() {
+  Widget _buildContinueButton({bool isLoading = false}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -433,7 +433,9 @@ class _PaymentMethodSelectionPageState
         child: SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: _selectedPaymentType != null ? _proceedToPayment : null,
+            onPressed: _selectedPaymentType != null && !isLoading
+                ? _proceedToPayment
+                : null,
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -442,15 +444,24 @@ class _PaymentMethodSelectionPageState
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
             ),
-            child: Text(
-              _selectedPaymentType == 'COD'
-                  ? 'Place Order'
-                  : 'Continue to Payment',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    _selectedPaymentType == 'COD'
+                        ? 'Place Order'
+                        : 'Continue to Payment',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/network/api_request.dart';
 import 'package:one_atta/features/loyalty/data/models/loyalty_points_response_model.dart';
+import 'package:one_atta/features/loyalty/data/models/loyalty_settings_model.dart';
 import 'package:one_atta/features/loyalty/data/models/loyalty_transaction_model.dart';
 
 abstract class LoyaltyRemoteDataSource {
@@ -28,6 +29,9 @@ abstract class LoyaltyRemoteDataSource {
     required String token,
     required String userId,
   });
+
+  // Get Loyalty Settings
+  Future<LoyaltySettingsModel> getLoyaltySettings();
 }
 
 class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
@@ -126,6 +130,25 @@ class LoyaltyRemoteDataSourceImpl implements LoyaltyRemoteDataSource {
                   .toList()
             : throw Exception(
                 response.data['message'] ?? 'Failed to get loyalty history',
+              ),
+      ApiError() => throw response.failure,
+    };
+  }
+
+  @override
+  Future<LoyaltySettingsModel> getLoyaltySettings() async {
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '${ApiEndpoints.baseUrl}/loyalty-settings',
+    );
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? LoyaltySettingsModel.fromJson(
+                response.data['data'] as Map<String, dynamic>,
+              )
+            : throw Exception(
+                response.data['message'] ?? 'Failed to get loyalty settings',
               ),
       ApiError() => throw response.failure,
     };

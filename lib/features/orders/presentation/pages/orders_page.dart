@@ -13,7 +13,7 @@ class OrdersPage extends StatefulWidget {
 
 class _OrdersPageState extends State<OrdersPage>
     with SingleTickerProviderStateMixin {
-  late TabController  _tabController;
+  late TabController _tabController;
 
   @override
   void initState() {

@@ -167,7 +167,7 @@ class OrderItem extends Equatable {
   final String id;
   final String type;
   final int quantity;
-  final int weightInKg; 
+  final int weightInKg;
   final double pricePerKg; // NEW: Price per kg
   final double totalPrice; // NEW: Total price for this item
 

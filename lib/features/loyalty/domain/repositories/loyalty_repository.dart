@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/loyalty/domain/entities/loyalty_points_response_entity.dart';
+import 'package:one_atta/features/loyalty/domain/entities/loyalty_settings_entity.dart';
 import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
 
 abstract class LoyaltyRepository {
@@ -29,4 +30,8 @@ abstract class LoyaltyRepository {
   /// Returns all earning and redemption transactions
   Future<Either<Failure, List<LoyaltyTransactionEntity>>>
   getLoyaltyTransactionHistory();
+
+  /// Get loyalty program settings
+  /// Returns configuration for points earning and redemption
+  Future<Either<Failure, LoyaltySettingsEntity>> getLoyaltySettings();
 }

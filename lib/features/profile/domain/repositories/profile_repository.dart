@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/failures.dart';
-import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart'
-   ;
+import 'package:one_atta/features/profile/domain/entities/user_profile_entity.dart';
 
 abstract class ProfileRepository {
   /// Get the current user's complete profile information
@@ -14,5 +13,4 @@ abstract class ProfileRepository {
   Future<Either<Failure, UserProfileEntity>> updateProfile(
     ProfileUpdateEntity profileUpdate,
   );
-
 }
