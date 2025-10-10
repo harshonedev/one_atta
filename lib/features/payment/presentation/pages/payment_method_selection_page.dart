@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_state.dart';
-import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
+import 'package:one_atta/features/payment/domain/entities/order_data.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_bloc.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_event.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_state.dart';
@@ -11,7 +11,7 @@ import 'package:one_atta/features/payment/presentation/bloc/payment_state.dart';
 class PaymentMethodSelectionPage extends StatefulWidget {
   final String orderId;
   final double amount;
-  final Map<String, dynamic>? orderData;
+  final OrderData? orderData;
 
   const PaymentMethodSelectionPage({
     super.key,
@@ -77,14 +77,14 @@ class _PaymentMethodSelectionPageState
     }
 
     // Extract items from orderData
-    final items = (orderData['items'] as List)
-        .map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
-        .toList();
-    final deliveryAddress = orderData['delivery_address'] as String;
-    final contactNumbers = (orderData['contact_numbers'] as List)
-        .map((e) => e.toString())
-        .toList();
-    final couponCode = orderData['coupon_code'] as String?;
+    final items = orderData.items;
+    final deliveryAddress = orderData.address.id;
+    final contactNumbers = [
+      orderData.address.primaryPhone,
+      if (orderData.address.secondaryPhone != null)
+        orderData.address.secondaryPhone!,
+    ];
+    final couponCode = orderData.couponCode;
 
     // Create order via API
     // _selectedPaymentType is either 'COD' or 'Razorpay'
@@ -234,8 +234,7 @@ class _PaymentMethodSelectionPageState
     if (orderData == null) return const SizedBox.shrink();
 
     // Extract address details from orderData if available
-    final addressData = orderData['address_details'] as Map<String, dynamic>?;
-    if (addressData == null) return const SizedBox.shrink();
+    final addressData = orderData.address;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -251,7 +250,7 @@ class _PaymentMethodSelectionPageState
               ),
               const SizedBox(width: 8),
               Text(
-                'Deliver to ${addressData['recipient_name']}',
+                'Deliver to ${addressData.recipientName}',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -261,15 +260,15 @@ class _PaymentMethodSelectionPageState
           ),
           const SizedBox(height: 12),
           Text(
-            addressData['full_address'] ?? '',
+            addressData.fullAddress,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          if (addressData['primary_phone'] != null) ...[
+          ...[
             const SizedBox(height: 4),
             Text(
-              'Contact No. ${addressData['primary_phone']}',
+              'Contact No. ${addressData.primaryPhone}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -285,12 +284,10 @@ class _PaymentMethodSelectionPageState
     if (orderData == null) return const SizedBox.shrink();
 
     // Extract order details
-    final items = orderData['items'] as List? ?? [];
-    final subtotal = (orderData['subtotal'] as num?)?.toDouble() ?? 0.0;
-    final couponDiscount =
-        (orderData['coupon_discount'] as num?)?.toDouble() ?? 0.0;
-    final loyaltyDiscount =
-        (orderData['loyalty_discount'] as num?)?.toDouble() ?? 0.0;
+    final items = orderData.items;
+    final subtotal = orderData.itemTotal;
+    final couponDiscount = orderData.couponDiscount;
+    final loyaltyDiscount = orderData.loyaltyDiscountAmount;
     final totalDiscount = couponDiscount + loyaltyDiscount;
 
     return BlocBuilder<DeliveryBloc, DeliveryState>(
@@ -299,7 +296,7 @@ class _PaymentMethodSelectionPageState
         double codCharges = 0.0;
 
         if (deliveryState is DeliveryLoaded) {
-          deliveryCharges = deliveryState.deliveryCharges;
+          deliveryCharges = orderData.deliveryCharges;
           // Add COD charges only if COD payment method is selected
           if (_selectedPaymentType == 'COD' && deliveryState.codAvailable) {
             codCharges = deliveryState.codCharges;

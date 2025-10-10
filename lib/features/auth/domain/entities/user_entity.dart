@@ -19,6 +19,30 @@ class UserEntity extends Equatable {
     this.profilePicture,
   });
 
+  factory UserEntity.fromJson(Map<String, dynamic> json) {
+    return UserEntity(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      mobile: json['mobile'] as String,
+      role: json['role'] as String,
+      loyaltyPoints: json['loyalty_points'] as int,
+      profilePicture: json['profile_picture'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'mobile': mobile,
+      'role': role,
+      'loyalty_points': loyaltyPoints,
+      'profile_picture': profilePicture,
+    };
+  }
+
   @override
   List<Object?> get props => [
     id,

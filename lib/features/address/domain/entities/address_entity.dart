@@ -55,6 +55,65 @@ class AddressEntity extends Equatable {
     required this.updatedAt,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'label': label,
+      'addressLine1': addressLine1,
+      'addressLine2': addressLine2,
+      'landmark': landmark,
+      'city': city,
+      'state': state,
+      'postalCode': postalCode,
+      'country': country,
+      'recipientName': recipientName,
+      'primaryPhone': primaryPhone,
+      'secondaryPhone': secondaryPhone,
+      'geo': geo != null
+          ? {'type': geo!.type, 'coordinates': geo!.coordinates}
+          : null,
+      'isDefault': isDefault,
+      'instructions': instructions,
+      'deleted': deleted,
+      'fullAddress': fullAddress,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory AddressEntity.fromJson(Map<String, dynamic> json) {
+    return AddressEntity(
+      id: json['id'] as String,
+      userId: json['userId'] as String,
+      label: json['label'] as String,
+      addressLine1: json['addressLine1'] as String,
+      addressLine2: json['addressLine2'] as String?,
+      landmark: json['landmark'] as String?,
+      city: json['city'] as String,
+      state: json['state'] as String,
+      postalCode: json['postalCode'] as String,
+      country: json['country'] as String,
+      recipientName: json['recipientName'] as String,
+      primaryPhone: json['primaryPhone'] as String,
+      secondaryPhone: json['secondaryPhone'] as String?,
+      geo: json['geo'] != null
+          ? GeoLocation(
+              type: json['geo']['type'] as String,
+              coordinates: List<double>.from(
+                json['geo']['coordinates'] as List,
+              ),
+            )
+          : null,
+      isDefault: json['isDefault'] as bool,
+      instructions: json['instructions'] as String?,
+      deleted: json['deleted'] as bool,
+      fullAddress: json['fullAddress'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

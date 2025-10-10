@@ -9,6 +9,7 @@ import 'package:one_atta/features/auth/presentation/pages/login_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:one_atta/features/payment/domain/entities/order_data.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blends_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blend_details_page.dart';
@@ -235,7 +236,7 @@ class AppRouter {
           name: 'payment-methods',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
-            final orderData = extra['orderData'] as Map<String, dynamic>? ?? {};
+            final orderData = extra['orderData'] as Map<String, dynamic>?;
             final amount = extra['amount'] as double? ?? 0.0;
 
             // Create a temporary order ID for payment flow
@@ -245,7 +246,9 @@ class AppRouter {
             return PaymentMethodSelectionPage(
               orderId: tempOrderId,
               amount: amount,
-              orderData: orderData,
+              orderData: orderData != null
+                  ? OrderData.fromJson(orderData)
+                  : null,
             );
           },
         ),

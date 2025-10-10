@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/features/address/domain/entities/address_entity.dart';
-import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
@@ -19,6 +17,8 @@ import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 import 'package:one_atta/features/cart/presentation/widgets/coupon_input_widget.dart';
 import 'package:one_atta/features/cart/presentation/widgets/enhanced_cart_summary_widget.dart';
 import 'package:one_atta/features/cart/presentation/widgets/loyalty_points_redemption_widget.dart';
+import 'package:one_atta/features/payment/domain/entities/order_data.dart';
+import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -131,52 +131,35 @@ class _CartPageState extends State<CartPage> {
     });
 
     // Create order first
-    final authState = context.read<AuthBloc>().state;
-    final email = (authState is AuthAuthenticated) ? authState.user.email : '';
-    final selectedAddress = cartState.selectedAddress!;
-
-    // Navigate to payment method selection with order data
-    final orderData = {
-      'items': cartState.cart.items
-          .map(
-            (item) => {
-              'item_type': item.productType.toLowerCase() == 'product'
-                  ? 'Product'
-                  : 'Blend',
-              'item': item.productId,
-              'quantity': item.quantity,
-              'weight_in_kg': item.weightInKg,
-            },
-          )
-          .toList(),
-      'delivery_address': selectedAddress.id,
-      'contact_numbers': [selectedAddress.primaryPhone],
-      'subtotal': cartState.itemTotal,
-      'coupon_code': cartState.appliedCoupon?.code,
-      'coupon_discount': cartState.couponDiscount,
-      'loyalty_discount': cartState.loyaltyDiscount,
-      'delivery_fee': cartState.deliveryFee,
-      'total_amount': cartState.toPayTotal,
-      'phone': selectedAddress.primaryPhone,
-      'email': email,
-      'address_details': {
-        'recipient_name': selectedAddress.recipientName,
-        'full_address': selectedAddress.fullAddress,
-        'primary_phone': selectedAddress.primaryPhone,
-        'city': selectedAddress.city,
-        'state': selectedAddress.state,
-        'postal_code': selectedAddress.postalCode,
-      },
-    };
-
     setState(() {
       _isProcessingOrder = false;
     });
 
+    final orderData = OrderData(
+      items: cartState.cart.items
+          .map(
+            (item) => OrderItem(
+              id: item.productId,
+              type: item.productType,
+              quantity: item.quantity,
+              weightInKg: item.weightInKg,
+            ),
+          )
+          .toList(),
+      address: cartState.selectedAddress!,
+      itemTotal: cartState.itemTotal,
+      couponDiscount: cartState.couponDiscount,
+      couponCode: cartState.appliedCoupon?.code,
+      loyaltyDiscountAmount: cartState.loyaltyDiscount,
+      deliveryCharges: cartState.deliveryFee!,
+      codCharges: 0,
+      totalAmount: cartState.toPayTotal,
+    );
+
     // Navigate to payment method selection
     context.push(
       '/payment/methods',
-      extra: {'orderData': orderData, 'amount': cartState.toPayTotal},
+      extra: {'orderData': orderData.toJson(), 'amount': cartState.toPayTotal},
     );
   }
 

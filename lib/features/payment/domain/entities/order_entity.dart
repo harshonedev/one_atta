@@ -157,11 +157,13 @@ class OrderItem extends Equatable {
   final String id;
   final String type;
   final int quantity;
+  final int weightInKg;
 
   const OrderItem({
     required this.id,
     required this.type,
     required this.quantity,
+    required this.weightInKg,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -169,13 +171,19 @@ class OrderItem extends Equatable {
       id: json['item'] as String,
       type: json['item_type'] as String,
       quantity: json['quantity'] as int,
+      weightInKg: json['weight_in_kg'] as int,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'item': id, 'item_type': type, 'quantity': quantity};
+    return {
+      'item': id,
+      'item_type': type,
+      'quantity': quantity,
+      'weight_in_kg': weightInKg,
+    };
   }
 
   @override
-  List<Object> get props => [id, type, quantity];
+  List<Object> get props => [id, type, quantity, weightInKg];
 }
