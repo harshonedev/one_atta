@@ -374,6 +374,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
           state.copyWith(
             isAnalyzing: false,
             analysisResult: successfulAnalysis,
+            savedBlend: null, // Clear any previous saved blend
           ),
         );
       }

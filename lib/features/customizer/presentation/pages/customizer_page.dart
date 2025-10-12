@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/widgets/packet_size_selector.dart';
 import 'package:one_atta/features/customizer/presentation/widgets/total_progress_card.dart';
@@ -38,35 +39,7 @@ class _CustomizerPageState extends State<CustomizerPage> {
     return BlocListener<CustomizerBloc, CustomizerState>(
       listener: (context, state) {
         if (state.error != null && state.error!.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(
-                    Icons.warning_rounded,
-                    color: Theme.of(context).colorScheme.onError,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      state.error!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onError,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          );
+          SnackbarUtils.showError(context, state.error!);
         }
       },
       child: BlocBuilder<CustomizerBloc, CustomizerState>(
@@ -207,38 +180,9 @@ class _CustomizerPageState extends State<CustomizerPage> {
                       const tolerance = 0.001;
                       if (state.totalPercentage < (1.0 - tolerance)) {
                         // Show snackbar if not at 100%
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                Icon(
-                                  Icons.warning_rounded,
-                                  color: Theme.of(context).colorScheme.onError,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Blend must be at 100% to analyze. Current: ${(state.totalPercentage * 100).toStringAsFixed(0)}%',
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onError,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.error,
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 3),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                        SnackbarUtils.showWarning(
+                          context,
+                          'Blend must be at 100% to analyze. Current: ${(state.totalPercentage * 100).toStringAsFixed(0)}%',
                         );
                         return;
                       }

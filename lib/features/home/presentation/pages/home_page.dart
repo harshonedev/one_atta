@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
@@ -709,19 +710,9 @@ class _HomePageState extends State<HomePage> {
                       ? () {
                           // Here you would typically save the review
                           Navigator.of(dialogContext).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  Icon(Icons.star, color: Colors.amber),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'Review submitted! +50 Grain Points earned',
-                                  ),
-                                ],
-                              ),
-                              backgroundColor: Colors.green,
-                            ),
+                          SnackbarUtils.showReward(
+                            context,
+                            'Review submitted! +50 Grain Points earned',
                           );
                         }
                       : null,

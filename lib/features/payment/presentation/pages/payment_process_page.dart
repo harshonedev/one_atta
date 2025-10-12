@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -86,11 +87,9 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
         _isProcessing = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to open Razorpay: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+      SnackbarUtils.showError(
+        context,
+        'Failed to open Razorpay: ${e.toString()}',
       );
     }
   }
@@ -132,14 +131,9 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Payment failed: ${response.message ?? 'Unknown error occurred'}',
-          ),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
+      SnackbarUtils.showError(
+        context,
+        'Payment failed: ${response.message ?? 'Unknown error occurred'}',
       );
       // Go back to payment selection
       context.pop();
@@ -147,11 +141,9 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('External Wallet Selected: ${response.walletName}'),
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackbarUtils.showInfo(
+      context,
+      'External Wallet Selected: ${response.walletName}',
     );
   }
 

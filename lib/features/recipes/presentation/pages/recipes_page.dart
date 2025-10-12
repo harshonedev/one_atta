@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_event.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_state.dart';
@@ -110,26 +111,17 @@ class _RecipesViewState extends State<RecipesView> {
             child: BlocConsumer<RecipesBloc, RecipesState>(
               listener: (context, state) {
                 if (state is RecipeCreated) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Recipe created successfully!'),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                    ),
+                  SnackbarUtils.showSuccess(
+                    context,
+                    'Recipe created successfully!',
                   );
                 } else if (state is RecipeDeleted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Recipe deleted successfully!'),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                    ),
+                  SnackbarUtils.showSuccess(
+                    context,
+                    'Recipe deleted successfully!',
                   );
                 } else if (state is RecipesError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                  );
+                  SnackbarUtils.showError(context, state.message);
                 }
               },
               builder: (context, state) {

@@ -2,9 +2,9 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_event.dart';
@@ -53,19 +53,12 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
           if (state is BlendDetailsShared) {
             // _showShareDialog(context, state.shareCode);
           } else if (state is BlendDetailsSubscribed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Successfully subscribed to blend!'),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-              ),
+            SnackbarUtils.showSuccess(
+              context,
+              'Successfully subscribed to blend!',
             );
           } else if (state is BlendDetailsActionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
+            SnackbarUtils.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -531,10 +524,9 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                                   Clipboard.setData(
                                     ClipboardData(text: blend.shareCode),
                                   );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Share code copied!'),
-                                    ),
+                                  SnackbarUtils.showSuccess(
+                                    context,
+                                    'Share code copied!',
                                   );
                                 },
                               ),
@@ -617,43 +609,10 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
     context.read<CartBloc>().add(AddItemToCart(item: cartItem));
 
     // Show success feedback
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: Theme.of(context).colorScheme.onPrimary,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                '${blendUsed.name} ($_selectedWeight Kg) added to cart!',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        action: SnackBarAction(
-          label: 'View Cart',
-          textColor: Theme.of(context).colorScheme.onPrimary,
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.onPrimary.withValues(alpha: 0.1),
-          onPressed: () {
-            context.push('/cart');
-          },
-        ),
-      ),
+    SnackbarUtils.showAddedToCart(
+      context,
+      blendUsed.name,
+      weight: '$_selectedWeight Kg',
     );
   }
 }

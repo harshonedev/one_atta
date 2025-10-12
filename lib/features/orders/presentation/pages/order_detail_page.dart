@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/orders/domain/entities/order_entity.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_event.dart';
@@ -178,11 +179,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         InkWell(
                           onTap: () {
                             Clipboard.setData(ClipboardData(text: order.id));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Order ID copied to clipboard'),
-                                duration: Duration(seconds: 2),
-                              ),
+                            SnackbarUtils.showSuccess(
+                              context,
+                              'Order ID copied to clipboard',
+                              duration: const Duration(seconds: 2),
                             );
                           },
                           child: Icon(
@@ -819,7 +819,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildActionButtons(BuildContext context, OrderEntity order) {
-
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -888,11 +887,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             onPressed: () {
               Navigator.pop(dialogContext);
               context.read<OrderBloc>().add(CancelOrder(orderId: order.id));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Order cancelled successfully'),
-                  backgroundColor: Colors.green,
-                ),
+              SnackbarUtils.showSuccess(
+                context,
+                'Order cancelled successfully',
               );
               Navigator.pop(context);
             },

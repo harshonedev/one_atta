@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_request_entity.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/customizer/domain/entities/blend_analysis_entity.dart';
@@ -33,7 +34,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     });
   }
 
-  void _checkAndAddToCartIfPending(BuildContext context, savedBlend) {
+  void _checkAndAddToCartIfPending(BuildContext context, SavedBlendEntity savedBlend) {
     if (_pendingAddToCart) {
       _pendingAddToCart = false;
       _addBlendToCart(context, savedBlend);
@@ -70,13 +71,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     });
 
     // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${savedBlend.name} added to cart!'),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    SnackbarUtils.showAddedToCart(context, savedBlend.name);
   }
 
   @override
@@ -118,20 +113,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
         child: BlocConsumer<CustomizerBloc, CustomizerState>(
           listener: (context, state) {
             if (state.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.error!),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              SnackbarUtils.showError(context, state.error!);
             }
             if (state.savedBlend != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Blend saved successfully!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              SnackbarUtils.showSuccess(context, 'Blend saved successfully!');
             }
 
             // Handle add to cart after save
@@ -298,7 +283,7 @@ class _HealthBenefitsCard extends StatelessWidget {
                         backgroundColor: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    Expanded( 
+                    Expanded(
                       child: Text(
                         benefit,
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -598,7 +583,7 @@ class _ActionButtonsSection extends StatelessWidget {
   }
 
   void _goToCart(BuildContext context) {
-    context.go('/cart');
+    context.push('/cart');
   }
 
   void _handleAddToCart(BuildContext context) {
