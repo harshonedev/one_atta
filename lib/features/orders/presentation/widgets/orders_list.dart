@@ -48,8 +48,13 @@ class OrdersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<OrderBloc, OrderState>(
+      buildWhen: (previous, current) {
+        return current is OrdersLoading ||
+            current is OrdersLoaded ||
+            current is OrderError;
+      },
       builder: (context, state) {
-        if (state is OrderLoading) {
+        if (state is OrdersLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -143,12 +148,12 @@ class OrdersList extends StatelessWidget {
               context.read<OrderBloc>().add(LoadUserOrders());
             },
             child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               itemCount: filteredOrders.length,
               itemBuilder: (context, index) {
                 final order = filteredOrders[index];
                 return OrderCard(
-                  order: order,
+                  order: order, // TODO: Get actual total count from API
                   onTap: () {
                     context.push('/order-details/${order.id}');
                   },

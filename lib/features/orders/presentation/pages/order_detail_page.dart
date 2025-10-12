@@ -33,12 +33,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
         elevation: 0,
-        title: Text(
-          'Order Details',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        title: Text('Order Details'),
       ),
       body: BlocBuilder<OrderBloc, OrderState>(
         builder: (context, state) {
@@ -104,7 +99,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            FilledButton.icon(
               onPressed: () {
                 context.read<OrderBloc>().add(LoadOrder(widget.orderId));
               },
@@ -148,14 +143,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primaryContainer.withValues(alpha: 0.6),
-            colorScheme.secondaryContainer.withValues(alpha: 0.4),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -241,9 +229,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,9 +429,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,17 +450,14 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withOpacity(0.3),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 children: [
-                  Container(
+                  Padding(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+
                     child: Icon(
                       item.itemType == 'Blend'
                           ? Icons.blender
@@ -493,27 +480,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.tertiaryContainer
-                                    .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                item.itemType,
-                                style: textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onTertiaryContainer,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            Text(
+                              '${item.quantity.toStringAsFixed(0)} Unit(s)',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '${item.quantity}kg × ₹${item.pricePerKg.toStringAsFixed(0)}',
+                              '${item.weightInKg}Kg × ₹${item.pricePerKg.toStringAsFixed(2)}',
                               style: textTheme.bodySmall?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -524,7 +499,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     ),
                   ),
                   Text(
-                    '₹${item.totalPrice.toStringAsFixed(0)}',
+                    '₹${item.totalPrice.toStringAsFixed(2)}',
                     style: textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,
@@ -548,9 +523,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,9 +598,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -635,7 +612,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ),
           const SizedBox(height: 16),
           _buildPriceRow(context, 'Subtotal', order.subtotal),
-          if (order.discountAmount > 0) ...[
+          if (order.couponApplied != null &&
+              order.couponApplied!.discountValue > 0) ...[
             const SizedBox(height: 12),
             _buildPriceRow(
               context,
@@ -672,7 +650,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 ),
               ),
               Text(
-                '₹${order.totalAmount.toStringAsFixed(0)}',
+                '₹${order.totalAmount.toStringAsFixed(2)}',
                 style: textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,
@@ -697,14 +675,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+        Expanded(
+          child: Text(
+            label,
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         Text(
-          '${amount < 0 ? '-' : ''}₹${amount.abs().toStringAsFixed(0)}',
+          '${amount < 0 ? '-' : ''}₹${amount.abs().toStringAsFixed(2)}',
           style: textTheme.bodyMedium?.copyWith(
             color: isDiscount ? Colors.green : colorScheme.onSurface,
             fontWeight: FontWeight.w600,
@@ -722,9 +702,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -804,9 +785,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -836,7 +819,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Widget _buildActionButtons(BuildContext context, OrderEntity order) {
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -845,11 +827,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           if (order.status == 'pending' || order.status == 'accepted') ...[
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
+              child: FilledButton.icon(
                 onPressed: () => _showCancelDialog(context, order),
-                icon: const Icon(Icons.cancel_outlined),
                 label: const Text('Cancel Order'),
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   backgroundColor: Colors.red.shade50,
                   foregroundColor: Colors.red.shade700,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -860,31 +841,31 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
             ),
           ],
-          if (order.status == 'shipped') ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: Implement track order functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Tracking feature coming soon!'),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.location_on_outlined),
-                label: const Text('Track Order'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          // if (order.status == 'shipped') ...[
+          //   SizedBox(
+          //     width: double.infinity,
+          //     child: FilledButton.icon(
+          //       onPressed: () {
+          //         // TODO: Implement track order functionality
+          //         ScaffoldMessenger.of(context).showSnackBar(
+          //           const SnackBar(
+          //             content: Text('Tracking feature coming soon!'),
+          //           ),
+          //         );
+          //       },
+          //       icon: const Icon(Icons.location_on_outlined),
+          //       label: const Text('Track Order'),
+          //       style: FilledButton.styleFrom(
+          //         backgroundColor: colorScheme.primary,
+          //         foregroundColor: colorScheme.onPrimary,
+          //         padding: const EdgeInsets.symmetric(vertical: 16),
+          //         shape: RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.circular(12),
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ],
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:one_atta/features/customizer/presentation/models/ingredient.dart';
 
 class IngredientCard extends StatefulWidget {
@@ -80,12 +81,14 @@ class _IngredientCardState extends State<IngredientCard>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Use an image for the ingredient
-                    Image.asset(
-                      'assets/images/${widget.ingredient.name.toLowerCase()}.png',
+                    SvgPicture.asset(
+                      'assets/icons/${widget.ingredient.name.toLowerCase()}.svg',
                       height: 30,
                       width: 30,
                       fit: BoxFit.contain,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                       errorBuilder: (context, error, stackTrace) {
                         // Fallback to icon if image fails to load
                         return Icon(

@@ -298,7 +298,7 @@ class _HealthBenefitsCard extends StatelessWidget {
                         backgroundColor: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    Expanded(
+                    Expanded( 
                       child: Text(
                         benefit,
                         style: Theme.of(context).textTheme.bodyMedium,

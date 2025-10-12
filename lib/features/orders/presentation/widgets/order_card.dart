@@ -16,11 +16,9 @@ class OrderCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.5),
-          width: 1,
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: InkWell(
@@ -76,7 +74,7 @@ class OrderCard extends StatelessWidget {
 
               // Divider
               Divider(
-                color: colorScheme.outlineVariant.withOpacity(0.3),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                 height: 1,
               ),
 
@@ -102,7 +100,7 @@ class OrderCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               '${item.itemName} (${item.quantity}kg)',
-                              style: textTheme.bodyMedium?.copyWith(
+                              style: textTheme.bodySmall?.copyWith(
                                 color: colorScheme.onSurface,
                               ),
                               maxLines: 1,
@@ -111,7 +109,7 @@ class OrderCard extends StatelessWidget {
                           ),
                           Text(
                             '₹${item.totalPrice.toStringAsFixed(0)}',
-                            style: textTheme.bodyMedium?.copyWith(
+                            style: textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
@@ -158,14 +156,10 @@ class OrderCard extends StatelessWidget {
                   ),
 
                   // Total amount
-                  Container(
+                  Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [

@@ -95,7 +95,7 @@ class OrderConfirmationPage extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(32),
                         ),
                       ),
                       icon: const Icon(Icons.receipt_long_rounded),
@@ -112,7 +112,12 @@ class OrderConfirmationPage extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                          borderRadius: BorderRadius.circular(32),
                         ),
                       ),
                       icon: const Icon(Icons.home_rounded),
@@ -137,14 +142,7 @@ class OrderConfirmationPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primaryContainer.withValues(alpha: 0.5),
-            colorScheme.secondaryContainer.withValues(alpha: 0.3),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -255,7 +253,9 @@ class OrderConfirmationPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -315,7 +315,9 @@ class OrderConfirmationPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -364,6 +366,14 @@ class OrderConfirmationPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          'Item ${index + 1}',
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
                           item.type,
                           style: textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -405,7 +415,9 @@ class OrderConfirmationPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

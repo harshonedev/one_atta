@@ -7,38 +7,11 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final OrderRepository orderRepository;
 
   OrderBloc({required this.orderRepository}) : super(OrderInitial()) {
-    on<CreateOrder>(_onCreateOrder);
     on<LoadOrder>(_onLoadOrder);
     on<LoadUserOrders>(_onLoadUserOrders);
     on<CancelOrder>(_onCancelOrder);
     on<ReorderOrder>(_onReorderOrder);
     on<TrackOrder>(_onTrackOrder);
-  }
-
-  Future<void> _onCreateOrder(
-    CreateOrder event,
-    Emitter<OrderState> emit,
-  ) async {
-    emit(OrderLoading());
-
-    final result = await orderRepository.createOrder(
-      items: event.items,
-      deliveryAddressId: event.deliveryAddressId,
-      contactNumbers: event.contactNumbers,
-      paymentMethod: event.paymentMethod,
-      subtotal: event.subtotal,
-      couponCode: event.couponCode,
-      couponDiscount: event.couponDiscount,
-      loyaltyDiscount: event.loyaltyDiscount,
-      deliveryFee: event.deliveryFee,
-      totalAmount: event.totalAmount,
-      specialInstructions: event.specialInstructions,
-    );
-
-    result.fold(
-      (failure) => emit(OrderError(failure.message)),
-      (order) => emit(OrderCreated(order)),
-    );
   }
 
   Future<void> _onLoadOrder(LoadOrder event, Emitter<OrderState> emit) async {
@@ -55,7 +28,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     LoadUserOrders event,
     Emitter<OrderState> emit,
   ) async {
-    emit(OrderLoading());
+    emit(OrdersLoading());
 
     final result = await orderRepository.getUserOrders(
       page: event.page,
@@ -67,7 +40,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       (orders) => emit(
         OrdersLoaded(
           orders: orders,
-          totalCount: orders.length, // TODO: Get actual total count from API
+          totalCount: orders.length,
           currentPage: event.page,
           hasNextPage: orders.length >= event.limit,
         ),

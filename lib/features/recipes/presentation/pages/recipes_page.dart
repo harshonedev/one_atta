@@ -53,7 +53,7 @@ class _RecipesViewState extends State<RecipesView> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => _showCreateRecipeDialog(context),
+            onPressed: () => _navigateToCart(context),
             icon: const Icon(Icons.shopping_cart_outlined),
             tooltip: 'Cart',
           ),
@@ -220,9 +220,7 @@ class _RecipesViewState extends State<RecipesView> {
     );
   }
 
-  void _showCreateRecipeDialog(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Create recipe feature coming soon!')),
-    );
+  void _navigateToCart(BuildContext context) {
+    context.push('/cart');
   }
 }

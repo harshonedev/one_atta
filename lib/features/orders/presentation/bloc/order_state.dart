@@ -12,6 +12,8 @@ class OrderInitial extends OrderState {}
 
 class OrderLoading extends OrderState {}
 
+class OrdersLoading extends OrderState {}
+
 class OrderCreated extends OrderState {
   final OrderEntity order;
 

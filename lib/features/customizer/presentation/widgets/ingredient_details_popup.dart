@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
 import 'package:one_atta/features/customizer/presentation/models/ingredient.dart';
 
@@ -120,9 +121,14 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                 const SizedBox(height: 20),
                 Hero(
                   tag: 'ingredient_${widget.ingredient.name}',
-                  child: Image.asset(
-                    'assets/images/${widget.ingredient.name.toLowerCase()}.png',
+                  child: SvgPicture.asset(
+                    'assets/icons/${widget.ingredient.name.toLowerCase()}.svg',
                     height: 90,
+                    colorFilter: ColorFilter.mode(
+                      const Color(0xFFB0792E),
+                      BlendMode.srcIn,
+                    ),
+
                     errorBuilder: (_, _, _) => Icon(
                       widget.ingredient.icon,
                       size: 90,

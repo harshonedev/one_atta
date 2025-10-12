@@ -32,81 +32,20 @@ class _OrdersPageState extends State<OrdersPage>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: const Text('My Orders'),
+        centerTitle: false,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Custom header
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'My Orders',
-                    style: textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Track and manage your orders',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Tab bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      indicator: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      labelColor: colorScheme.onPrimary,
-                      unselectedLabelColor: colorScheme.onSurfaceVariant,
-                      labelStyle: textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      unselectedLabelStyle: textTheme.labelMedium,
-                      dividerColor: Colors.transparent,
-                      tabs: const [
-                        Tab(text: 'All'),
-                        Tab(text: 'Active'),
-                        Tab(text: 'Completed'),
-                        Tab(text: 'Cancelled'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Tab views
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: const [
-                  OrdersList(filterStatus: null),
-                  OrdersList(filterStatus: 'active'),
-                  OrdersList(filterStatus: 'delivered'),
-                  OrdersList(filterStatus: 'cancelled'),
-                ],
-              ),
-            ),
+            Expanded(child: OrdersList(filterStatus: null)),
           ],
         ),
       ),

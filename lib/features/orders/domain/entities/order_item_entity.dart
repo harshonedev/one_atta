@@ -8,6 +8,7 @@ class OrderItemEntity extends Equatable {
   final double quantity;
   final double pricePerKg;
   final double totalPrice;
+  final int weightInKg ;
 
   const OrderItemEntity({
     required this.itemType,
@@ -17,6 +18,7 @@ class OrderItemEntity extends Equatable {
     required this.quantity,
     required this.pricePerKg,
     required this.totalPrice,
+    required this.weightInKg,
   });
 
   @override
@@ -28,5 +30,6 @@ class OrderItemEntity extends Equatable {
     quantity,
     pricePerKg,
     totalPrice,
+    weightInKg,
   ];
 }

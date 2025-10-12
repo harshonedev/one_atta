@@ -237,8 +237,6 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
               // Navigate to order confirmation
               final order = state.order;
 
-              print("Order completed: ${order.toJson()}");
-
               context.read<CartBloc>().add(ClearCart());
 
               context.go(
@@ -427,7 +425,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

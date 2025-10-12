@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:one_atta/features/customizer/presentation/models/ingredient.dart';
 import 'package:one_atta/features/customizer/presentation/widgets/ingredient_details_popup.dart';
 import 'package:one_atta/features/customizer/presentation/bloc/customizer_bloc.dart';
@@ -122,11 +123,15 @@ class SelectedIngredientCard extends StatelessWidget {
             Row(
               children: [
                 // Ingredient Image
-                Image.asset(
-                  'assets/images/${ingredient.name.toLowerCase()}.png',
+                SvgPicture.asset(
+                  'assets/icons/${ingredient.name.toLowerCase()}.svg',
                   height: 30,
                   width: 30,
                   fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(
+                    colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                    BlendMode.srcIn,
+                  ),
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(
                       ingredient.icon,
