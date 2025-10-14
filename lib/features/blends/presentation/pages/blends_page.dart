@@ -37,7 +37,7 @@ class BlendsView extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () => {},
+            onPressed: () => context.push('/cart'),
             icon: const Icon(Icons.shopping_cart_outlined),
             tooltip: 'Cart',
           ),

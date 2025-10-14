@@ -15,6 +15,7 @@ import 'package:one_atta/features/home/presentation/widgets/blend_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/daily_essentials_blend_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/recipe_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/section_header.dart';
+import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 
 class HomePage extends StatefulWidget {
@@ -30,6 +31,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     // Load home data when the page is initialized
     context.read<HomeBloc>().add(const LoadHomeData());
+    context.read<UserProfileBloc>().add(GetUserProfileRequested());
   }
 
   @override
@@ -245,41 +247,54 @@ class _HomePageState extends State<HomePage> {
           // Profile picture and greeting
           Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Text(
-                  user?.name.substring(0, 1).toUpperCase() ?? 'U',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
+              InkWell(
+                onTap: () {
+                  // Navigate to profile page
+                  context.push('/profile');
+                },
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  child: Text(
+                    user?.name.substring(0, 1).toUpperCase() ?? 'U',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hi, ${user?.name ?? 'User'}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
+              BlocBuilder<UserProfileBloc, UserProfileState>(
+                builder: (context, state) {
+                  final points = state is UserProfileLoaded
+                      ? state.profile.loyaltyPoints
+                      : 0;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber),
-                      const SizedBox(width: 4),
                       Text(
-                        '${user?.loyaltyPoints ?? 0} Atta Points',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        'Hi, ${user?.name ?? 'User'}',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.star, size: 16, color: Colors.amber),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$points Atta Points',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             ],
           ),
