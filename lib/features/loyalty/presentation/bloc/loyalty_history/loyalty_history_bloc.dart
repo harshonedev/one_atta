@@ -3,8 +3,8 @@ import 'package:logger/logger.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
 import 'package:one_atta/features/loyalty/domain/repositories/loyalty_repository.dart';
-import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_event.dart';
-import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_state.dart';
+import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_event.dart';
+import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_state.dart';
 
 class LoyaltyHistoryBloc
     extends Bloc<LoyaltyHistoryEvent, LoyaltyHistoryState> {

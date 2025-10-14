@@ -50,7 +50,9 @@ class _CartAddressSelectionWidgetState
   Widget build(BuildContext context) {
     return BlocListener<AddressBloc, AddressState>(
       listener: (context, state) {
-        if (state is AddressesLoaded && _selectedAddress == null) {
+        if (state is AddressesLoaded &&
+            _selectedAddress == null &&
+            state.addresses.isNotEmpty) {
           // Auto-select default address if available
           final defaultAddress = state.addresses.firstWhere(
             (addr) => addr.isDefault && !addr.deleted,
@@ -71,7 +73,9 @@ class _CartAddressSelectionWidgetState
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -142,7 +146,7 @@ class _CartAddressSelectionWidgetState
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurfaceVariant.withOpacity(0.3),
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -287,7 +291,7 @@ class _CartAddressSelectionWidgetState
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
+                        color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(

@@ -272,9 +272,9 @@ class MorePage extends StatelessWidget {
             children: [
               _buildSettingsItem(
                 context,
-                'My Profile',
-                Icons.account_circle_outlined,
-                () => context.push('/profile'),
+                'Rewards',
+                Icons.card_giftcard_rounded,
+                () => context.push('/rewards'),
               ),
               _buildSettingsItem(
                 context,

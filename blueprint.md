@@ -1,7 +1,67 @@
 # One Atta App Blueprint
 
 ## Project Overview
-One Atta is a Flutter application for flour/atta blending and recipe management. It features a customizer for creating custom flour blends, recipe browsing, order management, and user authentication.
+One Atta is a Flutter application for flour/atta blending and recipe management. It features a customizer for creating custom flour blends, recipe browsing, order management, loyalty rewards system, and user authentication.
+
+## Recent Updates
+
+### Transaction History Page Implementation (October 14, 2025)
+**Feature**: Created a comprehensive transaction history page for detailed view of all loyalty point transactions.
+
+**Implementation Details**:
+- **Complete Transaction List**: All transactions with filtering capabilities by transaction type
+- **Advanced Filtering**: Filter by Order Purchase, Blend Share, Review, Redemption, Bonus, or Referral
+- **Summary Statistics**: Total earned and redeemed points with monetary value calculations
+- **Enhanced Transaction Cards**: Detailed cards with icons, timestamps, reference IDs, and monetary values
+- **Empty States**: Proper handling for no transactions or filtered results
+- **Navigation Integration**: Accessible from rewards page "View All Transactions" button
+
+**UI Features**:
+- **Filter System**: Bottom sheet with transaction type selection and visual indicators
+- **Summary Overview**: Gradient container showing total earned/redeemed with value calculations
+- **Transaction Cards**: Enhanced design with proper spacing, shadows, and color coding
+- **Filter Indicator**: Active filter display with clear option
+- **Loading States**: Skeleton screens for better UX during data loading
+- **Error Handling**: Comprehensive error states with retry functionality
+
+**Technical Implementation**:
+- **BLoC Integration**: Leverages existing LoyaltyHistoryBloc for data management
+- **Routing**: Added '/transaction-history' route to app_router.dart
+- **State Management**: Local state for filter selection with StatefulWidget
+- **Responsive Design**: Proper scrolling with RefreshIndicator
+- **Material 3 Compliance**: Consistent theming with existing design system
+
+### Comprehensive Rewards Page Implementation (October 14, 2025)
+**Feature**: Designed and implemented a complete rewards page with Atta Points system, earning opportunities, and transaction history.
+
+**Implementation Details**:
+- **Points Balance Display**: Prominent card showing current Atta Points with monetary value
+- **Earning Opportunities Section**: Three ways to earn points:
+  1. Share Custom Blends (configurable points)
+  2. Review on Play Store (with screenshot requirement)
+  3. Purchase Products & Blends (percentage-based rewards)
+- **Transaction History**: Complete history with summary stats and individual transaction cards
+- **Info Dialog**: Comprehensive explanation of rewards system rules and restrictions
+
+**Technical Implementation**:
+- **BLoC Integration**: Uses LoyaltyBloc, LoyaltyHistoryBloc, and UserProfileBloc
+- **Material Design 3**: Consistent with app's orange primary color scheme
+- **Responsive UI**: Cards with gradients, shadows, and proper spacing
+- **Error Handling**: Skeleton loaders, error states, and retry functionality
+- **URL Launcher Integration**: Direct link to Play Store for reviews
+
+**UI Features**:
+- **Gradient Points Card**: Eye-catching display with star icon and monetary value
+- **Interactive Earning Cards**: Color-coded icons (purple for share, amber for review, green for purchase)
+- **Transaction Summary**: Separate containers showing total earned vs redeemed points
+- **Transaction Cards**: Individual transaction history with icons, descriptions, and dates
+- **Info Button**: Helpful dialog explaining redemption rules and restrictions
+
+**Business Rules Implemented**:
+- Cannot use coupons when redeeming Atta Points
+- Orders with redeemed points don't earn bonus percentage points
+- Play Store reviews require screenshot email verification
+- Configurable point values and percentages from loyalty settings
 
 ## Current Architecture & Features
 
@@ -39,13 +99,20 @@ One Atta is a Flutter application for flour/atta blending and recipe management.
 - Nutritional analysis
 - Ingredient ratio customization
 
-#### 6. Orders (`features/orders/`)
+#### 6. Loyalty/Rewards (`features/loyalty/`)
+- **NEW**: Comprehensive rewards page with Atta Points system
+- Points earning through purchases, sharing, and reviews
+- Transaction history with detailed tracking
+- Redemption during checkout with business rule enforcement
+- Configurable loyalty settings and point values
+
+#### 7. Orders (`features/orders/`)
 - Order history and management
 
-#### 7. Reels (`features/reels/`)
+#### 8. Reels (`features/reels/`)
 - Video content for recipes and tips
 
-#### 8. More (`features/more/`)
+#### 9. More (`features/more/`)
 - Additional features and settings
 
 ### Current Theme & Design

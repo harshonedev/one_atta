@@ -7,6 +7,7 @@ import 'package:one_atta/features/loyalty/data/datasources/loyalty_remote_dataso
 import 'package:one_atta/features/loyalty/data/repositories/loyalty_repository_impl.dart';
 import 'package:one_atta/features/loyalty/domain/repositories/loyalty_repository.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_bloc.dart';
+import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source.dart';
 import 'package:one_atta/features/recipes/data/datasources/recipes_remote_data_source_impl.dart';
 import 'package:one_atta/features/recipes/data/repositories/recipes_repository_impl.dart';
@@ -90,7 +91,6 @@ import 'package:one_atta/features/profile/data/repositories/profile_repository_i
 import 'package:one_atta/features/profile/domain/repositories/profile_repository.dart';
 // Profile - Updated BLoCs
 import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_bloc.dart';
-import 'package:one_atta/features/profile/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 
 // Coupons
 import 'package:one_atta/features/coupons/data/datasources/coupon_remote_data_source.dart';

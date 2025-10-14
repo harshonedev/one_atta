@@ -586,6 +586,7 @@ class _HomePageState extends State<HomePage> {
           InkWell(
             onTap: () {
               // Navigate to reviews page
+              context.push('/rewards');
             },
             borderRadius: BorderRadius.circular(16),
             child: Container(

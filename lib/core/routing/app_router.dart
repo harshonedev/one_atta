@@ -9,6 +9,8 @@ import 'package:one_atta/features/auth/presentation/pages/login_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:one_atta/features/loyalty/presentation/pages/rewards_page.dart';
+import 'package:one_atta/features/loyalty/presentation/pages/transaction_history_page.dart';
 import 'package:one_atta/features/payment/data/models/order_model.dart';
 import 'package:one_atta/features/payment/domain/entities/order_data.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipe_details_page.dart';
@@ -221,6 +223,17 @@ class AppRouter {
             return AddEditAddressPage(addressId: addressId);
           },
         ),
+        GoRoute(
+          path: '/rewards',
+          name: 'rewards',
+          builder: (context, state) => const RewardsPage(),
+        ),
+        GoRoute(
+          path: '/transaction-history',
+          name: 'transaction-history',
+          builder: (context, state) => const TransactionHistoryPage(),
+        ),
+
         GoRoute(
           path: '/profile',
           name: 'profile',

@@ -23,6 +23,8 @@ class AppConstants {
   static const String isLoggedInKey = 'is_logged_in';
   static const String appAPIKey = "Q8vjsTrlKX12bFNw3VHAyqGZ4Ch9xRpUWoaMfdPziE";
   static const String shareBaseUrl = "https://oneatta.com/share";
+  static const String playStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.oneatta.app';
 }
 
 class AppStrings {

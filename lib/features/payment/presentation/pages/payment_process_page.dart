@@ -65,6 +65,9 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
     final razorpayOrderId = widget.razorpay.orderId;
     final amount = widget.razorpay.amount; // Amount in paise
     final keyId = widget.razorpay.keyId;
+    final number = widget.order.contactNumbers.isNotEmpty
+        ? widget.order.contactNumbers.first
+        : '';
 
     final options = {
       'key': keyId,
@@ -73,7 +76,7 @@ class _PaymentProcessPageState extends State<PaymentProcessPage> {
       'name': 'One Atta',
       'description': 'Order Payment',
       'order_id': razorpayOrderId,
-      'prefill': {'contact': '', 'email': ''},
+      'prefill': {'contact': number, 'email': ''},
       'theme': {
         'color':
             '#${Theme.of(context).colorScheme.primary.value.toRadixString(16).substring(2)}',
