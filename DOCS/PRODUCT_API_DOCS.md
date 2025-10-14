@@ -3,6 +3,21 @@
 ## Overview
 This document describes the Product API endpoints for both admin operations and app user operations in the One Atta Backend system.
 
+## What's New (October 15, 2025)
+✨ **Out of Stock Feature Added**
+- New `outOfStock` field added to Product model (default: `false`)
+- Admin endpoint: `PATCH /:id/toggle-outofstock` to toggle stock status
+- Admin filtering: Query parameter `outOfStock=true/false` to filter products
+- Product stats now include `inStockProducts` and `outOfStockProducts` counts
+- App endpoints include out-of-stock products with the `outOfStock` field for UI display
+- **Important**: Out-of-stock products are visible in app responses (not filtered out) so the frontend can display "Out of Stock" badges
+
+### Key Differences: `is_available` vs `outOfStock`
+| Field | Purpose | Controlled By | App Visibility |
+|-------|---------|---------------|----------------|
+| `is_available` | Product is published/active | Admin (product management) | Only `true` values shown |
+| `outOfStock` | Product is temporarily out of stock | Admin/Inventory | Both `true` and `false` shown |
+
 ---
 
 ## Admin API Endpoints
@@ -27,6 +42,7 @@ Creates a new product in the system.
   "description": "High-quality wheat flour perfect for baking",
   "isSeasonal": false,
   "is_available": true,
+  "outOfStock": false,
   "price_per_kg": 45.50,
   "prod_picture": "https://example.com/flour.jpg",
   "nutritional_info": {
@@ -49,6 +65,7 @@ Creates a new product in the system.
     "description": "High-quality wheat flour perfect for baking",
     "isSeasonal": false,
     "is_available": true,
+    "outOfStock": false,
     "price_per_kg": 45.50,
     "prod_picture": "https://example.com/flour.jpg",
     "nutritional_info": {
@@ -72,6 +89,7 @@ Retrieves all products with optional filtering, searching, sorting, and paginati
 **Query Parameters:**
 - `is_available` (boolean): Filter by availability status
 - `isSeasonal` (boolean): Filter by seasonal status
+- `outOfStock` (boolean): Filter by stock status (true = out of stock, false = in stock)
 - `search` (string): Search in name, SKU, or description
 - `minPrice` (number): Minimum price filter
 - `maxPrice` (number): Maximum price filter
@@ -82,7 +100,7 @@ Retrieves all products with optional filtering, searching, sorting, and paginati
 
 **Example Request:**
 ```
-GET /api/admin/products?is_available=true&search=wheat&sortBy=price_per_kg&sortOrder=asc&page=1&limit=5
+GET /api/admin/products?is_available=true&outOfStock=false&search=wheat&sortBy=price_per_kg&sortOrder=asc&page=1&limit=5
 ```
 
 **Response:**
@@ -99,6 +117,7 @@ GET /api/admin/products?is_available=true&search=wheat&sortBy=price_per_kg&sortO
         "description": "Premium quality wheat flour",
         "isSeasonal": false,
         "is_available": true,
+        "outOfStock": false,
         "price_per_kg": 42.00,
         "prod_picture": "https://example.com/wheat.jpg",
         "nutritional_info": {
@@ -139,6 +158,7 @@ Retrieves a specific product by its ID.
     "description": "Premium quality wheat flour",
     "isSeasonal": false,
     "is_available": true,
+    "outOfStock": false,
     "price_per_kg": 42.00,
     "prod_picture": "https://example.com/wheat.jpg",
     "nutritional_info": {
@@ -180,7 +200,8 @@ Updates an existing product.
 {
   "name": "Updated Wheat Flour",
   "price_per_kg": 48.00,
-  "is_available": false
+  "is_available": false,
+  "outOfStock": true
 }
 ```
 
@@ -195,6 +216,7 @@ Updates an existing product.
     "name": "Updated Wheat Flour",
     "price_per_kg": 48.00,
     "is_available": false,
+    "outOfStock": true,
     // ... other fields
   }
 }
@@ -249,7 +271,34 @@ Toggles the availability status of a product (enables/disables).
 
 ---
 
-### 8. Bulk Update Products
+### 8. Toggle Product Out of Stock Status
+**PATCH** `/:id/toggle-outofstock`
+
+Toggles the out-of-stock status of a product.
+
+**Parameters:**
+- `id` (string): Product ID
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Product marked as out of stock successfully",
+  "data": {
+    "id": "64a1b2c3d4e5f6789012345",
+    "name": "Wheat Flour",
+    "is_available": true,
+    "outOfStock": true,
+    // ... other fields
+  }
+}
+```
+
+**Note:** When toggled to `true`, the product is marked as out of stock. In the app, products with `outOfStock: true` will be displayed with an "Out of Stock" badge.
+
+---
+
+### 9. Bulk Update Products
 **PATCH** `/bulk-update`
 
 Updates multiple products at once.
@@ -263,7 +312,8 @@ Updates multiple products at once.
   ],
   "updateData": {
     "is_available": false,
-    "isSeasonal": true
+    "isSeasonal": true,
+    "outOfStock": true
   }
 }
 ```
@@ -282,7 +332,7 @@ Updates multiple products at once.
 
 ---
 
-### 9. Search Products
+### 10. Search Products
 **GET** `/search`
 
 Searches products by name, SKU, or description.
@@ -316,7 +366,7 @@ GET /api/admin/products/search?query=wheat&limit=5
 
 ---
 
-### 10. Get Product Statistics
+### 11. Get Product Statistics
 **GET** `/stats`
 
 Retrieves statistical information about products.
@@ -330,6 +380,8 @@ Retrieves statistical information about products.
     "totalProducts": 25,
     "availableProducts": 20,
     "unavailableProducts": 5,
+    "inStockProducts": 18,
+    "outOfStockProducts": 7,
     "seasonalProducts": 8,
     "averagePrice": 45.75,
     "minPrice": 15.00,
@@ -346,7 +398,10 @@ Retrieves statistical information about products.
 
 **Authentication:** No authentication required for public product viewing.
 
-**Note:** App endpoints only return products that are available (`is_available: true`).
+**Note:** 
+- App endpoints only return products that are available (`is_available: true`)
+- Products with `outOfStock: true` are **included** in responses to allow the app to display "Out of Stock" status to users
+- The app frontend should display appropriate UI (badges, disabled buttons) based on the `outOfStock` field
 
 ### 1. Get All Products (App)
 **GET** `/`
@@ -382,12 +437,31 @@ GET /api/app/products?search=wheat&sortBy=price_per_kg&sortOrder=asc&page=1&limi
         "description": "Premium quality wheat flour",
         "isSeasonal": false,
         "is_available": true,
+        "outOfStock": false,
         "price_per_kg": 42.00,
         "prod_picture": "https://example.com/wheat.jpg",
         "nutritional_info": {
           "calories": 364,
           "protein": 10.3,
           "carbs": 76.3
+        },
+        "createdAt": "2023-07-05T10:30:00.000Z",
+        "updatedAt": "2023-07-05T10:30:00.000Z"
+      },
+      {
+        "id": "64a1b2c3d4e5f6789012346",
+        "sku": "PRO-RIC-5678",
+        "name": "Rice Flour",
+        "description": "Fine quality rice flour",
+        "isSeasonal": false,
+        "is_available": true,
+        "outOfStock": true,
+        "price_per_kg": 55.00,
+        "prod_picture": "https://example.com/rice.jpg",
+        "nutritional_info": {
+          "calories": 366,
+          "protein": 6.0,
+          "carbs": 80.0
         },
         "createdAt": "2023-07-05T10:30:00.000Z",
         "updatedAt": "2023-07-05T10:30:00.000Z"
@@ -399,6 +473,8 @@ GET /api/app/products?search=wheat&sortBy=price_per_kg&sortOrder=asc&page=1&limi
   }
 }
 ```
+
+**Note:** In the example above, the second product has `outOfStock: true`, which should trigger the app to display an "Out of Stock" badge and disable the "Add to Cart" functionality.
 
 ### 2. Get Product by ID (App)
 **GET** `/:id`
@@ -420,6 +496,7 @@ Retrieves a specific available product by its ID for app users.
     "description": "Premium quality wheat flour",
     "isSeasonal": false,
     "is_available": true,
+    "outOfStock": false,
     "price_per_kg": 42.00,
     "prod_picture": "https://example.com/wheat.jpg",
     "nutritional_info": {
@@ -432,6 +509,8 @@ Retrieves a specific available product by its ID for app users.
   }
 }
 ```
+
+**Note:** If the product has `outOfStock: true`, it will still be returned (not a 404). The app should check this field and display appropriate UI.
 
 **Error Response (Product not available or not found):**
 ```json
@@ -516,6 +595,10 @@ All endpoints may return the following error responses:
     type: Boolean,
     default: true
   },
+  outOfStock: {
+    type: Boolean,
+    default: false
+  },
   price_per_kg: {
     type: Number,
     required: true,
@@ -539,10 +622,19 @@ All endpoints may return the following error responses:
 ## Notes
 
 ### Admin vs App Endpoints:
-- **Admin endpoints** (`/api/admin/products`) provide full CRUD operations and can access all products regardless of availability status
-- **App endpoints** (`/api/app/products`) are read-only and only show available products to end users
+- **Admin endpoints** (`/api/admin/products`) provide full CRUD operations and can access all products regardless of availability or stock status
+- **App endpoints** (`/api/app/products`) are read-only and only show available products (`is_available: true`) to end users
 - **Admin endpoints** require authentication and admin/manager role
 - **App endpoints** are publicly accessible for viewing products
+- **Out of Stock Handling**: 
+  - Admin can filter products by `outOfStock` status and toggle stock status
+  - App includes out-of-stock products in responses but displays them with appropriate UI indicators
+
+### Stock Status Management:
+- **`is_available`**: Controls whether a product is published/active in the system (admin decision)
+- **`outOfStock`**: Indicates current inventory status (temporary condition)
+- Products can be `is_available: true` but `outOfStock: true` - these are shown in the app with "Out of Stock" messaging
+- Admin can toggle stock status using the `/toggle-outofstock` endpoint
 
 ### General Notes:
 1. **SKU Generation**: SKU codes are automatically generated based on product names in the format `PRO-XXX-9999` where XXX are the first 3 letters of the product name and 9999 is a random 4-digit number.
@@ -561,4 +653,17 @@ All endpoints may return the following error responses:
 
 7. **File Uploads**: Product images should be uploaded using the upload endpoints before creating/updating products.
 
-8. **Availability Filter**: App endpoints automatically filter to show only available products, while admin endpoints can access all products.
+8. **Availability Filter**: App endpoints automatically filter to show only available products (`is_available: true`), while admin endpoints can access all products.
+
+9. **Out of Stock Display**: 
+   - App endpoints include out-of-stock products in responses (unlike unavailable products which are filtered out)
+   - Frontend should check the `outOfStock` field to display appropriate UI (badges, disabled buttons, etc.)
+   - Example UI implementations:
+     - Show "Out of Stock" badge on product cards
+     - Disable "Add to Cart" button
+     - Display expected restock date (if available)
+     - Allow users to sign up for back-in-stock notifications
+
+10. **Toggle Endpoints**: 
+    - `/toggle-availability` - Controls product visibility (publish/unpublish)
+    - `/toggle-outofstock` - Controls inventory status (in stock/out of stock)

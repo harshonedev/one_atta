@@ -9,14 +9,12 @@ import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 class DailyEssentialsBlendCard extends StatelessWidget {
   final BlendItem blend;
   final VoidCallback? onTap;
-  final VoidCallback? onAddToCart;
   final bool isCompact;
 
   const DailyEssentialsBlendCard({
     super.key,
     required this.blend,
     this.onTap,
-    this.onAddToCart,
     this.isCompact = false,
   });
 
@@ -196,9 +194,9 @@ class DailyEssentialsBlendCard extends StatelessWidget {
                           // Action button
                           Expanded(
                             child: ElevatedButton(
-                              onPressed:
-                                  onAddToCart ??
-                                  () => _addBlendToCart(context, blend),
+                              onPressed: blend.isInStock
+                                  ? () => _addBlendToCart(context, blend)
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Theme.of(
                                   context,
@@ -214,7 +212,9 @@ class DailyEssentialsBlendCard extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                'Add to Cart',
+                                blend.isInStock
+                                    ? 'Add to Cart'
+                                    : 'Out of Stock',
                                 style: Theme.of(context).textTheme.labelMedium
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
@@ -318,9 +318,9 @@ class DailyEssentialsBlendCard extends StatelessWidget {
 
                       // Action button
                       FilledButton(
-                        onPressed:
-                            onAddToCart ??
-                            () => _addBlendToCart(context, blend),
+                        onPressed: blend.isInStock
+                            ? () => _addBlendToCart(context, blend)
+                            : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(
                             context,
@@ -339,7 +339,7 @@ class DailyEssentialsBlendCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          'Add to Cart',
+                          blend.isInStock ? 'Add to Cart' : 'Out of Stock',
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,

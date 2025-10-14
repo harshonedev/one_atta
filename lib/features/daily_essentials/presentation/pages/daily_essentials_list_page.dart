@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/features/daily_essentials/domain/entities/daily_essential_entity.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_event.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_state.dart';
@@ -110,7 +111,7 @@ class DailyEssentialsListPage extends StatelessWidget {
 
   Widget _buildProductList(
     BuildContext context,
-    List products,
+    List<DailyEssentialEntity> products,
     bool isRefreshing,
   ) {
     return RefreshIndicator(
@@ -282,7 +283,7 @@ class DailyEssentialsListPage extends StatelessWidget {
                             ),
                             const Spacer(),
                             Text(
-                              product.isInStock ? 'In Stock' : 'Out of Stock',
+                              !product.isInStock ? 'In Stock' : 'Out of Stock',
                               style: TextStyle(
                                 color: product.isInStock
                                     ? Colors.green.shade600

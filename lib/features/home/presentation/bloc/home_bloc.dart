@@ -286,8 +286,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     try {
       final result = await dailyEssentialsRepository.getAllProducts();
       return result.fold(
-        // If API fails, fall back to static data
-        (failure) => _getStaticReadyToSellBlends(),
+        (failure) => [],
 
         // Convert daily essentials to blend items
         (products) {
@@ -307,6 +306,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                   category: product.category,
                   pricePerKg: product.price,
                   tags: product.tags,
+                  isInStock: product.isInStock,
                 ),
               )
               .toList();
@@ -315,41 +315,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     } catch (e) {
       // If any error, fall back to static data
       logger.e('Error loading ready-to-sell blends: $e');
-      return _getStaticReadyToSellBlends();
+      return [];
     }
-  }
-
-  List<BlendItem> _getStaticReadyToSellBlends() {
-    return [
-      const BlendItem(
-        id: 'ready_1',
-        name: 'Atta (Classic Wheat)',
-        description:
-            'Traditional whole wheat flour blend perfect for daily use',
-        imageUrl: AppAssets.attaImage,
-        category: 'Classic',
-        pricePerKg: 50.0,
-        tags: ['Traditional', 'Whole Wheat', 'Daily Use'],
-      ),
-      const BlendItem(
-        id: 'ready_2',
-        name: 'Bedmi',
-        description: 'Special spiced flour blend for authentic bedmi puri',
-        imageUrl: AppAssets.bedmiImage,
-        category: 'Special',
-        pricePerKg: 70.0,
-        tags: ['Spiced', 'Traditional', 'Authentic'],
-      ),
-      const BlendItem(
-        id: 'ready_3',
-        name: 'Missi',
-        description: 'Mixed gram and wheat flour blend rich in protein',
-        imageUrl: AppAssets.missiImage,
-        category: 'Protein',
-        pricePerKg: 80.0,
-        tags: ['Gram', 'Wheat', 'High Protein'],
-      ),
-    ];
   }
 }
 
@@ -361,6 +328,7 @@ class BlendItem extends Equatable {
   final String category;
   final List<String> tags;
   final double pricePerKg;
+  final bool isInStock;
 
   const BlendItem({
     required this.id,
@@ -370,6 +338,7 @@ class BlendItem extends Equatable {
     required this.category,
     required this.tags,
     required this.pricePerKg,
+    required this.isInStock,
   });
 
   @override
@@ -381,5 +350,6 @@ class BlendItem extends Equatable {
     category,
     tags,
     pricePerKg,
+    isInStock,
   ];
 }

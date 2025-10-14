@@ -42,7 +42,7 @@ class ProductModel extends DailyEssentialEntity {
           .toDouble(), // API doesn't have original price, so use same
       unit: 'kg', // Based on API, all products are per kg
       stockQuantity: 100, // Default stock as API doesn't provide this
-      isInStock: json['is_available'] ?? false,
+      isInStock:!(json['outOfStock'] ?? false),
       tags: _generateTagsFromProduct(json),
       benefits: _generateBenefitsFromProduct(json),
       brand: 'OneAtta', // Default brand

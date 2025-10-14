@@ -517,8 +517,6 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 100), // Space for bottom bar
             ],
           ),
         ),
