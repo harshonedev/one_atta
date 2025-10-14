@@ -13,6 +13,9 @@ class ApiEndpoints {
   static const String coupons = '$baseUrl/coupons';
   static const String shipping = '$baseUrl/shipping';
   static const String delivery = '$baseUrl/delivery';
+  static const String faqs = '$baseUrl/faqs';
+  static const String feedback = '$baseUrl/feedback';
+  static const String appSettings = '$baseUrl/app-settings';
 }
 
 class AppConstants {

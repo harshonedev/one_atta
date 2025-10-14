@@ -4,6 +4,7 @@ import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/routing/app_router.dart';
 import 'package:one_atta/core/theme/theme.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_event.dart';
+import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
@@ -24,6 +25,9 @@ import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_event.dart';
 import 'package:one_atta/features/payment/presentation/bloc/payment_bloc.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
+import 'package:one_atta/features/faq/presentation/bloc/faq_bloc.dart';
+import 'package:one_atta/features/feedback/presentation/bloc/feedback_bloc.dart';
+import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,13 +70,17 @@ class MainApp extends StatelessWidget {
           create: (context) =>
               di.sl<UserProfileBloc>()..add(const GetUserProfileRequested()),
         ),
-
         BlocProvider(
           create: (context) => di.sl<ReelsBloc>()..add(const LoadReelsFeed()),
         ),
         BlocProvider(create: (context) => di.sl<PaymentBloc>()),
         BlocProvider(create: (context) => di.sl<OrderBloc>()),
         BlocProvider(create: (context) => di.sl<DeliveryBloc>()),
+        BlocProvider(create: (context) => di.sl<FaqBloc>()),
+        BlocProvider(create: (context) => di.sl<FeedbackBloc>()),
+        BlocProvider(
+          create: (context) => di.sl<AppSettingsBloc>()..add(LoadAppSettings()),
+        ),
       ],
       child: MaterialApp.router(
         title: 'One Atta',

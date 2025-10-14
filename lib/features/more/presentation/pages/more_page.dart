@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/utils/snackbar_utils.dart';
+import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
+import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_state.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_event.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -377,13 +381,19 @@ class MorePage extends StatelessWidget {
                 context,
                 'Help & FAQs',
                 Icons.help_outline,
-                () => _showComingSoon(context, 'Help & FAQs'),
+                () => context.push('/faq'),
               ),
               _buildSettingsItem(
                 context,
                 'Leave Feedback',
                 Icons.feedback_outlined,
-                () => _showComingSoon(context, 'Leave Feedback'),
+                () => context.push('/submit-feedback'),
+              ),
+              _buildSettingsItem(
+                context,
+                'My Feedback',
+                Icons.rate_review_outlined,
+                () => context.push('/feedback-history'),
               ),
             ],
           ),
@@ -393,40 +403,78 @@ class MorePage extends StatelessWidget {
   }
 
   Widget _buildLegalSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Legal',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.onSurface,
+    return BlocBuilder<AppSettingsBloc, AppSettingsState>(
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Legal',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              _buildSettingsItem(
-                context,
-                'Terms & Conditions',
-                Icons.description_outlined,
-                () => _showComingSoon(context, 'Terms & Conditions'),
+            const SizedBox(height: 4),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _buildSettingsItem(
+                    context,
+                    'Terms & Conditions',
+                    Icons.description_outlined,
+                    () {
+                      if (state is AppSettingsLoaded) {
+                        print(
+                          "Terms and Condition Url - ${state.settings.termsAndConditionsUrl}",
+                        );
+                      } else {
+                        print("State  - ${state}");
+                      }
+
+                      final url = state is AppSettingsLoaded
+                          ? state.settings.termsAndConditionsUrl
+                          : null;
+
+                      if (url != null) {
+                        _handleUrlLauncher(context, url);
+                      } else {
+                        SnackbarUtils.showError(
+                          context,
+                          "Could not open terms & conditions",
+                        );
+                      }
+                    },
+                  ),
+                  _buildSettingsItem(
+                    context,
+                    'Privacy Policy',
+                    Icons.privacy_tip_outlined,
+                    () {
+                      final url = state is AppSettingsLoaded
+                          ? state.settings.privacyPolicyUrl
+                          : null;
+
+                      if (url != null) {
+                        _handleUrlLauncher(context, url);
+                      } else {
+                        SnackbarUtils.showError(
+                          context,
+                          "Could not privacy policy",
+                        );
+                      }
+                    },
+                  ),
+                ],
               ),
-              _buildSettingsItem(
-                context,
-                'Privacy Policy',
-                Icons.privacy_tip_outlined,
-                () => _showComingSoon(context, 'Privacy Policy'),
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -522,16 +570,19 @@ class MorePage extends StatelessWidget {
     );
   }
 
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature feature coming soon!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+  void _handleUrlLauncher(BuildContext context, String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch';
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackbarUtils.showError(context, "Failed to open");
+      }
+    }
   }
 
   void _showLogoutDialog(BuildContext context) {

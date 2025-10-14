@@ -6,12 +6,11 @@ import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loya
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_event.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_state.dart';
 import 'package:one_atta/features/loyalty/presentation/widgets/transaction_card.dart';
+import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_bloc.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_event.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_state.dart';
-import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_bloc.dart';
-import 'package:one_atta/features/profile/presentation/bloc/user_profile/user_profile_state.dart';
 
 class RewardsPage extends StatefulWidget {
   const RewardsPage({super.key});
@@ -30,6 +29,7 @@ class _RewardsPageState extends State<RewardsPage> {
   void _initializeData() {
     context.read<LoyaltyBloc>().add(FetchLoyaltySettings());
     context.read<LoyaltyHistoryBloc>().add(const GetLoyaltyHistoryRequested());
+    context.read<UserProfileBloc>().add(GetUserProfileRequested());
   }
 
   @override

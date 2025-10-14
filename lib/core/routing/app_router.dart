@@ -32,6 +32,9 @@ import 'package:one_atta/features/address/presentation/pages/addresses_list_page
 import 'package:one_atta/features/address/presentation/pages/add_edit_address_page.dart';
 import 'package:one_atta/features/profile/presentation/pages/profile_page.dart';
 import 'package:one_atta/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:one_atta/features/faq/presentation/pages/faq_page.dart';
+import 'package:one_atta/features/feedback/presentation/pages/submit_feedback_page.dart';
+import 'package:one_atta/features/feedback/presentation/pages/feedback_history_page.dart';
 import 'package:one_atta/features/payment/presentation/pages/payment_method_selection_page.dart';
 import 'package:one_atta/features/payment/presentation/pages/payment_process_page.dart';
 import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
@@ -243,6 +246,23 @@ class AppRouter {
           path: '/profile/edit',
           name: 'edit-profile',
           builder: (context, state) => const EditProfilePage(),
+        ),
+        // FAQ Route
+        GoRoute(
+          path: '/faq',
+          name: 'faq',
+          builder: (context, state) => const FaqPage(),
+        ),
+        // Feedback Routes
+        GoRoute(
+          path: '/submit-feedback',
+          name: 'submit-feedback',
+          builder: (context, state) => const SubmitFeedbackPage(),
+        ),
+        GoRoute(
+          path: '/feedback-history',
+          name: 'feedback-history',
+          builder: (context, state) => const FeedbackHistoryPage(),
         ),
         // Payment Routes
         GoRoute(

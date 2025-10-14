@@ -16,6 +16,27 @@ import 'package:one_atta/features/recipes/presentation/bloc/recipe_details_bloc.
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// FAQ
+import 'package:one_atta/features/faq/data/datasources/faq_remote_data_source.dart';
+import 'package:one_atta/features/faq/data/datasources/faq_remote_data_source_impl.dart';
+import 'package:one_atta/features/faq/data/repositories/faq_repository_impl.dart';
+import 'package:one_atta/features/faq/domain/repositories/faq_repository.dart';
+import 'package:one_atta/features/faq/presentation/bloc/faq_bloc.dart';
+
+// Feedback
+import 'package:one_atta/features/feedback/data/datasources/feedback_remote_data_source.dart';
+import 'package:one_atta/features/feedback/data/datasources/feedback_remote_data_source_impl.dart';
+import 'package:one_atta/features/feedback/data/repositories/feedback_repository_impl.dart';
+import 'package:one_atta/features/feedback/domain/repositories/feedback_repository.dart';
+import 'package:one_atta/features/feedback/presentation/bloc/feedback_bloc.dart';
+
+// AppSettings
+import 'package:one_atta/features/app_settings/data/datasources/app_settings_remote_data_source.dart';
+import 'package:one_atta/features/app_settings/data/datasources/app_settings_remote_data_source_impl.dart';
+import 'package:one_atta/features/app_settings/data/repositories/app_settings_repository_impl.dart';
+import 'package:one_atta/features/app_settings/domain/repositories/app_settings_repository.dart';
+import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
+
 // BLoC
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
@@ -436,6 +457,48 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<RecipesRemoteDataSource>(
     () => RecipesRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  //! Features - FAQ
+  // BLoC
+  sl.registerFactory(() => FaqBloc(faqRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<FaqRepository>(
+    () => FaqRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<FaqRemoteDataSource>(
+    () => FaqRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  //! Features - Feedback
+  // BLoC
+  sl.registerFactory(() => FeedbackBloc(feedbackRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<FeedbackRepository>(
+    () => FeedbackRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<FeedbackRemoteDataSource>(
+    () => FeedbackRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  //! Features - AppSettings
+  // BLoC
+  sl.registerFactory(() => AppSettingsBloc(appSettingsRepository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<AppSettingsRepository>(
+    () => AppSettingsRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<AppSettingsRemoteDataSource>(
+    () => AppSettingsRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   // API Request
