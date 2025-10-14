@@ -78,6 +78,33 @@ One Atta is a Flutter application for flour/atta blending and recipe management.
 - Clear descriptions for each payment type
 - Continue button text changes based on selection ("Place Order" for COD, "Continue to Payment" for Prepaid)
 
+### Profile Page Redesign (October 14, 2025)
+**Feature**: Redesigned the profile page to match the app's UI theme and styling, removing loyalty points transaction history for a cleaner experience.
+
+**Implementation Details**:
+- **Removed Loyalty History**: Eliminated the `LoyaltyHistoryList` widget and related BLoC calls
+- **Enhanced Profile Header**: Streamlined design with better spacing and centered layout
+- **New Profile Content Sections**:
+  - Prominent loyalty points card with gradient background and star icon
+  - Profile information cards for email, phone, and member since date
+  - Quick actions grid with four action cards (My Orders, Favorites, Settings, Help & Support)
+
+**UI Improvements**:
+- **Material Design 3 Consistency**: All components follow the app's orange primary color scheme
+- **Card-based Layout**: Consistent 16px border radius across all cards
+- **Modern Visual Hierarchy**: 
+  - Gradient header with primary color scheme
+  - Information cards with subtle borders and icon containers
+  - Action cards with secondary color scheme accents
+- **Better Spacing**: 24px sections, 16px between cards, proper padding throughout
+- **Interactive Elements**: Action cards with tap feedback and proper accessibility
+- **Typography**: Consistent with Poppins font family and Material 3 text scales
+
+**Removed Components**:
+- `LoyaltyHistoryList` widget
+- Loyalty transaction history functionality
+- Related BLoC events and states for transaction history
+
 ## Current Task: Cart Feature Implementation
 
 ### Requirements

@@ -110,47 +110,51 @@ class MorePage extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            backgroundImage: user?.profilePicture != null
-                ? NetworkImage(user!.profilePicture!)
-                : null,
-            child: user?.profilePicture == null
-                ? Text(
-                    initials,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user != null ? displayMobile : "",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+      child: InkWell(
+        onTap: () => context.push('/profile'),
+        borderRadius: BorderRadius.circular(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundImage: user?.profilePicture != null
+                  ? NetworkImage(user!.profilePicture!)
+                  : null,
+              child: user?.profilePicture == null
+                  ? Text(
+                      initials,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user != null ? displayMobile : "",
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -134,7 +134,9 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
           leading: Container(
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.7),
               shape: BoxShape.circle,
             ),
             child: BackButton(color: Theme.of(context).colorScheme.onSurface),
@@ -176,7 +178,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                             child: Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -231,7 +233,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                             Colors.transparent,
                             Theme.of(
                               context,
-                            ).colorScheme.surface.withOpacity(0.8),
+                            ).colorScheme.surface.withValues(alpha: 0.8),
                           ],
                         ),
                       ),
@@ -245,7 +247,9 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
             Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.7),
                 shape: BoxShape.circle,
               ),
               child: IconButton(
@@ -496,7 +500,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                           strokeWidth: 2,
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.7),
+                          ).colorScheme.primary.withValues(alpha: 0.7),
                         ),
 
                         child: Padding(
@@ -590,7 +594,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
     );
   }
 
-  void _addBlendToCart(BuildContext context, BlendEntity blendUsed) {
+  void _addBlendToCart(BuildContext context, BlendDetailsEntity blendUsed) {
     // Add blend to cart using proper cart bloc
     final cartItem = CartItemEntity(
       productId: blendUsed.id,
