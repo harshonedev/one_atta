@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
+import 'package:one_atta/core/presentation/widgets/cart_icon_button.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_event.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_state.dart';
@@ -35,13 +36,7 @@ class BlendsView extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () => context.push('/cart'),
-            icon: const Icon(Icons.shopping_cart_outlined),
-            tooltip: 'Cart',
-          ),
-        ],
+        actions: [CartIconButton()],
       ),
       body: BlocConsumer<BlendsBloc, BlendsState>(
         listener: (context, state) {

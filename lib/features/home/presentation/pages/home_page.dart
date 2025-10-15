@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
-import 'package:one_atta/core/utils/snackbar_utils.dart';
+import 'package:one_atta/core/presentation/widgets/cart_icon_button.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
@@ -134,6 +134,7 @@ class _HomePageState extends State<HomePage> {
     return RefreshIndicator(
       onRefresh: () async {
         context.read<HomeBloc>().add(const RefreshHomeData());
+        context.read<UserProfileBloc>().add(GetUserProfileRequested());
       },
       child: Column(
         children: [
@@ -227,7 +228,7 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 // Review Section
-                SliverToBoxAdapter(child: _buildReviewSection(context)),
+                SliverToBoxAdapter(child: _buildRewardsSection(context)),
 
                 // Bottom padding
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -333,18 +334,8 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Settings icon
-          IconButton(
-            onPressed: () {
-              // navigate to cart page
-              context.push('/cart');
-            },
-            icon: Icon(
-              Icons.shopping_cart_outlined,
-              size: 24,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
+          // Cart icon
+          CartIconButton(),
         ],
       ),
     );
@@ -529,216 +520,59 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildReviewSection(BuildContext context) {
+  Widget _buildRewardsSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          // Write a Review Card
-          InkWell(
-            onTap: () {
-              _showWriteReviewDialog(context);
-            },
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade100,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.star_outline,
-                      color: Colors.amber.shade700,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Earn 50 Grain Points',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.amber.shade800,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Review your last blend\'s taste & texture',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: Colors.amber.shade700),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.amber.shade600,
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
+      child: InkWell(
+        onTap: () {
+          // Navigate to reviews page
+          context.push('/rewards');
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(32),
           ),
-
-          const SizedBox(height: 8),
-
-          // View Reviews Card
-          InkWell(
-            onTap: () {
-              // Navigate to reviews page
-              context.push('/rewards');
-            },
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset(
-                          AppAssets.giftIcon,
-                          width: 24,
-                          height: 24,
-                          colorFilter: ColorFilter.mode(
-                            Theme.of(context).colorScheme.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'View Rewards',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showWriteReviewDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        int rating = 0;
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              title: Row(
-                children: [
-                  Icon(Icons.edit_note_rounded, size: 32),
-                  const SizedBox(width: 8),
-                  const Text('Write a Review'),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Rate your last blend:'),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            rating = index + 1;
-                          });
-                        },
-                        child: Icon(
-                          Icons.star,
-                          size: 32,
-                          color: index < rating
-                              ? Colors.amber
-                              : Colors.grey.shade300,
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Tell us about your experience:'),
-                  const SizedBox(height: 8),
-                  TextField(
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText:
-                          'Share your thoughts about taste, texture, and overall experience...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      AppAssets.giftIcon,
+                      width: 24,
+                      height: 24,
+                      colorFilter: ColorFilter.mode(
+                        Theme.of(context).colorScheme.primary,
+                        BlendMode.srcIn,
                       ),
                     ),
-                    onChanged: (value) {},
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Text(
+                      'View Rewards',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: rating > 0
-                      ? () {
-                          // Here you would typically save the review
-                          Navigator.of(dialogContext).pop();
-                          SnackbarUtils.showReward(
-                            context,
-                            'Review submitted! +50 Grain Points earned',
-                          );
-                        }
-                      : null,
-                  child: const Text('Submit'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Theme.of(context).colorScheme.primary,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -863,7 +697,7 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // Review Section
-          SliverToBoxAdapter(child: _buildReviewSection(context)),
+          SliverToBoxAdapter(child: _buildRewardsSection(context)),
 
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 32)),

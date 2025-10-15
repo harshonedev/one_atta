@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
+import 'package:one_atta/core/presentation/widgets/cart_icon_button.dart';
 import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_bloc.dart';
 import 'package:one_atta/features/recipes/presentation/bloc/recipes_event.dart';
@@ -52,13 +53,7 @@ class _RecipesViewState extends State<RecipesView> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () => _navigateToCart(context),
-            icon: const Icon(Icons.shopping_cart_outlined),
-            tooltip: 'Cart',
-          ),
-        ],
+        actions: [CartIconButton()],
       ),
       body: Column(
         children: [
@@ -210,9 +205,5 @@ class _RecipesViewState extends State<RecipesView> {
         ),
       ),
     );
-  }
-
-  void _navigateToCart(BuildContext context) {
-    context.push('/cart');
   }
 }
