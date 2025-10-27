@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/presentation/pages/error_page.dart';
@@ -20,9 +21,12 @@ class RecipeDetailsPage extends StatefulWidget {
 }
 
 class _RecipeDetailsPageState extends State<RecipeDetailsPage>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   YoutubePlayerController? _youtubeController;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -34,7 +38,15 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
   @override
   void dispose() {
     _tabController.dispose();
+    _youtubeController?.removeListener(_youtubePlayerListener);
     _youtubeController?.dispose();
+    // Reset orientation preferences when leaving the page
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     super.dispose();
   }
 
@@ -43,13 +55,42 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
     if (videoId != null) {
       _youtubeController = YoutubePlayerController(
         initialVideoId: videoId,
-        flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
-      );
+        flags: const YoutubePlayerFlags(
+          autoPlay: false,
+          mute: false,
+          enableCaption: true,
+          controlsVisibleAtStart: true,
+          hideControls: false,
+          forceHD: false,
+        ),
+      )..addListener(_youtubePlayerListener);
+    }
+  }
+
+  void _youtubePlayerListener() {
+    if (_youtubeController != null && mounted) {
+      // Handle fullscreen changes
+      if (_youtubeController!.value.isFullScreen) {
+        // Lock orientation to landscape when in fullscreen
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      } else {
+        // Reset orientation when exiting fullscreen
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: BlocConsumer<RecipeDetailsBloc, RecipeDetailsState>(
@@ -107,18 +148,68 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
       _initializeYoutubePlayer(recipe.videoUrl!);
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: CustomScrollView(
-        slivers: [
-          // App Bar with Recipe Image
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            foregroundColor: Theme.of(context).colorScheme.onSurface,
-            leading: Container(
-              margin: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+    final scrollView = CustomScrollView(
+      slivers: [
+        // App Bar with Recipe Image
+        SliverAppBar(
+          expandedHeight: 300,
+          pinned: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
+          leading: Container(
+            margin: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.7),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          flexibleSpace: FlexibleSpaceBar(
+            background: Stack(
+              children: [
+                // Recipe Image
+                Positioned.fill(
+                  child: NetworkImageLoader(
+                    imageUrl: recipe.recipePicture ?? '',
+                    height: 300,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                // Gradient overlay
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Theme.of(
+                            context,
+                          ).colorScheme.surface.withValues(alpha: 0.8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Container(
+              margin: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
@@ -126,163 +217,128 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                 shape: BoxShape.circle,
               ),
               child: IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                children: [
-                  // Recipe Image
-                  Positioned.fill(
-                    child: NetworkImageLoader(
-                      imageUrl: recipe.recipePicture ?? '',
-                      height: 300,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  // Gradient overlay
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Theme.of(
-                              context,
-                            ).colorScheme.surface.withValues(alpha: 0.8),
-                          ],
+                onPressed: state.isLiking
+                    ? null
+                    : () => _toggleLike(context, recipe.id),
+                icon: state.isLiking
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
+                      )
+                    : Icon(
+                        state.isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: state.isLiked
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.onSurface,
                       ),
-                    ),
-                  ),
-                ],
               ),
             ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surface.withValues(alpha: 0.7),
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: state.isLiking
-                      ? null
-                      : () => _toggleLike(context, recipe.id),
-                  icon: state.isLiking
-                      ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        )
-                      : Icon(
-                          state.isLiked
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: state.isLiked
-                              ? Theme.of(context).colorScheme.error
-                              : Theme.of(context).colorScheme.onSurface,
-                        ),
-                ),
-              ),
-            ],
-          ),
+          ],
+        ),
 
-          // Recipe Title and Info
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+        // Recipe Title and Info
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  recipe.title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (recipe.description?.isNotEmpty == true) ...[
                   Text(
-                    recipe.title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
+                    recipe.description!,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  if (recipe.description?.isNotEmpty == true) ...[
-                    Text(
-                      recipe.description!,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  // Recipe Stats
-                  _buildRecipeStats(context, recipe, state),
+                  const SizedBox(height: 16),
                 ],
-              ),
+                // Recipe Stats
+                _buildRecipeStats(context, recipe, state),
+              ],
             ),
           ),
+        ),
 
-          // Blend Information Section
-          if (recipe.blendUsed != null)
-            SliverToBoxAdapter(
-              child: _buildBlendInformation(context, recipe.blendUsed!),
-            ),
-
-          // Tab Bar
-          SliverPersistentHeader(
-            delegate: _SliverAppBarDelegate(
-              TabBar(
-                controller: _tabController,
-                labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant,
-                indicatorColor: Theme.of(context).colorScheme.primary,
-                tabs: const [
-                  Tab(text: 'Ingredients'),
-                  Tab(text: 'Instructions'),
-                ],
-              ),
-            ),
-            pinned: true,
-          ),
-
-          // Tab Content
+        // Blend Information Section
+        if (recipe.blendUsed != null)
           SliverToBoxAdapter(
-            child: AnimatedBuilder(
-              animation: _tabController,
-              builder: (context, child) {
-                return IndexedStack(
-                  index: _tabController.index,
-                  children: [
-                    _buildIngredientsTab(context, recipe),
-                    _buildInstructionsTab(context, recipe),
-                  ],
-                );
-              },
-            ),
+            child: _buildBlendInformation(context, recipe.blendUsed!),
           ),
 
-          // YouTube Video Player
-          if (recipe.videoUrl != null && _youtubeController != null)
-            SliverToBoxAdapter(child: _buildYoutubePlayer()),
+        // Tab Bar
+        SliverPersistentHeader(
+          delegate: _SliverAppBarDelegate(
+            TabBar(
+              controller: _tabController,
+              labelColor: Theme.of(context).colorScheme.primary,
+              unselectedLabelColor: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant,
+              indicatorColor: Theme.of(context).colorScheme.primary,
+              tabs: const [
+                Tab(text: 'Ingredients'),
+                Tab(text: 'Instructions'),
+              ],
+            ),
+          ),
+          pinned: true,
+        ),
 
-          // Bottom spacing
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
-        ],
-      ),
+        // Tab Content
+        SliverToBoxAdapter(
+          child: AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, child) {
+              return IndexedStack(
+                index: _tabController.index,
+                children: [
+                  _buildIngredientsTab(context, recipe),
+                  _buildInstructionsTab(context, recipe),
+                ],
+              );
+            },
+          ),
+        ),
+
+        // YouTube Video Player
+        if (recipe.videoUrl != null && _youtubeController != null)
+          SliverToBoxAdapter(child: _buildYoutubePlayer()),
+
+        // Bottom spacing
+        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+      ],
+    );
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: _youtubeController != null
+          ? YoutubePlayerBuilder(
+              player: YoutubePlayer(
+                controller: _youtubeController!,
+                showVideoProgressIndicator: true,
+                progressIndicatorColor: Theme.of(context).colorScheme.primary,
+                progressColors: ProgressBarColors(
+                  playedColor: Theme.of(context).colorScheme.primary,
+                  handleColor: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              builder: (context, player) {
+                return scrollView;
+              },
+            )
+          : scrollView,
     );
   }
 
@@ -375,7 +431,6 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            print('View Blend Details Pressed - $blendUsed.id');
             context.push('/blend-details/${blendUsed.id}');
           },
           borderRadius: BorderRadius.circular(16),
@@ -567,7 +622,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
         children: [
           Text(
             'Recipe Video',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
