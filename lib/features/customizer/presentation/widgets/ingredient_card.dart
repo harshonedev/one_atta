@@ -63,10 +63,16 @@ class _IngredientCardState extends State<IngredientCard>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: widget.isSelected
-                      ? Theme.of(context).colorScheme.primaryContainer
-                      : Theme.of(context).colorScheme.surface,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: widget.isSelected
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.3)
+                        : Colors.transparent,
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Theme.of(

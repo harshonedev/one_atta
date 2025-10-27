@@ -110,6 +110,18 @@ class _CustomizerPageState extends State<CustomizerPage> {
             )
           else ...[
             // Available Ingredients Section
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                'Select Ingredients',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             AvailableIngredientsSection(
               availableIngredients: state.availableIngredients,
               selectedIngredients: state.selectedIngredients,
@@ -117,6 +129,11 @@ class _CustomizerPageState extends State<CustomizerPage> {
               scrollController: _horizontalScrollController,
               onIngredientAdded: (ingredient) {
                 context.read<CustomizerBloc>().add(AddIngredient(ingredient));
+              },
+              onIngredientRemoved: (ingredient) {
+                context.read<CustomizerBloc>().add(
+                  RemoveIngredient(ingredient.name),
+                );
               },
             ),
           ],
@@ -138,7 +155,7 @@ class _CustomizerPageState extends State<CustomizerPage> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Tap an ingredient to fine tune its amount',
+                    'Tap an ingredient to change its amount',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(
                         context,

@@ -30,6 +30,8 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
 
   int get divisions => (widget.totalWeight / 100).round(); // 100g steps
 
+  bool get isWheat => widget.ingredient.name.toLowerCase() == 'wheat';
+
   // Check if a new percentage would exceed max capacity
   bool _wouldExceedCapacity(double newPercentage) {
     const tolerance = 0.001; // Same tolerance as in the bloc
@@ -93,7 +95,7 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
               borderRadius: BorderRadius.circular(36),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 28,
                   offset: const Offset(0, 12),
                 ),
@@ -143,6 +145,11 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                   divisions: divisions,
                   totalWeight: widget.totalWeight,
                   onChanged: (p) {
+                    // if wheat, only allow increase
+                    if (isWheat && p < 0.3) {
+                      return;
+                    }
+
                     // Only allow the change if it's a decrease or if it doesn't exceed capacity
                     if (p <= _percentage || !_wouldExceedCapacity(p)) {
                       setState(() => _percentage = p);
@@ -235,12 +242,19 @@ class _IngredientDetailsPopupState extends State<IngredientDetailsPopup> {
                       // Snap to nearest 100g before dispatch
                       final snappedWeight = (currentWeight / 100).round() * 100;
                       final snappedPercentage = snappedWeight / totalWeight;
-                      context.read<CustomizerBloc>().add(
-                        UpdateIngredientPercentage(
-                          widget.ingredient.name,
-                          snappedPercentage.clamp(0, 1),
-                        ),
-                      );
+                      if (snappedPercentage == 0) {
+                        context.read<CustomizerBloc>().add(
+                          RemoveIngredient(widget.ingredient.name),
+                        );
+                      } else {
+                        context.read<CustomizerBloc>().add(
+                          UpdateIngredientPercentage(
+                            widget.ingredient.name,
+                            snappedPercentage.clamp(0, 1),
+                          ),
+                        );
+                      }
+
                       Navigator.of(context).pop();
                     },
                   ),

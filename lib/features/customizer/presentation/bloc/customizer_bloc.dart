@@ -130,33 +130,20 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
         break;
     }
 
-    // Filter out ingredients that don't result in multiples of 100g for the new packet size
-    final validSelectedIngredients = state.selectedIngredients.where((
-      ingredient,
-    ) {
+    final ingredients = state.selectedIngredients.map((ingredient) {
       final weightInGrams = (ingredient.percentage * newWeight).round();
-      return weightInGrams % 100 ==
-          0; // Keep only if weight is multiple of 100g
+      final adjustedPercentage = weightInGrams % 100 == 0
+          ? ingredient.percentage
+          : (weightInGrams - (weightInGrams % 100)) / newWeight;
+      return ingredient.copyWith(percentage: adjustedPercentage);
     }).toList();
-
-    // Log removed ingredients for debugging
-    final removedIngredients = state.selectedIngredients
-        .where((ingredient) => !validSelectedIngredients.contains(ingredient))
-        .map((ingredient) => ingredient.name)
-        .toList();
-
-    if (removedIngredients.isNotEmpty) {
-      logger.i(
-        'Removed ingredients due to packet size change: $removedIngredients',
-      );
-    }
 
     emit(
       state.copyWith(
         selectedPacketSize: event.packetSize,
         totalWeight: newWeight,
-        selectedIngredients: validSelectedIngredients,
-        isMaxCapacityReached: _isCapacityReached(validSelectedIngredients),
+        selectedIngredients: ingredients,
+        isMaxCapacityReached: _isCapacityReached(ingredients),
       ),
     );
   }

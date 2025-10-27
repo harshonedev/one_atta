@@ -375,7 +375,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       Text(
-                        '100% Chemical Free',
+                        '100% Preservative Free',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.amber.shade200,
                           fontWeight: FontWeight.bold,
@@ -396,11 +396,25 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildStepItem(context, Icons.grain, 'Grains'),
-                _buildStepItem(context, Icons.texture, 'Texture'),
-                _buildStepItem(context, Icons.add_circle_outline, 'Additives'),
-                _buildStepItem(context, Icons.check_circle, 'Done'),
+                _buildStepItem(context, Icons.grain_rounded, 'Select', false),
+
+                _buildStepItem(context, Icons.blender_rounded, 'Mix', false),
+
+                _buildStepItem(
+                  context,
+                  Icons.pie_chart_rounded,
+                  'Preview',
+                  false,
+                ),
+
+                _buildStepItem(
+                  context,
+                  Icons.shopping_bag_rounded,
+                  'Confirm',
+                  true,
+                ),
               ],
             ),
           ],
@@ -576,24 +590,47 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildStepItem(BuildContext context, IconData icon, String label) {
+  Widget _buildStepItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    bool isLastItem,
+  ) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+            ),
+            if (!isLastItem)
+              Icon(
+                Icons.arrow_forward,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontWeight: FontWeight.w500,
+        const SizedBox(height: 4),
+        SizedBox(
+          width: 50,
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onPrimary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],

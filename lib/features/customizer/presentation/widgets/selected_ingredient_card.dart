@@ -34,6 +34,8 @@ class SelectedIngredientCard extends StatelessWidget {
 
   int get weightInGrams => (ingredient.percentage * totalWeight).round();
 
+  bool get isWheat => ingredient.name.toLowerCase() == 'wheat';
+
   // Calculate step size for slider based on packet size (100g increments)
   double get stepSize {
     switch (packetSize) {
@@ -190,40 +192,20 @@ class SelectedIngredientCard extends StatelessWidget {
                   ),
                 ),
                 // Remove Button (all ingredients now removable)
-                IconButton(
-                  icon: Icon(
-                    Icons.remove_circle_outline,
-                    color: colorScheme.error,
+                if (!isWheat)
+                  IconButton(
+                    icon: Icon(
+                      Icons.remove_circle_outline,
+                      color: colorScheme.error,
+                    ),
+                    onPressed: () {
+                      if (!isWheat) {
+                        onRemoved();
+                      }
+                    },
                   ),
-                  onPressed: onRemoved,
-                ),
               ],
             ),
-            // const SizedBox(height: 16),
-            // // Slider
-            // SliderTheme(
-            //   data: SliderTheme.of(context).copyWith(
-            //     trackHeight: 8.0,
-            //     trackShape: const RoundedRectSliderTrackShape(),
-            //     activeTrackColor: colorScheme.primary,
-            //     inactiveTrackColor: colorScheme.surfaceVariant,
-            //     thumbShape: const RoundSliderThumbShape(
-            //       enabledThumbRadius: 10.0,
-            //     ),
-            //     thumbColor: colorScheme.primary,
-            //     overlayColor: colorScheme.primary.withOpacity(0.2),
-            //     overlayShape: const RoundSliderOverlayShape(
-            //       overlayRadius: 20.0,
-            //     ),
-            //   ),
-            //   child: Slider(
-            //     value: ingredient.percentage,
-            //     min: 0.0,
-            //     max: 1.0,
-            //     onChanged: (value) =>
-            //         _setPercentage(context, value, showSnackbarOnLimit: true),
-            //   ),
-            // ),
           ],
         ),
       ),
