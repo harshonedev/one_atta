@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/presentation/pages/maintenance_page.dart';
 import 'package:one_atta/core/presentation/pages/splash_page.dart';
 import 'package:one_atta/core/presentation/pages/main_navigation_page.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
@@ -43,15 +44,21 @@ import 'package:one_atta/features/orders/presentation/pages/order_confirmation_p
 import 'package:one_atta/features/orders/presentation/pages/order_detail_page.dart';
 
 class AppRouter {
-  static late final GoRouter _router;
-  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
+  static GoRouter? _router;
+  static GlobalKey<NavigatorState>? _rootNavigatorKey;
+  static GlobalKey<NavigatorState>? _shellNavigatorKey;
 
-  static GoRouter get router => _router;
+  static GoRouter get router => _router!;
 
   static void init() {
+    // Only initialize once
+    if (_router != null) return;
+
+    _rootNavigatorKey = GlobalKey<NavigatorState>();
+    _shellNavigatorKey = GlobalKey<NavigatorState>();
+
     _router = GoRouter(
-      navigatorKey: _rootNavigatorKey,
+      navigatorKey: _rootNavigatorKey!,
       initialLocation: '/splash',
       redirect: (context, state) {
         // Get the auth bloc to check authentication state
@@ -88,6 +95,11 @@ class AppRouter {
           builder: (context, state) => const SplashPage(),
         ),
         GoRoute(
+          path: '/maintenance',
+          name: 'maintenance',
+          builder: (context, state) => const MaintenancePage(),
+        ),
+        GoRoute(
           path: '/onboarding',
           name: 'onboarding',
           builder: (context, state) => const OnboardingPage(),
@@ -112,7 +124,7 @@ class AppRouter {
         ),
         // ShellRoute for bottom navigation to keep the BottomNavigationBar persistent
         ShellRoute(
-          navigatorKey: _shellNavigatorKey,
+          navigatorKey: _shellNavigatorKey!,
           builder: (context, state, child) {
             return MainNavigationPage(child: child);
           },
