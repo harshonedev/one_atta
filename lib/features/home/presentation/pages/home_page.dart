@@ -200,7 +200,7 @@ class _HomePageState extends State<HomePage> {
                 // Recipes Section
                 SliverToBoxAdapter(
                   child: SectionHeader(
-                    title: 'Recipes For You',
+                    title: 'Latest Recipes',
                     actionText: 'See All',
                     onActionPressed: () {
                       context.go('/recipes');
