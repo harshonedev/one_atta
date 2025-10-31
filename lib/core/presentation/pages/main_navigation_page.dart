@@ -99,7 +99,7 @@ class MainNavigationPage extends StatelessWidget {
                 BlendMode.srcIn,
               ),
             ),
-            label: 'Reels',
+            label: 'Play',
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(

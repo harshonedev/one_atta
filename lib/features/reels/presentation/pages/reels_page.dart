@@ -93,7 +93,7 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
         children: [
           Expanded(
             child: Text(
-              'Reels',
+              'Play',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
