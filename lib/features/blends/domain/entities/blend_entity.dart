@@ -56,7 +56,7 @@ class BlendDetailsEntity extends Equatable {
   final String id;
   final String name;
   final List<AdditiveEntity> additives;
-  final String createdBy;
+  final CreatedByEntity createdBy;
   final String shareCode;
   final int shareCount;
   final bool isPublic;

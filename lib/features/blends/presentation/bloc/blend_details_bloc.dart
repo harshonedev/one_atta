@@ -11,9 +11,6 @@ class BlendDetailsBloc extends Bloc<BlendDetailsEvent, BlendDetailsState> {
       super(const BlendDetailsInitial()) {
     on<LoadBlendDetails>(_onLoadBlendDetails);
     on<RefreshBlendDetails>(_onRefreshBlendDetails);
-    on<ShareBlendFromDetails>(_onShareBlendFromDetails);
-    on<SubscribeToBlendFromDetails>(_onSubscribeToBlendFromDetails);
-    on<UpdateBlendDetails>(_onUpdateBlendDetails);
   }
 
   Future<void> _onLoadBlendDetails(
@@ -41,62 +38,5 @@ class BlendDetailsBloc extends Bloc<BlendDetailsEvent, BlendDetailsState> {
       (failure) => emit(BlendDetailsError(failure.message)),
       (blend) => emit(BlendDetailsLoaded(blend)),
     );
-  }
-
-  Future<void> _onShareBlendFromDetails(
-    ShareBlendFromDetails event,
-    Emitter<BlendDetailsState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is BlendDetailsLoaded) {
-      emit(BlendDetailsActionLoading(currentState.blend));
-
-      final result = await _repository.shareBlend(event.blendId);
-
-      result.fold(
-        (failure) =>
-            emit(BlendDetailsActionError(currentState.blend, failure.message)),
-        (shareCode) => emit(BlendDetailsShared(currentState.blend, shareCode)),
-      );
-    }
-  }
-
-  Future<void> _onSubscribeToBlendFromDetails(
-    SubscribeToBlendFromDetails event,
-    Emitter<BlendDetailsState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is BlendDetailsLoaded) {
-      emit(BlendDetailsActionLoading(currentState.blend));
-
-      final result = await _repository.subscribeToBlend(event.blendId);
-
-      result.fold(
-        (failure) =>
-            emit(BlendDetailsActionError(currentState.blend, failure.message)),
-        (_) => emit(BlendDetailsSubscribed(currentState.blend)),
-      );
-    }
-  }
-
-  Future<void> _onUpdateBlendDetails(
-    UpdateBlendDetails event,
-    Emitter<BlendDetailsState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is BlendDetailsLoaded) {
-      emit(BlendDetailsActionLoading(currentState.blend));
-
-      final result = await _repository.updateBlend(
-        event.blendId,
-        event.updateBlend,
-      );
-
-      result.fold(
-        (failure) =>
-            emit(BlendDetailsActionError(currentState.blend, failure.message)),
-        (updatedBlend) => emit(BlendDetailsUpdated(updatedBlend)),
-      );
-    }
   }
 }

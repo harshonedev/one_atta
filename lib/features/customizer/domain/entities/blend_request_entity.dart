@@ -22,7 +22,7 @@ class SaveBlendEntity extends Equatable {
   const SaveBlendEntity({
     required this.name,
     required this.additives,
-    this.isPublic = false,
+    this.isPublic = true,
     required this.weightKg,
   });
 

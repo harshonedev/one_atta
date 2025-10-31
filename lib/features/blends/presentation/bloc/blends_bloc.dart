@@ -11,9 +11,6 @@ class BlendsBloc extends Bloc<BlendsEvent, BlendsState> {
       super(const BlendsInitial()) {
     on<LoadPublicBlends>(_onLoadPublicBlends);
     on<RefreshBlends>(_onRefreshBlends);
-    on<ShareBlend>(_onShareBlend);
-    on<SubscribeToBlend>(_onSubscribeToBlend);
-    on<GetBlendByShareCode>(_onGetBlendByShareCode);
   }
 
   Future<void> _onLoadPublicBlends(
@@ -40,48 +37,6 @@ class BlendsBloc extends Bloc<BlendsEvent, BlendsState> {
     result.fold(
       (failure) => emit(BlendsError(failure.message)),
       (blends) => emit(BlendsLoaded(blends)),
-    );
-  }
-
-  Future<void> _onShareBlend(
-    ShareBlend event,
-    Emitter<BlendsState> emit,
-  ) async {
-    emit(const BlendActionLoading());
-
-    final result = await _repository.shareBlend(event.blendId);
-
-    result.fold(
-      (failure) => emit(BlendActionError(failure.message)),
-      (shareCode) => emit(BlendShared(shareCode)),
-    );
-  }
-
-  Future<void> _onSubscribeToBlend(
-    SubscribeToBlend event,
-    Emitter<BlendsState> emit,
-  ) async {
-    emit(const BlendActionLoading());
-
-    final result = await _repository.subscribeToBlend(event.blendId);
-
-    result.fold(
-      (failure) => emit(BlendActionError(failure.message)),
-      (_) => emit(const BlendSubscribed()),
-    );
-  }
-
-  Future<void> _onGetBlendByShareCode(
-    GetBlendByShareCode event,
-    Emitter<BlendsState> emit,
-  ) async {
-    emit(const BlendsLoading());
-
-    final result = await _repository.getBlendByShareCode(event.shareCode);
-
-    result.fold(
-      (failure) => emit(BlendsError(failure.message)),
-      (blend) => emit(BlendByShareCodeLoaded(blend)),
     );
   }
 }

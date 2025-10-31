@@ -1,5 +1,6 @@
 class ApiEndpoints {
-  static const String baseUrl = 'https://api.oneatta.com/api/app';
+  static const String baseUrl =
+      'https://one-atta-backend-1.onrender.com/api/app';
   static const String auth = '$baseUrl/auth';
   static const String blends = '$baseUrl/blends';
   static const String addresses = '$baseUrl/addresses';

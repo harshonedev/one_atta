@@ -123,7 +123,7 @@ class BlendDetailsModel extends BlendDetailsEntity {
               ?.map((additive) => AdditiveModel.fromJson(additive))
               .toList() ??
           [],
-      createdBy: json['created_by'] ?? '',
+      createdBy: CreatedByModel.fromJson(json['created_by'] ?? {}),
       shareCode: json['share_code'] ?? '',
       shareCount: json['share_count'] ?? 0,
       isPublic: json['is_public'] ?? false,

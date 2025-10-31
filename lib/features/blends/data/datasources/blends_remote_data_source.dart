@@ -11,18 +11,6 @@ abstract class BlendsRemoteDataSource {
   /// Get blend details with price analysis
   Future<BlendDetailsModel> getBlendDetails(String id, String token);
 
-  /// Share a blend
-  Future<String> shareBlend(String id);
-
-  /// Subscribe to a blend
-  Future<void> subscribeToBlend(String id);
-
-  /// Update a blend
-  Future<BlendModel> updateBlend(String id, UpdateBlendModel blend);
-
-  /// Get blend by share code
-  Future<PublicBlendModel> getBlendByShareCode(String shareCode);
-
   /// Get user's own blends
   Future<List<BlendModel>> getUserBlends(String token);
 }

@@ -286,14 +286,26 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                     ),
                     const SizedBox(height: 8),
 
+                    // Creator name
                     Row(
                       children: [
+                        Text(
+                          'by ${blend.createdBy.name}',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                        const SizedBox(width: 16),
                         Icon(
                           Icons.share,
                           size: 16,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 4),
                         Text(
                           '${blend.shareCount} shares',
                           style: Theme.of(context).textTheme.bodyMedium

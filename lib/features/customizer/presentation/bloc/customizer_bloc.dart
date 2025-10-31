@@ -418,7 +418,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
       final saveBlendRequest = SaveBlendEntity(
         name: finalBlendName,
         additives: additives,
-        isPublic: false,
+        isPublic: true,
         weightKg: state.totalWeight / 1000,
       );
 
@@ -548,7 +548,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
         final saveBlendRequest = SaveBlendEntity(
           name: blendName,
           additives: additives,
-          isPublic: false,
+          isPublic: true,
           weightKg: state.totalWeight / 1000,
         );
 

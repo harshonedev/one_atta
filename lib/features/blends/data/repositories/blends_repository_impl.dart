@@ -59,61 +59,6 @@ class BlendsRepositoryImpl implements BlendsRepository {
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
-
-  @override
-  Future<Either<Failure, String>> shareBlend(String id) async {
-    try {
-      final result = await remoteDataSource.shareBlend(id);
-      return Right(result);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error occurred: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> subscribeToBlend(String id) async {
-    try {
-      await remoteDataSource.subscribeToBlend(id);
-      return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error occurred: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, BlendEntity>> updateBlend(
-    String id,
-    UpdateBlendEntity blend,
-  ) async {
-    try {
-      final blendModel = UpdateBlendModel.fromEntity(blend);
-      final result = await remoteDataSource.updateBlend(id, blendModel);
-      return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error occurred: $e'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, PublicBlendEntity>> getBlendByShareCode(
-    String shareCode,
-  ) async {
-    try {
-      final result = await remoteDataSource.getBlendByShareCode(shareCode);
-      return Right(result.toEntity());
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(ServerFailure('Unexpected error occurred: $e'));
-    }
-  }
-
   @override
   Future<Either<Failure, List<BlendEntity>>> getUserBlends() async {
     try {

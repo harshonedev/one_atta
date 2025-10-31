@@ -267,7 +267,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       // Sort by popularity and take top trending ones
       final sortedBlends = List<PublicBlendEntity>.from(blends);
       sortedBlends.sort((a, b) => b.shareCount.compareTo(a.shareCount));
-      return sortedBlends.take(6).toList();
+      return sortedBlends.take(5).toList();
     });
   }
 
