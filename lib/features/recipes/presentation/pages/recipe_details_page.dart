@@ -51,7 +51,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
   }
 
   void _initializeYoutubePlayer(String videoUrl) {
-    final videoId = YoutubePlayer.convertUrlToId(videoUrl); 
+    final videoId = YoutubePlayer.convertUrlToId(videoUrl);
     if (videoId != null) {
       _youtubeController = YoutubePlayerController(
         initialVideoId: videoId,

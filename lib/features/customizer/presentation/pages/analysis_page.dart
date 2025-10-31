@@ -34,7 +34,10 @@ class _AnalysisPageState extends State<AnalysisPage> {
     });
   }
 
-  void _checkAndAddToCartIfPending(BuildContext context, SavedBlendEntity savedBlend) {
+  void _checkAndAddToCartIfPending(
+    BuildContext context,
+    SavedBlendEntity savedBlend,
+  ) {
     if (_pendingAddToCart) {
       _pendingAddToCart = false;
       _addBlendToCart(context, savedBlend);

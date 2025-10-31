@@ -44,9 +44,7 @@ class _OrdersPageState extends State<OrdersPage>
       ),
       body: SafeArea(
         child: Column(
-          children: [
-            Expanded(child: OrdersList(filterStatus: null)),
-          ],
+          children: [Expanded(child: OrdersList(filterStatus: null))],
         ),
       ),
     );

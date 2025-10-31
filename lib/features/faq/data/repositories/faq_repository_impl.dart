@@ -50,7 +50,9 @@ class FaqRepositoryImpl implements FaqRepository {
   }
 
   @override
-  Future<Either<Failure, FaqHelpfulMarkedResponse>> markFaqAsHelpful(String faqId) async {
+  Future<Either<Failure, FaqHelpfulMarkedResponse>> markFaqAsHelpful(
+    String faqId,
+  ) async {
     try {
       final result = await remoteDataSource.markFaqAsHelpful(faqId);
       return Right(result);

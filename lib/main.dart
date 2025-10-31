@@ -28,6 +28,7 @@ import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:one_atta/features/faq/presentation/bloc/faq_bloc.dart';
 import 'package:one_atta/features/feedback/presentation/bloc/feedback_bloc.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
+import 'package:one_atta/features/contact/presentation/bloc/contact_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,6 +82,7 @@ class MainApp extends StatelessWidget {
         BlocProvider(
           create: (context) => di.sl<AppSettingsBloc>()..add(LoadAppSettings()),
         ),
+        BlocProvider(create: (context) => di.sl<ContactBloc>()),
       ],
       child: MaterialApp.router(
         title: 'One Atta',

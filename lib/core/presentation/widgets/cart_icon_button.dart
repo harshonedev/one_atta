@@ -22,7 +22,6 @@ class CartIconButton extends StatelessWidget {
                 Icons.shopping_cart_outlined,
                 size: 24,
                 color: Theme.of(context).colorScheme.onSurface,
-              
               ),
               tooltip: 'Cart',
             ),

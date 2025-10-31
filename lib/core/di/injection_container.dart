@@ -37,6 +37,13 @@ import 'package:one_atta/features/app_settings/data/repositories/app_settings_re
 import 'package:one_atta/features/app_settings/domain/repositories/app_settings_repository.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
 
+// Contact
+import 'package:one_atta/features/contact/data/datasources/contact_remote_data_source.dart';
+import 'package:one_atta/features/contact/data/datasources/contact_remote_data_source_impl.dart';
+import 'package:one_atta/features/contact/data/repositories/contact_repository_impl.dart';
+import 'package:one_atta/features/contact/domain/repositories/contact_repository.dart';
+import 'package:one_atta/features/contact/presentation/bloc/contact_bloc.dart';
+
 // BLoC
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
@@ -499,6 +506,20 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<AppSettingsRemoteDataSource>(
     () => AppSettingsRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  //! Features - Contact
+  // BLoC
+  sl.registerFactory(() => ContactBloc(repository: sl()));
+
+  // Repository
+  sl.registerLazySingleton<ContactRepository>(
+    () => ContactRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<ContactRemoteDataSource>(
+    () => ContactRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   // API Request

@@ -379,6 +379,12 @@ class MorePage extends StatelessWidget {
             children: [
               _buildSettingsItem(
                 context,
+                'Contact Us',
+                Icons.contact_support_outlined,
+                () => context.push('/contact'),
+              ),
+              _buildSettingsItem(
+                context,
                 'Help & FAQs',
                 Icons.help_outline,
                 () => context.push('/faq'),
