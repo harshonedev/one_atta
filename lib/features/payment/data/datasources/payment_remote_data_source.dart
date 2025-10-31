@@ -24,6 +24,7 @@ abstract class PaymentRemoteDataSource {
     String? discountType, // NEW: "loyalty" or "coupon" or null
     String? couponCode,
     int loyaltyPointsUsed = 0,
+    String? userNote, // NEW: Delivery instructions (max 50 chars)
   });
 
   /// Verify Razorpay payment (POST /api/app/payments/verify)

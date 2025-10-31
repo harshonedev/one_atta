@@ -76,6 +76,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
     String? discountType,
     String? couponCode,
     int loyaltyPointsUsed = 0,
+    String? userNote,
   }) async {
     final requestData = {
       'items': items.map((item) => item.toJson()).toList(),
@@ -92,6 +93,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       if (couponCode != null && couponCode.isNotEmpty)
         'coupon_code': couponCode,
       if (loyaltyPointsUsed > 0) 'loyalty_points_used': loyaltyPointsUsed,
+      if (userNote != null && userNote.isNotEmpty) 'user_note': userNote,
     };
 
     final response = await apiRequest.callRequest(

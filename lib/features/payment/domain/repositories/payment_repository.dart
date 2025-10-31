@@ -25,6 +25,7 @@ abstract class PaymentRepository {
     String? discountType, // NEW: "loyalty" or "coupon" or null
     String? couponCode,
     int loyaltyPointsUsed = 0,
+    String? userNote, // NEW: Delivery instructions (max 50 chars)
   });
 
   /// Verify Razorpay payment (follows /api/app/payments/verify)

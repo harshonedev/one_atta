@@ -433,7 +433,7 @@ class MorePage extends StatelessWidget {
                           "Terms and Condition Url - ${state.settings.termsAndConditionsUrl}",
                         );
                       } else {
-                        print("State  - ${state}");
+                        print("State  - $state");
                       }
 
                       final url = state is AppSettingsLoaded

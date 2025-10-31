@@ -30,6 +30,13 @@ class PaymentMethodSelectionPage extends StatefulWidget {
 class _PaymentMethodSelectionPageState
     extends State<PaymentMethodSelectionPage> {
   String? _selectedPaymentType; // 'COD' or 'Razorpay'
+  final TextEditingController _noteController = TextEditingController();
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
 
   void _onPaymentMethodSelected(String paymentType) {
     setState(() {
@@ -101,6 +108,9 @@ class _PaymentMethodSelectionPageState
             ? 'loyalty'
             : (couponCode != null && couponCode.isNotEmpty)
             ? 'coupon'
+            : null,
+        userNote: _noteController.text.trim().isNotEmpty
+            ? _noteController.text.trim()
             : null,
       ),
     );
@@ -215,6 +225,10 @@ class _PaymentMethodSelectionPageState
                         isSelected: _selectedPaymentType == 'Razorpay',
                       ),
 
+                      // Delivery Instructions
+                      const SizedBox(height: 24),
+                      _buildDeliveryInstructions(),
+
                       // Order Summary
                       const SizedBox(height: 24),
                       _buildOrderSummary(),
@@ -277,6 +291,72 @@ class _PaymentMethodSelectionPageState
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveryInstructions() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.note_alt_outlined,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Instructions',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _noteController,
+            maxLength: 50,
+            maxLines: 2,
+            decoration: InputDecoration(
+              hintText: 'e.g., Atta should be soft, Avoid plastic packaging,',
+              hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              counterStyle: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );

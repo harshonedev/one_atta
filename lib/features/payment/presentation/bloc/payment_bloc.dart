@@ -60,6 +60,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       discountType: event.discountType,
       couponCode: event.couponCode,
       loyaltyPointsUsed: event.loyaltyPointsUsed,
+      userNote: event.userNote,
     );
 
     result.fold((failure) => emit(PaymentError(failure.message)), (response) {

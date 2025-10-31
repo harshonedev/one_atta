@@ -55,6 +55,7 @@ Get all orders for the authenticated user (only orders with successful payments)
         "pincode": "400001"
       },
       "contact_numbers": ["+919876543210"],
+      "user_note": "Please deliver between 2-4 PM",
       "payment_method": "Razorpay",
       "payment_status": "completed",
       "payment_verified": true,
@@ -137,6 +138,7 @@ Get details of a specific order.
       "pincode": "400001"
     },
     "contact_numbers": ["+919876543210"],
+    "user_note": "Leave at reception if not home",
     "payment_method": "Razorpay",
     "payment_status": "completed",
     "payment_verified": true,

@@ -66,6 +66,7 @@ Creates a new order and initializes Razorpay payment for online orders.
   ],
   "delivery_address": "507f1f77bcf86cd799439013",
   "contact_numbers": ["+91-9876543210"],
+  "user_note": "Please deliver between 2-4 PM. Leave package at the door.",
   "payment_method": "Razorpay",
   "subtotal": 750,
   "discount_amount": 75,
@@ -91,6 +92,7 @@ Creates a new order and initializes Razorpay payment for online orders.
 | items[].total_price | Number | Yes | Total price for this item (> 0) |
 | delivery_address | ObjectId | Yes | User's address ID |
 | contact_numbers | Array | Yes | 1-2 phone numbers |
+| user_note | String | No | **NEW** Special instructions or notes from user (max 500 chars) |
 | payment_method | String | Yes | "Razorpay", "COD", "UPI", "Card", "Wallet" |
 | subtotal | Number | Yes | **NEW** Pre-calculated subtotal from frontend |
 | discount_amount | Number | No | **NEW** Pre-calculated discount (default: 0) |
@@ -123,6 +125,7 @@ Creates a new order and initializes Razorpay payment for online orders.
       "_id": "507f1f77bcf86cd799439014",
       "status": "pending",
       "payment_status": "pending",
+      "user_note": "Please deliver between 2-4 PM. Leave package at the door.",
       "subtotal": 750,
       "discount_amount": 75,
       "is_discount_availed": true,
@@ -162,6 +165,7 @@ Creates a new order and initializes Razorpay payment for online orders.
       "_id": "507f1f77bcf86cd799439014",
       "status": "pending",
       "payment_status": "pending",
+      "user_note": "Please call before delivery",
       "subtotal": 750,
       "discount_amount": 0,
       "is_discount_availed": false,
@@ -254,6 +258,7 @@ Verifies Razorpay payment signature and completes the order.
     "razorpay_order_id": "order_MtxVHqz9v8V1Gg",
     "razorpay_payment_id": "pay_MtxWKzJP2KLy9E",
     "delivery_address": {...},
+    "user_note": "Please deliver between 2-4 PM. Leave package at the door.",
     "subtotal": 750,
     "discount_amount": 75,
     "is_discount_availed": true,
@@ -308,6 +313,7 @@ Confirms a Cash on Delivery order and processes loyalty/coupon.
     "payment_method": "COD",
     "payment_status": "pending",
     "delivery_address": {...},
+    "user_note": "Please call before delivery",
     "subtotal": 750,
     "discount_amount": 0,
     "is_discount_availed": false,
@@ -443,7 +449,7 @@ const createOrder = async (items, orderSummary, addressId, contactNumbers, payme
     coupon_code: orderSummary.couponCode,
     loyalty_points_used: orderSummary.loyaltyPointsUsed
   };
-  
+const createOrder = async (orderData) => {
   const response = await fetch('/api/app/payments/create-order', {
     method: 'POST',
     headers: {
@@ -452,12 +458,19 @@ const createOrder = async (items, orderSummary, addressId, contactNumbers, payme
     },
     body: JSON.stringify(orderData)
   });
-  
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
   const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.message || 'Order creation failed');
+  }
+
   return result.data;
 };
-```
-
 ### Step 3: Initialize Razorpay (for online payments)
 ```javascript
 // Initialize Razorpay checkout
@@ -848,7 +861,8 @@ POST /api/app/payments/create-order
   "total_amount": 390,
   "payment_method": "Razorpay",
   "delivery_address": "addr123",
-  "contact_numbers": ["+919876543210"]
+  "contact_numbers": ["+919876543210"],
+  "user_note": "Please ring the doorbell twice"
 }
 ```
 
@@ -897,7 +911,8 @@ POST /api/app/payments/create-order
   "total_amount": 445,
   "payment_method": "Razorpay",
   "delivery_address": "addr123",
-  "contact_numbers": ["+919876543210"]
+  "contact_numbers": ["+919876543210"],
+  "user_note": "Leave at reception desk if not home"
 }
 ```
 
@@ -945,7 +960,8 @@ POST /api/app/payments/create-order
   "total_amount": 510,
   "payment_method": "COD",
   "delivery_address": "addr123",
-  "contact_numbers": ["+919876543210"]
+  "contact_numbers": ["+919876543210"],
+  "user_note": "Please deliver in the evening after 6 PM"
 }
 ```
 
@@ -974,6 +990,12 @@ For payment-related issues:
 ---
 
 ## Changelog
+
+### Version 2.1 (October 2025)
+- ✅ **NEW**: Added `user_note` field to orders (optional, max 500 chars)
+- ✅ **FEATURE**: Users can now add special delivery instructions when placing orders
+- ✅ **VISIBILITY**: User notes visible to admins in all order management endpoints
+- 📝 **USE CASE**: "Please deliver between 2-4 PM", "Call before delivery", etc.
 
 ### Version 2.0 (October 2025)
 - ✅ **NEW**: Added `weight_in_kg` field to order items

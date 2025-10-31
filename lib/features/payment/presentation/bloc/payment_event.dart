@@ -36,6 +36,7 @@ class CreateOrder extends PaymentEvent {
   final String? discountType; // NEW: "loyalty" or "coupon" or null
   final String? couponCode;
   final int loyaltyPointsUsed;
+  final String? userNote; // NEW: Delivery instructions (max 50 chars)
 
   const CreateOrder({
     required this.items,
@@ -51,6 +52,7 @@ class CreateOrder extends PaymentEvent {
     this.discountType,
     this.couponCode,
     this.loyaltyPointsUsed = 0,
+    this.userNote,
   });
 
   @override
@@ -68,6 +70,7 @@ class CreateOrder extends PaymentEvent {
     discountType,
     couponCode,
     loyaltyPointsUsed,
+    userNote,
   ];
 }
 

@@ -23,6 +23,7 @@ class UserModel extends UserEntity {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       '_id': id,

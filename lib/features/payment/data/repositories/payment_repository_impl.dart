@@ -48,6 +48,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
     String? discountType,
     String? couponCode,
     int loyaltyPointsUsed = 0,
+    String? userNote,
   }) async {
     try {
       final token = await authLocalDataSource.getToken();
@@ -70,6 +71,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
         discountType: discountType,
         couponCode: couponCode,
         loyaltyPointsUsed: loyaltyPointsUsed,
+        userNote: userNote,
       );
       logger.i('Order created successfully: ${response.order.id}');
       return Right(response);
