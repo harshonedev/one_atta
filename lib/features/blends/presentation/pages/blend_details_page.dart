@@ -10,7 +10,6 @@ import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.da
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_event.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blend_details_state.dart';
 import 'package:one_atta/features/blends/presentation/widgets/ingredients_card.dart';
-import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
@@ -158,7 +157,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                   // BacKground image
                   Positioned.fill(
                     child: Image.network(
-                      BlendImages.getImageForBlend(widget.blendId),
+                      blend.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -616,7 +615,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
       price: blendUsed.pricePerKg * _selectedWeight,
       mrp: blendUsed.pricePerKg * _selectedWeight,
       pricePerKg: blendUsed.pricePerKg,
-      imageUrl: BlendImages.getImageForBlend(blendUsed.id),
+      imageUrl: blendUsed.imageUrl,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       weightInKg: _selectedWeight,

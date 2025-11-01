@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
-import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
-
 class BlendCard extends StatelessWidget {
   final PublicBlendEntity blend;
   final VoidCallback? onTap;
@@ -37,7 +35,7 @@ class BlendCard extends StatelessWidget {
           children: [
             // Image with NetworkImageLoader
             NetworkImageLoader(
-              imageUrl: BlendImages.getImageForBlend(blend.id),
+              imageUrl: blend.imageUrl,
               height: 120,
               width: double.infinity,
               borderRadius: BorderRadius.circular(12),
@@ -99,7 +97,7 @@ class BlendCard extends StatelessWidget {
             children: [
               // Image
               NetworkImageLoader(
-                imageUrl: BlendImages.getImageForBlend(blend.id),
+                imageUrl: blend.imageUrl,
                 height: 80,
                 width: 80,
                 borderRadius: BorderRadius.circular(8),

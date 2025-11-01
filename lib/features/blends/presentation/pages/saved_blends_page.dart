@@ -9,7 +9,6 @@ import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/presentation/bloc/saved_blends_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/saved_blends_event.dart';
 import 'package:one_atta/features/blends/presentation/bloc/saved_blends_state.dart';
-import 'package:one_atta/features/blends/presentation/constants/blend_images.dart';
 
 class SavedBlendsPage extends StatelessWidget {
   const SavedBlendsPage({super.key});
@@ -219,7 +218,7 @@ class SavedBlendListCard extends StatelessWidget {
           children: [
             // Image section
             NetworkImageLoader(
-              imageUrl: BlendImages.getImageForBlend(blend.id),
+              imageUrl: blend.imageUrl,
               height: 180,
               width: double.infinity,
               borderRadius: BorderRadius.circular(12),

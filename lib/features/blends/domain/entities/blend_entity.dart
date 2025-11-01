@@ -7,6 +7,7 @@ class BlendEntity extends Equatable {
   final String id;
   final String name;
   final List<AdditiveEntity> additives;
+  final String imageUrl;
   final String createdBy;
   final String shareCode;
   final int shareCount;
@@ -27,6 +28,7 @@ class BlendEntity extends Equatable {
     required this.shareCount,
     required this.isPublic,
     required this.pricePerKg,
+    required this.imageUrl,
     this.totalPrice,
     required this.expiryDays,
     required this.deleted,
@@ -49,6 +51,7 @@ class BlendEntity extends Equatable {
     deleted,
     createdAt,
     updatedAt,
+    imageUrl,
   ];
 }
 
@@ -57,6 +60,7 @@ class BlendDetailsEntity extends Equatable {
   final String name;
   final List<AdditiveEntity> additives;
   final CreatedByEntity createdBy;
+  final String imageUrl;
   final String shareCode;
   final int shareCount;
   final bool isPublic;
@@ -78,6 +82,7 @@ class BlendDetailsEntity extends Equatable {
     required this.shareCount,
     required this.isPublic,
     required this.pricePerKg,
+    required this.imageUrl,
     this.totalPrice,
     required this.expiryDays,
     this.priceAnalysis,
@@ -103,6 +108,7 @@ class BlendDetailsEntity extends Equatable {
     blendPriceComparison,
     pricing,
     createdAt,
+    imageUrl,
     updatedAt,
   ];
 }
@@ -112,6 +118,7 @@ class PublicBlendEntity extends Equatable {
   final String name;
   final List<AdditiveEntity> additives;
   final CreatedByEntity createdBy;
+  final String imageUrl;
   final String shareCode;
   final int shareCount;
   final bool isPublic;
@@ -125,6 +132,7 @@ class PublicBlendEntity extends Equatable {
     required this.name,
     required this.additives,
     required this.createdBy,
+    required this.imageUrl,
     required this.shareCode,
     required this.shareCount,
     required this.isPublic,
@@ -147,5 +155,6 @@ class PublicBlendEntity extends Equatable {
     expiryDays,
     createdAt,
     updatedAt,
+    imageUrl,
   ];
 }

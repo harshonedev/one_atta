@@ -18,6 +18,7 @@ class BlendModel extends BlendEntity {
     required super.deleted,
     required super.createdAt,
     required super.updatedAt,
+    required super.imageUrl,
   });
 
   factory BlendModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +41,7 @@ class BlendModel extends BlendEntity {
               .toList() ??
           [],
       createdBy: createdBy,
+      imageUrl: json['blend_image_url'] ?? '',
       shareCode: json['share_code'] ?? '',
       shareCount: json['share_count'] ?? 0,
       isPublic: json['is_public'] ?? false,
@@ -71,6 +73,7 @@ class BlendModel extends BlendEntity {
       'total_price': totalPrice,
       'expiry_days': expiryDays,
       'deleted': deleted,
+      'blend_image_url': imageUrl,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -91,6 +94,7 @@ class BlendModel extends BlendEntity {
       deleted: deleted,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      imageUrl: imageUrl,
     );
   }
 }
@@ -110,6 +114,7 @@ class BlendDetailsModel extends BlendDetailsEntity {
     super.priceAnalysis,
     super.blendPriceComparison,
     super.pricing,
+    required super.imageUrl,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -118,6 +123,7 @@ class BlendDetailsModel extends BlendDetailsEntity {
     return BlendDetailsModel(
       id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? '',
+      imageUrl: json['blend_image_url'] ?? '',
       additives:
           (json['additives'] as List<dynamic>?)
               ?.map((additive) => AdditiveModel.fromJson(additive))
@@ -156,6 +162,7 @@ class BlendDetailsModel extends BlendDetailsEntity {
           .map((additive) => (additive as AdditiveModel).toJson())
           .toList(),
       'created_by': createdBy,
+      'blend_image_url': imageUrl,
       'share_code': shareCode,
       'share_count': shareCount,
       'is_public': isPublic,
@@ -190,6 +197,7 @@ class BlendDetailsModel extends BlendDetailsEntity {
       pricing: pricing,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      imageUrl: imageUrl,
     );
   }
 }
@@ -207,6 +215,7 @@ class PublicBlendModel extends PublicBlendEntity {
     required super.expiryDays,
     required super.createdAt,
     required super.updatedAt,
+    required super.imageUrl,
   });
 
   factory PublicBlendModel.fromJson(Map<String, dynamic> json) {
@@ -230,6 +239,7 @@ class PublicBlendModel extends PublicBlendEntity {
       updatedAt: DateTime.parse(
         json['updatedAt'] ?? DateTime.now().toIso8601String(),
       ),
+      imageUrl: json['blend_image_url'] ?? '',
     );
   }
 
@@ -248,6 +258,7 @@ class PublicBlendModel extends PublicBlendEntity {
       'expiry_days': expiryDays,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'blend_image_url': imageUrl,
     };
   }
 
@@ -264,6 +275,7 @@ class PublicBlendModel extends PublicBlendEntity {
       expiryDays: expiryDays,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      imageUrl: imageUrl,
     );
   }
 }
