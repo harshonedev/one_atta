@@ -80,33 +80,9 @@ class _ImageCarouselState extends State<ImageCarousel> {
                     decoration: BoxDecoration(
                       color: _currentIndex == index
                           ? Theme.of(context).colorScheme.primary
-                          : Colors.white.withOpacity(0.6),
+                          : Colors.white.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                  ),
-                ),
-              ),
-            ),
-
-          // Image Counter
-          if (widget.imageUrls.length > 1)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  '${_currentIndex + 1}/${widget.imageUrls.length}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -177,7 +153,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             shape: BoxShape.circle,
           ),
           child: Icon(

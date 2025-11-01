@@ -75,7 +75,9 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
           leading: Container(
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.7),
               shape: BoxShape.circle,
             ),
             child: BackButton(color: Theme.of(context).colorScheme.onSurface),
@@ -90,7 +92,9 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
             Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.7),
                 shape: BoxShape.circle,
               ),
               child: IconButton(
@@ -608,7 +612,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -764,7 +768,7 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
           textColor: Theme.of(context).colorScheme.onPrimary,
           backgroundColor: Theme.of(
             context,
-          ).colorScheme.onPrimary.withOpacity(0.1),
+          ).colorScheme.onPrimary.withValues(alpha: 0.1),
           onPressed: () {
             context.push('/cart');
           },

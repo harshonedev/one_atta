@@ -28,14 +28,31 @@ class ProductModel extends DailyEssentialEntity {
     // Map API response to our entity
     // Based on the product API docs, the API returns:
     // id, sku, name, description, isSeasonal, is_available, price_per_kg, prod_picture, nutritional_info, createdAt, updatedAt
-
+    final productImages = json['product_images'] as List<dynamic>?;
+    print('ProductModel.fromJson - productImages: $productImages');
+    final images = productImages != null && productImages.isNotEmpty
+        ? productImages
+              .where((img) => img['is_primary'] != true)
+              .map((img) => img['url'] as String)
+              .whereType<String>()
+              .toList()
+        : <String>[];
+    print('ProductModel.fromJson - additional images: $images');
+    final primaryImage = productImages != null
+        ? productImages.firstWhere(
+                (img) => img['is_primary'] == true,
+                orElse: () => {},
+              )['url']
+              as String?
+        : null;
+    print('ProductModel.fromJson - primary image: $primaryImage');
+    final urls = [if (primaryImage != null) primaryImage, ...images];
+    print('ProductModel.fromJson - imageUrls: $urls');
     return ProductModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       description: json['description'] ?? '',
-      imageUrls: json['prod_picture'] != null && json['prod_picture'].isNotEmpty
-          ? [json['prod_picture']]
-          : [],
+      imageUrls: urls,
       category: _determineCategoryFromName(json['name'] ?? ''),
       price: (json['price_per_kg'] ?? 0.0).toDouble(),
       originalPrice: (json['price_per_kg'] ?? 0.0)

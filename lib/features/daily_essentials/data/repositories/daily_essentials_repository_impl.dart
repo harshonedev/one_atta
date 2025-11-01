@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:logger/logger.dart';
 import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/daily_essentials/data/datasources/daily_essentials_remote_data_source.dart';
 import 'package:one_atta/features/daily_essentials/domain/entities/daily_essential_entity.dart';
@@ -6,6 +7,8 @@ import 'package:one_atta/features/daily_essentials/domain/repositories/daily_ess
 
 class DailyEssentialsRepositoryImpl implements DailyEssentialsRepository {
   final DailyEssentialsRemoteDataSource remoteDataSource;
+
+  final Logger logger = Logger();
 
   DailyEssentialsRepositoryImpl({required this.remoteDataSource});
 
@@ -36,8 +39,10 @@ class DailyEssentialsRepositoryImpl implements DailyEssentialsRepository {
         result.data.products.map((product) => product.toEntity()).toList(),
       );
     } on Failure catch (failure) {
+      logger.e('Error in getAllProducts: $failure');
       return Left(failure);
     } catch (e) {
+      logger.e('Unexpected error in getAllProducts: $e');
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
