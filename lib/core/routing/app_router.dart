@@ -35,6 +35,7 @@ import 'package:one_atta/features/profile/presentation/pages/profile_page.dart';
 import 'package:one_atta/features/profile/presentation/pages/edit_profile_page.dart';
 import 'package:one_atta/features/faq/presentation/pages/faq_page.dart';
 import 'package:one_atta/features/contact/presentation/pages/contact_us_page.dart';
+import 'package:one_atta/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:one_atta/features/feedback/presentation/pages/submit_feedback_page.dart';
 import 'package:one_atta/features/feedback/presentation/pages/feedback_history_page.dart';
 import 'package:one_atta/features/payment/presentation/pages/payment_method_selection_page.dart';
@@ -271,6 +272,12 @@ class AppRouter {
           path: '/contact',
           name: 'contact',
           builder: (context, state) => const ContactUsPage(),
+        ),
+        // Notifications Route
+        GoRoute(
+          path: '/notifications',
+          name: 'notifications',
+          builder: (context, state) => const NotificationsPage(),
         ),
         // Feedback Routes
         GoRoute(

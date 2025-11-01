@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:one_atta/core/presentation/widgets/network_image_loader.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
+
 class BlendCard extends StatelessWidget {
   final PublicBlendEntity blend;
   final VoidCallback? onTap;

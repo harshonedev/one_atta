@@ -14,5 +14,3 @@ class LoadPublicBlends extends BlendsEvent {
 class RefreshBlends extends BlendsEvent {
   const RefreshBlends();
 }
-
-

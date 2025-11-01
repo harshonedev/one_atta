@@ -62,6 +62,7 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
       ApiError() => throw response.failure,
     };
   }
+
   @override
   Future<List<BlendModel>> getUserBlends(String token) async {
     final response = await apiRequest.callRequest(

@@ -5,6 +5,91 @@ One Atta is a Flutter application for flour/atta blending and recipe management.
 
 ## Recent Updates
 
+### Firebase Cloud Messaging (FCM) Notifications Implementation (November 1, 2025)
+**Feature**: Complete notification system using Firebase Cloud Messaging with local storage and real-time push notifications.
+
+**Implementation Details**:
+- **FCM Integration**: Firebase Cloud Messaging for push notifications with background and foreground message handling
+- **Local Notifications**: Flutter Local Notifications plugin for displaying notifications when app is in foreground
+- **Notification Storage**: SharedPreferences-based local storage for notification history (up to 100 notifications)
+- **Real-time Updates**: Stream-based notification delivery with automatic BLoC state updates
+- **Clean Architecture**: Domain, Data, and Presentation layers following project architecture pattern
+- **API Integration**: Backend API endpoints for FCM token management with JWT authentication
+
+**Features Implemented**:
+- **Push Notifications**: 
+  - Foreground notifications with local notification display
+  - Background notification handling with top-level function
+  - Notification tap handling for deep linking
+  - FCM token management with automatic refresh
+- **Notification Management**:
+  - View all notifications with timestamp and read status
+  - Mark individual notifications as read
+  - Mark all notifications as read
+  - Delete individual notifications with swipe gesture
+  - Clear all notifications
+  - Unread count badge display
+- **Notification Types**: Support for different notification types (order, promotion, delivery, general) with custom icons
+- **Topic Subscriptions**: Subscribe/unsubscribe to FCM topics for targeted messaging
+- **FCM Token API Integration**:
+  - Automatic token registration on app start and authentication
+  - Token removal on logout
+  - Backend synchronization for push notification targeting
+  - Error handling for network failures
+
+**UI Components**:
+- **Notifications Page**: Full-screen page with list of notifications
+- **Notification Cards**: Dismissible cards with icon, title, body, timestamp, and read indicator
+- **Badge Icon Widget**: Reusable notification bell icon with unread count badge
+- **Empty State**: Friendly empty state when no notifications exist
+- **Pull to Refresh**: Refresh notifications list with swipe down gesture
+
+**Technical Implementation**:
+- **FCM Service**: Centralized service for FCM initialization, token management, and message handling with token change callbacks
+- **Repository Pattern**: Abstract repository with local and remote data sources for notification CRUD and API operations
+- **BLoC State Management**: NotificationBloc for state management with events for all notification actions including API calls
+- **Data Models**: 
+  - NotificationEntity (domain) and NotificationModel (data) with JSON serialization
+  - FcmTokenResponseModel for API responses
+- **Remote Data Source**: HTTP client integration for FCM token management API endpoints
+- **Utility Service**: NotificationService for high-level token management operations
+- **Android Configuration**: 
+  - POST_NOTIFICATIONS permission for Android 13+
+  - Custom notification icon and color resources
+  - High importance notification channel
+  - Default notification metadata in AndroidManifest.xml
+  - Core library desugaring enabled for flutter_local_notifications compatibility
+
+**API Endpoints Integrated**:
+- `POST /updatefcmtoken` - Register/update FCM token for authenticated user
+- `DELETE /removefcmtoken` - Remove FCM token on logout
+- JWT token authentication for API security
+- Error handling for network failures and authentication issues
+
+**Routing & Navigation**:
+- `/notifications` route for notifications page
+- Deep linking support for notification tap actions
+- Navigation from notification badge icon in app bar
+
+**Background Message Handling**:
+- Top-level `firebaseMessagingBackgroundHandler` function
+- Automatic notification saving to local storage
+- BLoC event dispatch for UI updates
+
+**Notification Data Structure**:
+```dart
+{
+  id: String,
+  title: String,
+  body: String,
+  imageUrl: String?,
+  data: Map<String, dynamic>?,
+  timestamp: DateTime,
+  isRead: bool,
+  type: String? // 'order', 'promotion', 'delivery', 'general'
+}
+```
+
 ### Transaction History Page Implementation (October 14, 2025)
 **Feature**: Created a comprehensive transaction history page for detailed view of all loyalty point transactions.
 

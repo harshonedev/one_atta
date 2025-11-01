@@ -44,6 +44,15 @@ import 'package:one_atta/features/contact/data/repositories/contact_repository_i
 import 'package:one_atta/features/contact/domain/repositories/contact_repository.dart';
 import 'package:one_atta/features/contact/presentation/bloc/contact_bloc.dart';
 
+// Notifications
+import 'package:one_atta/features/notifications/data/datasources/notification_local_data_source.dart';
+import 'package:one_atta/features/notifications/data/datasources/notification_remote_data_source.dart';
+import 'package:one_atta/features/notifications/data/datasources/notification_remote_data_source_impl.dart';
+import 'package:one_atta/features/notifications/data/repositories/notification_repository_impl.dart';
+import 'package:one_atta/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:one_atta/core/services/fcm_service.dart';
+import 'package:one_atta/core/services/notification_service.dart';
+
 // BLoC
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/blends/presentation/bloc/blends_bloc.dart';
@@ -520,6 +529,44 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<ContactRemoteDataSource>(
     () => ContactRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  //! Features - Notifications
+  // BLoC
+  sl.registerFactory(
+    () => NotificationBloc(
+      repository: sl(),
+      fcmService: sl(),
+      authRepository: sl(),
+    ),
+  );
+
+  // Repository
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      localDataSource: sl(),
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<NotificationLocalDataSource>(
+    () => NotificationLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  // Services
+  sl.registerLazySingleton(() => FCMService());
+
+  sl.registerLazySingleton(
+    () => NotificationService(
+      fcmService: sl(),
+      notificationRemoteDataSource: sl(),
+      authLocalDataSource: sl(),
+    ),
   );
 
   // API Request

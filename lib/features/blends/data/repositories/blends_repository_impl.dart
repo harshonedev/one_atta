@@ -59,6 +59,7 @@ class BlendsRepositoryImpl implements BlendsRepository {
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
+
   @override
   Future<Either<Failure, List<BlendEntity>>> getUserBlends() async {
     try {

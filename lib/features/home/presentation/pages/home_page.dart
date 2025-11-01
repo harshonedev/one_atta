@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
 import 'package:one_atta/core/presentation/widgets/cart_icon_button.dart';
+import 'package:one_atta/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
@@ -302,37 +303,8 @@ class _HomePageState extends State<HomePage> {
 
           const Spacer(),
 
-          // Notification icon
-          IconButton(
-            onPressed: () {
-              // Navigate to notifications
-            },
-            icon: Stack(
-              children: [
-                SvgPicture.asset(
-                  AppAssets.notificationsIcon,
-                  width: 24,
-                  height: 24,
-                  colorFilter: ColorFilter.mode(
-                    Theme.of(context).colorScheme.onSurface,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.error,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Notification icon with badge
+          const NotificationBadgeIcon(),
 
           // Cart icon
           CartIconButton(),

@@ -1,7 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/routing/app_router.dart';
+import 'package:one_atta/core/services/notification_service.dart';
 import 'package:one_atta/core/theme/theme.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_event.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_event.dart';
@@ -29,6 +31,10 @@ import 'package:one_atta/features/faq/presentation/bloc/faq_bloc.dart';
 import 'package:one_atta/features/feedback/presentation/bloc/feedback_bloc.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
 import 'package:one_atta/features/contact/presentation/bloc/contact_bloc.dart';
+import 'package:one_atta/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:one_atta/features/notifications/presentation/bloc/notification_event.dart';
+import 'package:one_atta/core/services/fcm_service.dart';
+import 'package:one_atta/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +48,22 @@ void main() async {
 
   // Initialize router
   AppRouter.init();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize FCM
+  await di.sl<FCMService>().initialize();
+
+  // register FCM token
+  await di.sl<NotificationService>().registerFcmToken();
+
+  // Set up FCM token auto-update
+  final fcmService = di.sl<FCMService>();
+  fcmService.onTokenUpdated = (String newToken) {
+    // Auto-update token when it changes
+    di.sl<NotificationBloc>().add(UpdateFcmToken(newToken));
+  };
 
   runApp(const MainApp());
 }
@@ -83,6 +105,10 @@ class MainApp extends StatelessWidget {
           create: (context) => di.sl<AppSettingsBloc>()..add(LoadAppSettings()),
         ),
         BlocProvider(create: (context) => di.sl<ContactBloc>()),
+        BlocProvider(
+          create: (context) =>
+              di.sl<NotificationBloc>()..add(const LoadNotifications()),
+        ),
       ],
       child: MaterialApp.router(
         title: 'One Atta',

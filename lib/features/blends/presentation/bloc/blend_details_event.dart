@@ -24,4 +24,3 @@ class RefreshBlendDetails extends BlendDetailsEvent {
   @override
   List<Object?> get props => [blendId];
 }
-
