@@ -52,6 +52,7 @@ import 'package:one_atta/features/notifications/data/repositories/notification_r
 import 'package:one_atta/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:one_atta/core/services/fcm_service.dart';
 import 'package:one_atta/core/services/notification_service.dart';
+import 'package:one_atta/core/services/preferences_service.dart';
 
 // BLoC
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
@@ -551,6 +552,8 @@ Future<void> init() async {
 
   // Services
   sl.registerLazySingleton(() => FCMService());
+
+  sl.registerLazySingleton(() => PreferencesService(sharedPreferences: sl()));
 
   sl.registerLazySingleton(
     () => NotificationService(

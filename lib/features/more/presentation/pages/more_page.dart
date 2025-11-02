@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/di/injection_container.dart' as di;
+import 'package:one_atta/core/services/preferences_service.dart';
 import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_state.dart';
@@ -310,17 +312,7 @@ class MorePage extends StatelessWidget {
         const SizedBox(height: 4),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              _buildToggleItem(
-                context,
-                'Notification Settings',
-                Icons.notifications_outlined,
-                true,
-                (value) {},
-              ),
-            ],
-          ),
+          child: const Column(children: [NotificationToggleWidget()]),
         ),
       ],
     );
@@ -544,38 +536,6 @@ class MorePage extends StatelessWidget {
     );
   }
 
-  Widget _buildToggleItem(
-    BuildContext context,
-    String title,
-    IconData icon,
-    bool value,
-    ValueChanged<bool> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 24,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ),
-          Switch.adaptive(value: value, onChanged: onChanged),
-        ],
-      ),
-    );
-  }
-
   void _handleUrlLauncher(BuildContext context, String url) async {
     try {
       final uri = Uri.parse(url);
@@ -648,6 +608,131 @@ class MorePage extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+// Notification Toggle Widget
+class NotificationToggleWidget extends StatefulWidget {
+  const NotificationToggleWidget({super.key});
+
+  @override
+  State<NotificationToggleWidget> createState() =>
+      _NotificationToggleWidgetState();
+}
+
+class _NotificationToggleWidgetState extends State<NotificationToggleWidget> {
+  bool _notificationsEnabled = true;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationSetting();
+  }
+
+  Future<void> _loadNotificationSetting() async {
+    try {
+      final preferencesService = di.sl<PreferencesService>();
+      final enabled = await preferencesService.getNotificationsEnabled();
+      if (mounted) {
+        setState(() {
+          _notificationsEnabled = enabled;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    try {
+      final preferencesService = di.sl<PreferencesService>();
+      await preferencesService.setNotificationsEnabled(value);
+
+      if (mounted) {
+        setState(() {
+          _notificationsEnabled = value;
+        });
+
+        // Show feedback
+        SnackbarUtils.showSuccess(
+          context,
+          value ? 'Notifications enabled' : 'Notifications disabled',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackbarUtils.showError(
+          context,
+          'Failed to update notification settings',
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              Icons.notifications_outlined,
+              size: 24,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Notification Settings',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(
+            Icons.notifications_outlined,
+            size: 24,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              'Notifications',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
+          Switch.adaptive(
+            value: _notificationsEnabled,
+            onChanged: _toggleNotifications,
+          ),
+        ],
+      ),
     );
   }
 }

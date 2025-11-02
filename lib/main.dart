@@ -34,6 +34,7 @@ import 'package:one_atta/features/contact/presentation/bloc/contact_bloc.dart';
 import 'package:one_atta/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:one_atta/features/notifications/presentation/bloc/notification_event.dart';
 import 'package:one_atta/core/services/fcm_service.dart';
+import 'package:one_atta/core/services/preferences_service.dart';
 import 'package:one_atta/firebase_options.dart';
 
 void main() async {
@@ -55,11 +56,14 @@ void main() async {
   // Initialize FCM
   await di.sl<FCMService>().initialize();
 
+  // Set preferences service for FCM
+  final fcmService = di.sl<FCMService>();
+  fcmService.setPreferencesService(di.sl<PreferencesService>());
+
   // register FCM token
   await di.sl<NotificationService>().registerFcmToken();
 
   // Set up FCM token auto-update
-  final fcmService = di.sl<FCMService>();
   fcmService.onTokenUpdated = (String newToken) {
     // Auto-update token when it changes
     di.sl<NotificationBloc>().add(UpdateFcmToken(newToken));

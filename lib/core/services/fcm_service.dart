@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:one_atta/features/notifications/domain/entities/notification_entity.dart';
+import 'package:one_atta/core/services/preferences_service.dart';
 
 /// Top-level function to handle background messages
 @pragma('vm:entry-point')
@@ -29,6 +30,13 @@ class FCMService {
 
   // Callback for when FCM token changes
   Function(String)? onTokenUpdated;
+
+  // Preferences service for checking notification settings
+  PreferencesService? _preferencesService;
+
+  void setPreferencesService(PreferencesService service) {
+    _preferencesService = service;
+  }
 
   /// Initialize FCM and local notifications
   Future<void> initialize() async {
@@ -165,6 +173,19 @@ class FCMService {
 
   /// Show local notification
   Future<void> _showLocalNotification(RemoteMessage message) async {
+    // Check if notifications are enabled
+    if (_preferencesService != null) {
+      final notificationsEnabled = await _preferencesService!
+          .getNotificationsEnabled();
+      if (!notificationsEnabled) {
+        developer.log(
+          'Notifications are disabled by user, skipping local notification',
+          name: 'FCMService',
+        );
+        return;
+      }
+    }
+
     final notification = message.notification;
     final android = message.notification?.android;
 
