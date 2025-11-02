@@ -17,6 +17,7 @@ class ProductModel extends DailyEssentialEntity {
     required super.brand,
     required super.origin,
     required super.expiryInfo,
+    super.expiryDays,
     required super.rating,
     required super.reviewCount,
     required super.isOrganic,
@@ -64,7 +65,9 @@ class ProductModel extends DailyEssentialEntity {
       benefits: _generateBenefitsFromProduct(json),
       brand: 'OneAtta', // Default brand
       origin: 'India', // Default origin
-      expiryInfo: 'Best before 6 months from packaging', // Default expiry info
+      expiryInfo: _generateExpiryInfo(json['expiry_days']),
+      expiryDays:
+          json['expiry_days'] as int?, // Number of days until expiry (nullable)
       rating: 4.5, // Default rating as API doesn't provide this
       reviewCount: 50, // Default review count as API doesn't provide this
       isOrganic:
@@ -193,6 +196,26 @@ class ProductModel extends DailyEssentialEntity {
         return 'Calories';
       default:
         return key;
+    }
+  }
+
+  static String _generateExpiryInfo(dynamic expiryDays) {
+    if (expiryDays == null) {
+      return 'Best before 30 days from packaging'; // Default for non-perishable
+    }
+
+    final days = expiryDays as int;
+
+    if (days <= 7) {
+      return 'Best consumed within $days days from packaging';
+    } else if (days <= 30) {
+      return 'Best before $days days from packaging';
+    } else if (days <= 90) {
+      final weeks = (days / 7).round();
+      return 'Best before $weeks weeks from packaging';
+    } else {
+      final months = (days / 30).round();
+      return 'Best before $months months from packaging';
     }
   }
 }

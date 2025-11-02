@@ -16,6 +16,8 @@ class DailyEssentialEntity extends Equatable {
   final String brand;
   final String origin;
   final String expiryInfo;
+  final int?
+  expiryDays; // Number of days until product expires (nullable for non-perishable items)
   final double rating;
   final int reviewCount;
   final bool isOrganic;
@@ -38,6 +40,7 @@ class DailyEssentialEntity extends Equatable {
     required this.brand,
     required this.origin,
     required this.expiryInfo,
+    this.expiryDays,
     required this.rating,
     required this.reviewCount,
     required this.isOrganic,
@@ -69,6 +72,7 @@ class DailyEssentialEntity extends Equatable {
     brand,
     origin,
     expiryInfo,
+    expiryDays,
     rating,
     reviewCount,
     isOrganic,
