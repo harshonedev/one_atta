@@ -144,7 +144,6 @@ import 'package:one_atta/features/reels/data/datasources/reels_remote_data_sourc
 import 'package:one_atta/features/reels/data/repositories/reels_repository_impl.dart';
 import 'package:one_atta/features/reels/domain/repositories/reels_repository.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
-import 'package:one_atta/core/services/video_cache_manager.dart';
 
 // Payment
 import 'package:one_atta/features/payment/data/datasources/payment_remote_data_source.dart';
@@ -419,7 +418,6 @@ Future<void> init() async {
       remoteDataSource: sl(),
       localDataSource: sl(),
       authLocalDataSource: sl(),
-      videoCacheManager: sl(),
     ),
   );
 
@@ -431,13 +429,6 @@ Future<void> init() async {
   sl.registerLazySingleton<ReelsLocalDataSource>(
     () => ReelsLocalDataSourceImpl(),
   );
-
-  // Services
-  sl.registerLazySingleton<VideoCacheManager>(() {
-    final cacheManager = VideoCacheManager.instance;
-    cacheManager.init(); // Initialize the cache manager
-    return cacheManager;
-  });
 
   //! Core
   sl.registerLazySingleton(() => http.Client());

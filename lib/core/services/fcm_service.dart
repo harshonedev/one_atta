@@ -125,7 +125,7 @@ class FCMService {
     try {
       _fcmToken = await _messaging.getToken();
       developer.log('FCM Token: $_fcmToken', name: 'FCMService');
-      
+
       // Listen for token refresh
       _messaging.onTokenRefresh.listen((newToken) {
         _fcmToken = newToken;

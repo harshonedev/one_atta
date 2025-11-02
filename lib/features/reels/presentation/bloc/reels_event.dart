@@ -70,10 +70,3 @@ class RefreshReelsFromServer extends ReelsEvent {
   @override
   List<Object?> get props => [];
 }
-
-class ClearReelsCache extends ReelsEvent {
-  const ClearReelsCache();
-
-  @override
-  List<Object?> get props => [];
-}

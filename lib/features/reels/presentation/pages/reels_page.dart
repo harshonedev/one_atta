@@ -5,6 +5,7 @@ import 'package:one_atta/features/reels/domain/entities/reel_entity.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_event.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_state.dart';
+import 'package:one_atta/features/reels/presentation/managers/video_preload_manager.dart';
 import 'package:one_atta/features/reels/presentation/widgets/reel_item.dart';
 
 class ReelsPage extends StatefulWidget {
@@ -16,7 +17,7 @@ class ReelsPage extends StatefulWidget {
 
 class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
   final PageController _pageController = PageController();
-  final ScrollController _scrollController = ScrollController();
+  final VideoPreloadManager _videoManager = VideoPreloadManager();
   int _currentIndex = 0;
 
   @override
@@ -25,9 +26,6 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
     // Load initial reels
     context.read<ReelsBloc>().add(RefreshReelsFromServer());
 
-    // Set up scroll listener for infinite loading
-    _scrollController.addListener(_onScroll);
-
     // Hide status bar for immersive experience
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
   }
@@ -35,22 +33,10 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _pageController.dispose();
-    _scrollController.dispose();
+    _videoManager.disposeAll();
     // Restore status bar
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
-      final bloc = context.read<ReelsBloc>();
-      final state = bloc.state;
-
-      if (state is ReelsFeedLoaded && state.hasMore && !state.isLoadingMore) {
-        bloc.add(const LoadMoreReels());
-      }
-    }
   }
 
   void _onReelView(String reelId) {
@@ -59,10 +45,37 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
       ..add(IncrementReelView(reelId));
   }
 
-  void _onPageChanged(int index) {
+  void _onPageChanged(int index, List<ReelEntity> reels) {
     setState(() {
       _currentIndex = index;
     });
+
+    // Pause all videos except the current one
+    if (index < reels.length) {
+      _videoManager.pauseAllExcept(reels[index].id);
+    }
+
+    // Preload adjacent videos for smooth experience
+    final reelIds = reels.map((r) => r.id).toList();
+    final videoUrls = {for (var reel in reels) reel.id: reel.playbackUrl};
+
+    _videoManager.preloadAdjacentVideos(
+      currentReelId: reels[index].id,
+      reelIds: reelIds,
+      videoUrls: videoUrls,
+      preloadCount: 1, // Preload next 1 video
+    );
+
+    // Load more reels when approaching the end (3 items before)
+    final bloc = context.read<ReelsBloc>();
+    final state = bloc.state;
+
+    if (state is ReelsFeedLoaded &&
+        index >= reels.length - 3 &&
+        state.hasMore &&
+        !state.isLoadingMore) {
+      bloc.add(const LoadMoreReels());
+    }
   }
 
   Future<void> _onRefresh() async {
@@ -117,7 +130,7 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
       child: PageView.builder(
         controller: _pageController,
         scrollDirection: Axis.vertical,
-        onPageChanged: _onPageChanged,
+        onPageChanged: (index) => _onPageChanged(index, reels),
         itemCount: reels.length,
         itemBuilder: (context, index) {
           final reel = reels[index];
@@ -128,6 +141,7 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
             isVisible: isCurrentReel,
             onView: () => _onReelView(reel.id),
             autoPlay: true,
+            videoManager: _videoManager,
           );
         },
       ),

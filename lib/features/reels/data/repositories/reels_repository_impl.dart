@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/failures.dart';
-import 'package:one_atta/core/services/video_cache_manager.dart';
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_local_data_source.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_remote_data_source.dart';
@@ -12,13 +11,11 @@ class ReelsRepositoryImpl implements ReelsRepository {
   final ReelsRemoteDataSource remoteDataSource;
   final ReelsLocalDataSource localDataSource;
   final AuthLocalDataSource authLocalDataSource;
-  final VideoCacheManager videoCacheManager;
 
   ReelsRepositoryImpl({
     required this.remoteDataSource,
     required this.localDataSource,
     required this.authLocalDataSource,
-    required this.videoCacheManager,
   });
 
   @override
@@ -37,9 +34,6 @@ class ReelsRepositoryImpl implements ReelsRepository {
         final cachedCursor = await localDataSource.getCachedCursor();
 
         if (cachedReels.isNotEmpty) {
-          // Start pre-caching videos in background
-          _preCacheVideosInBackground(cachedReels);
-
           return Right(
             ReelsFeedEntity(
               reels: cachedReels,
@@ -62,9 +56,6 @@ class ReelsRepositoryImpl implements ReelsRepository {
             .map((reel) => reel as ReelModel)
             .toList();
         await localDataSource.cacheReels(reelModels, cursor: result.nextCursor);
-
-        // Start pre-caching videos in background
-        _preCacheVideosInBackground(reelModels);
       }
 
       return Right(result);
@@ -88,23 +79,23 @@ class ReelsRepositoryImpl implements ReelsRepository {
     }
   }
 
-  void _preCacheVideosInBackground(List<ReelModel> reels) {
-    final videoData = reels
-        .map((reel) => {'videoUrl': reel.videoUrl, 'reelId': reel.id})
-        .toList();
-
-    // Don't await - let it cache in background
-    videoCacheManager.preCacheVideos(videoData);
+  @override
+  Future<Either<Failure, ReelDetailEntity>> getReelDetails(String id) async {
+    try {
+      final result = await remoteDataSource.getReelDetails(id);
+      return Right(result);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Failed to get reel details: $e'));
+    }
   }
 
   @override
   Future<Either<Failure, int>> incrementViewCount(String id) async {
     try {
-      final token = await authLocalDataSource.getToken();
-      if (token == null) {
-        return Left(UnauthorizedFailure('User is not authenticated'));
-      }
-      final result = await remoteDataSource.incrementViewCount(token, id);
+      // Public endpoint - no authentication required
+      final result = await remoteDataSource.incrementViewCount(id);
 
       // Update cache if successful
       await localDataSource.updateReelViewCount(id, result);
@@ -114,6 +105,39 @@ class ReelsRepositoryImpl implements ReelsRepository {
       return Left(failure);
     } catch (e) {
       return Left(ServerFailure('Failed to increment view count: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ReelEntity>>> getReelsByBlend(
+    String blendId, {
+    int? limit,
+  }) async {
+    try {
+      final result = await remoteDataSource.getReelsByBlend(
+        blendId,
+        limit: limit,
+      );
+      return Right(result);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Failed to get reels by blend: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ReelSearchResultEntity>> searchReels(
+    String query, {
+    int? limit,
+  }) async {
+    try {
+      final result = await remoteDataSource.searchReels(query, limit: limit);
+      return Right(result);
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Failed to search reels: $e'));
     }
   }
 

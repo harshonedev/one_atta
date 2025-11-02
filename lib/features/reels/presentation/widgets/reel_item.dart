@@ -5,6 +5,7 @@ import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/features/reels/domain/entities/reel_entity.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_bloc.dart';
 import 'package:one_atta/features/reels/presentation/bloc/reels_event.dart';
+import 'package:one_atta/features/reels/presentation/managers/video_preload_manager.dart';
 import 'package:one_atta/features/reels/presentation/widgets/reel_video_player.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -13,7 +14,7 @@ class ReelItem extends StatefulWidget {
   final bool isVisible;
   final VoidCallback? onView;
   final bool autoPlay;
-  final bool isLiked;
+  final VideoPreloadManager? videoManager;
 
   const ReelItem({
     super.key,
@@ -21,7 +22,7 @@ class ReelItem extends StatefulWidget {
     required this.isVisible,
     this.onView,
     this.autoPlay = true,
-    this.isLiked = false,
+    this.videoManager,
   });
 
   @override
@@ -109,6 +110,11 @@ class _ReelItemState extends State<ReelItem> {
 
   @override
   Widget build(BuildContext context) {
+    // Get preloaded controller if available
+    final preloadedController = widget.videoManager?.getController(
+      widget.reel.id,
+    );
+
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -116,16 +122,23 @@ class _ReelItemState extends State<ReelItem> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Video Player
+          // Video Player (HLS from Cloudflare Stream)
           ReelVideoPlayer(
-            videoUrl: widget.reel.videoUrl,
+            videoUrl: widget.reel.playbackUrl,
             reelId: widget.reel.id,
-            posterUrl: widget.reel.posterUrl,
+            thumbnailUrl: widget.reel.thumbnailUrl,
             isPlaying: _isPlaying,
             isMuted: _isMuted,
+            preloadedController: preloadedController,
             onTogglePlay: _togglePlayback,
             onToggleMute: _toggleMute,
             onVideoTap: _onVideoTap,
+            onControllerActive: () {
+              widget.videoManager?.markAsActive(widget.reel.id);
+            },
+            onControllerInactive: () {
+              widget.videoManager?.markAsInactive(widget.reel.id);
+            },
           ),
 
           // Right side controls
@@ -260,8 +273,10 @@ class _ReelItemState extends State<ReelItem> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.9),
-              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
+              Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.8),
             ],
           ),
           borderRadius: BorderRadius.circular(12),

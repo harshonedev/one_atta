@@ -15,6 +15,16 @@ Content-Type: application/json
 
 ---
 
+## 🎥 Video Streaming
+
+Videos are powered by **Cloudflare Stream** providing:
+- ✅ **Adaptive Bitrate Streaming**: Automatic quality adjustment based on network
+- ✅ **Global CDN**: Fast delivery from 200+ locations worldwide
+- ✅ **HLS & DASH**: Industry-standard streaming protocols
+- ✅ **Multiple Qualities**: 360p, 480p, 720p, 1080p (based on source)
+
+---
+
 ## Endpoints
 
 ### 1. Get Reels Feed
@@ -46,10 +56,14 @@ GET /api/app/reels?limit=15&cursor=2023-07-15T10:30:00.000Z_60f1b2e4d4b0f4001f5e
       {
         "id": "60f1b2e4d4b0f4001f5e4a3d",
         "caption": "Amazing multigrain blend recipe!",
-        "poster_url": "https://bucket.s3.../poster.jpg",
-        "video_url": "https://bucket.s3.../video.mp4",
+        "playback_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../manifest/video.m3u8",
+        "dash_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../manifest/video.mpd",
+        "thumbnail_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../thumbnails/thumbnail.jpg",
+        "embed_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../iframe",
         "duration": 45,
         "formatted_duration": "0:45",
+        "width": 1920,
+        "height": 1080,
         "tags": ["healthy", "organic", "multigrain"],
         "views": 150,
         "createdAt": "2023-07-15T10:30:00.000Z",
@@ -106,6 +120,16 @@ GET /api/app/reels?limit=15&cursor=2023-07-15T10:30:00.000Z_60f1b2e4d4b0f4001f5e
 | reels | array | Array of reel objects |
 | nextCursor | string | Cursor for next page (null if no more) |
 | hasMore | boolean | Whether there are more reels to load |
+
+**Video URL Fields:**
+| Field | Description |
+|-------|-------------|
+| playback_url | HLS manifest URL (use this for primary playback) |
+| dash_url | DASH manifest URL (alternative format) |
+| thumbnail_url | Auto-generated video thumbnail/poster |
+| embed_url | Embeddable iframe player URL |
+| width | Video width in pixels |
+| height | Video height in pixels |
 
 **Error Responses:**
 ```json
@@ -200,10 +224,14 @@ GET /api/app/reels/60f1b2e4d4b0f4001f5e4a3d
         "name": "Admin User"
       },
       "status": "ready",
-      "video_url": "https://bucket.s3.../video.mp4",
-      "poster_url": "https://bucket.s3.../poster.jpg",
+      "playback_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../manifest/video.m3u8",
+      "dash_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../manifest/video.mpd",
+      "thumbnail_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../thumbnails/thumbnail.jpg",
+      "embed_url": "https://customer-m033z5x00ks6nunl.cloudflarestream.com/.../iframe",
       "duration": 45,
       "formatted_duration": "0:45",
+      "width": 1920,
+      "height": 1080,
       "caption": "Amazing multigrain blend recipe!",
       "tags": ["healthy", "organic", "multigrain"],
       "visibility": "public",
@@ -513,14 +541,38 @@ export const useReelsFeed = (apiBaseUrl) => {
 };
 ```
 
-### Reel Player Component
+### Reel Player Component with HLS.js
 
 ```javascript
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import Hls from 'hls.js';
 
 const ReelPlayer = ({ reel, onView }) => {
   const [hasViewed, setHasViewed] = useState(false);
   const videoRef = useRef(null);
+  const hlsRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef.current && reel.playback_url) {
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+        });
+        
+        hls.loadSource(reel.playback_url);
+        hls.attachMedia(videoRef.current);
+        hlsRef.current = hls;
+
+        return () => {
+          hls.destroy();
+        };
+      } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native HLS support (Safari)
+        videoRef.current.src = reel.playback_url;
+      }
+    }
+  }, [reel.playback_url]);
 
   const handlePlay = async () => {
     if (!hasViewed) {
@@ -542,8 +594,7 @@ const ReelPlayer = ({ reel, onView }) => {
     <div className="reel-container">
       <video
         ref={videoRef}
-        src={reel.video_url}
-        poster={reel.poster_url}
+        poster={reel.thumbnail_url}
         controls
         onPlay={handlePlay}
         className="reel-video"
@@ -758,9 +809,9 @@ const LazyReelPlayer = ({ reel }) => {
   return (
     <div ref={elementRef}>
       {inView ? (
-        <video src={reel.video_url} poster={reel.poster_url} />
+        <ReelPlayer reel={reel} />
       ) : (
-        <img src={reel.poster_url} alt="Video thumbnail" />
+        <img src={reel.thumbnail_url} alt="Video thumbnail" />
       )}
     </div>
   );
@@ -831,3 +882,182 @@ All API responses follow this consistent format:
 - `403` - Forbidden (private reel)
 - `404` - Not Found
 - `500` - Internal Server Error
+
+---
+
+## Video Streaming Guide
+
+### Understanding Video URLs
+
+Each reel provides multiple streaming URLs:
+
+```javascript
+{
+  "playback_url": "...manifest/video.m3u8",    // HLS - Primary (use this)
+  "dash_url": "...manifest/video.mpd",          // DASH - Alternative
+  "thumbnail_url": "...thumbnails/thumbnail.jpg", // Poster image
+  "embed_url": "...iframe"                      // Embeddable player
+}
+```
+
+### Adaptive Bitrate Streaming
+
+Cloudflare Stream automatically provides multiple quality levels:
+- **360p** - Low bandwidth (~ 0.5 Mbps)
+- **480p** - Medium bandwidth (~ 1 Mbps)
+- **720p** - High bandwidth (~ 2.5 Mbps)
+- **1080p** - Very high bandwidth (~ 5 Mbps)
+
+The player automatically switches between qualities based on the viewer's network speed.
+
+### Platform-Specific Implementation
+
+#### Web (HLS.js) - Recommended
+
+```bash
+npm install hls.js
+```
+
+```javascript
+import Hls from 'hls.js';
+
+function setupPlayer(videoElement, playbackUrl) {
+  if (Hls.isSupported()) {
+    const hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: true,
+    });
+    hls.loadSource(playbackUrl);
+    hls.attachMedia(videoElement);
+  } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+    // Native HLS support (Safari, iOS)
+    videoElement.src = playbackUrl;
+  }
+}
+```
+
+#### React Native
+
+```bash
+npm install react-native-video
+```
+
+```javascript
+import Video from 'react-native-video';
+
+<Video
+  source={{ uri: reel.playback_url }}
+  poster={reel.thumbnail_url}
+  posterResizeMode="cover"
+  resizeMode="contain"
+  controls={true}
+  style={{ width: '100%', height: 300 }}
+/>
+```
+
+#### Flutter
+
+```yaml
+dependencies:
+  video_player: ^2.7.0
+```
+
+```dart
+import 'package:video_player/video_player.dart';
+
+VideoPlayerController _controller = VideoPlayerController.network(
+  reel.playbackUrl,
+);
+
+await _controller.initialize();
+_controller.play();
+```
+
+#### Cloudflare Embed Player (No Code)
+
+```html
+<stream src="VIDEO_ID" controls poster="THUMBNAIL_URL"></stream>
+<script src="https://embed.cloudflarestream.com/embed/sdk.latest.js"></script>
+```
+
+### Thumbnail Customization
+
+Add URL parameters to customize thumbnails:
+
+```javascript
+// At specific time (5 seconds into video)
+const thumb = `${reel.thumbnail_url}?time=5s`;
+
+// At percentage (50% of video)
+const thumb = `${reel.thumbnail_url}?time=50pct`;
+
+// Resized thumbnail
+const thumb = `${reel.thumbnail_url}?width=320&height=180&fit=crop`;
+
+// WebP format for better compression
+const thumb = `${reel.thumbnail_url}?format=webp&width=400`;
+```
+
+### Performance Best Practices
+
+1. **Use HLS.js for web** - Better browser compatibility and features
+2. **Lazy load videos** - Only load when in viewport
+3. **Show thumbnails first** - Faster initial page load
+4. **Cache thumbnails** - Reduce repeat requests
+5. **Preload metadata** - Set `preload="metadata"` on video elements
+6. **Monitor bandwidth** - HLS.js provides network quality metrics
+
+### Error Handling
+
+```javascript
+const hls = new Hls();
+
+hls.on(Hls.Events.ERROR, (event, data) => {
+  if (data.fatal) {
+    switch (data.type) {
+      case Hls.ErrorTypes.NETWORK_ERROR:
+        // Network error - try to recover
+        hls.startLoad();
+        break;
+      case Hls.ErrorTypes.MEDIA_ERROR:
+        // Media error - try to recover
+        hls.recoverMediaError();
+        break;
+      default:
+        // Cannot recover
+        console.error('Fatal error:', data);
+        break;
+    }
+  }
+});
+```
+
+### Quality Selection
+
+```javascript
+// Get available quality levels
+const levels = hls.levels.map(level => ({
+  height: level.height,
+  bitrate: level.bitrate
+}));
+
+// Set specific quality (index)
+hls.currentLevel = 2; // 720p
+
+// Set auto quality
+hls.currentLevel = -1;
+
+// Get current quality
+const currentQuality = hls.levels[hls.currentLevel];
+```
+
+---
+
+## Additional Resources
+
+- **Admin API Docs**: `DOCS/ADMIN_REEL_API_DOCS.md`
+- **Migration Guide**: `DOCS/CLOUDFLARE_STREAM_MIGRATION.md`
+- **Quick Reference**: `DOCS/CLOUDFLARE_STREAM_QUICK_REFERENCE.md`
+- **Player Examples**: `DOCS/CLOUDFLARE_STREAM_PLAYER_EXAMPLES.js`
+- **HLS.js Documentation**: https://github.com/video-dev/hls.js/
+- **Cloudflare Stream**: https://developers.cloudflare.com/stream/

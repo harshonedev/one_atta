@@ -3,13 +3,18 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:one_atta/features/reels/data/datasources/reels_local_data_source.dart';
 import 'package:one_atta/features/reels/data/models/reel_model.dart';
 
+/// Local data source for caching reel metadata (titles, likes, views, etc.)
+///
+/// Note: Video caching is handled automatically by Cloudflare Stream CDN
+/// with adaptive bitrate and global edge network. This cache only stores
+/// reel metadata for offline viewing and faster list loading.
 class ReelsLocalDataSourceImpl implements ReelsLocalDataSource {
   static const String _reelsBoxName = 'reels_cache';
   static const String _reelsKey = 'cached_reels';
   static const String _cursorKey = 'cached_cursor';
   static const String _timestampKey = 'cache_timestamp';
   static const int _cacheValidityMinutes =
-      30; // URL expires in 1 hour, refresh at 30 minutes
+      30; // Refresh metadata every 30 minutes
 
   late Box<String> _box;
 

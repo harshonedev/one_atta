@@ -1,4 +1,4 @@
-package com.example.one_atta
+package com.oneatta.app
 
 import io.flutter.embedding.android.FlutterActivity
 

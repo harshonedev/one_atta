@@ -1,29 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:video_player/video_player.dart';
-import 'package:one_atta/core/services/video_cache_manager.dart';
-import 'package:one_atta/core/di/injection_container.dart' as di;
 
 class ReelVideoPlayer extends StatefulWidget {
-  final String videoUrl;
+  final String videoUrl; // HLS playback URL (Cloudflare Stream)
   final String reelId;
-  final String posterUrl;
+  final String thumbnailUrl; // Cloudflare thumbnail URL
   final bool isPlaying;
   final bool isMuted;
+  final VideoPlayerController? preloadedController;
   final VoidCallback? onTogglePlay;
   final VoidCallback? onToggleMute;
   final VoidCallback? onVideoTap;
+  final VoidCallback? onControllerActive;
+  final VoidCallback? onControllerInactive;
 
   const ReelVideoPlayer({
     super.key,
     required this.videoUrl,
     required this.reelId,
-    required this.posterUrl,
+    required this.thumbnailUrl,
     this.isPlaying = false,
     this.isMuted = true,
+    this.preloadedController,
     this.onTogglePlay,
     this.onToggleMute,
     this.onVideoTap,
+    this.onControllerActive,
+    this.onControllerInactive,
   });
 
   @override
@@ -34,13 +38,15 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
   VideoPlayerController? _controller;
   bool _isLoading = true;
   bool _hasError = false;
-  final VideoCacheManager _cacheManager = di.sl<VideoCacheManager>();
+  bool _isUsingPreloadedController = false;
   final Logger _logger = Logger();
 
   @override
   void initState() {
     super.initState();
     _initializeVideo();
+    // Notify that this controller is now active
+    widget.onControllerActive?.call();
   }
 
   @override
@@ -74,22 +80,51 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
         _hasError = false;
       });
 
-      _controller?.dispose();
+      // Check if we have a preloaded controller
+      if (widget.preloadedController != null &&
+          widget.preloadedController!.value.isInitialized) {
+        _logger.i('Using preloaded controller for reel: ${widget.reelId}');
 
-      // Try to get cached video file first
-      try {
-        final fileInfo = await _cacheManager.getVideoFile(
-          widget.videoUrl,
-          widget.reelId,
-        );
-        _controller = VideoPlayerController.file(fileInfo.file);
-      } catch (cacheError) {
-        // Fall back to network if cache fails
-        _logger.w('Cache failed, using network: $cacheError');
-        _controller = VideoPlayerController.networkUrl(
-          Uri.parse(widget.videoUrl),
-        );
+        // Dispose any existing controller if we're switching
+        if (_controller != null && !_isUsingPreloadedController) {
+          await _controller!.dispose();
+        }
+
+        _controller = widget.preloadedController;
+        _isUsingPreloadedController = true;
+
+        _controller!.setVolume(widget.isMuted ? 0.0 : 1.0);
+
+        if (widget.isPlaying) {
+          await _controller!.play();
+        }
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
       }
+
+      // Dispose previous controller only if we created it
+      if (_controller != null && !_isUsingPreloadedController) {
+        await _controller?.dispose();
+      }
+      _isUsingPreloadedController = false;
+
+      // HLS streaming from Cloudflare Stream
+      _logger.i(
+        'Initializing HLS video from Cloudflare Stream: ${widget.videoUrl}',
+      );
+
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl),
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false,
+        ),
+      );
 
       await _controller!.initialize();
 
@@ -122,7 +157,14 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    // Notify that this controller is no longer active
+    widget.onControllerInactive?.call();
+
+    // Only dispose if we created the controller ourselves
+    // Preloaded controllers are managed by VideoPreloadManager
+    if (_controller != null && !_isUsingPreloadedController) {
+      _controller?.dispose();
+    }
     super.dispose();
   }
 
@@ -131,10 +173,10 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Background/Poster Image
-        if (widget.posterUrl.isNotEmpty)
+        // Background/Thumbnail Image (Cloudflare Stream)
+        if (widget.thumbnailUrl.isNotEmpty)
           Image.network(
-            widget.posterUrl,
+            widget.thumbnailUrl,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               return Container(

@@ -38,11 +38,28 @@ class ReelsRemoteDataSourceImpl implements ReelsRemoteDataSource {
   }
 
   @override
-  Future<int> incrementViewCount(String token, String id) async {
+  Future<ReelDetailModel> getReelDetails(String id) async {
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/$id',
+    );
+
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? ReelDetailModel.fromJson(response.data['data']['reel'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch reel details',
+              ),
+      ApiError() => throw response.failure,
+    };
+  }
+
+  @override
+  Future<int> incrementViewCount(String id) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.post,
       url: '$baseUrl/$id/view',
-      token: token,
     );
 
     return switch (response) {
@@ -51,6 +68,54 @@ class ReelsRemoteDataSourceImpl implements ReelsRemoteDataSource {
             ? response.data['data']['views'] ?? 0
             : throw Exception(
                 response.data['message'] ?? 'Failed to record view',
+              ),
+      ApiError() => throw response.failure,
+    };
+  }
+
+  @override
+  Future<List<ReelModel>> getReelsByBlend(String blendId, {int? limit}) async {
+    String requestUrl = '$baseUrl/blend/$blendId';
+    if (limit != null) {
+      requestUrl += '?limit=$limit';
+    }
+
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: requestUrl,
+    );
+
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? (response.data['data']['reels'] as List<dynamic>)
+                  .map((item) => ReelModel.fromJson(item))
+                  .toList()
+            : throw Exception(
+                response.data['message'] ?? 'Failed to fetch reels by blend',
+              ),
+      ApiError() => throw response.failure,
+    };
+  }
+
+  @override
+  Future<ReelSearchResultModel> searchReels(String query, {int? limit}) async {
+    final queryParams = <String>['q=$query'];
+    if (limit != null) queryParams.add('limit=$limit');
+
+    final requestUrl = '$baseUrl/search?${queryParams.join('&')}';
+
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: requestUrl,
+    );
+
+    return switch (response) {
+      ApiSuccess() =>
+        response.data['success'] == true
+            ? ReelSearchResultModel.fromJson(response.data['data'])
+            : throw Exception(
+                response.data['message'] ?? 'Failed to search reels',
               ),
       ApiError() => throw response.failure,
     };

@@ -21,7 +21,6 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
     on<ReelLikedStatusRequested>(_onReelLikedStatusRequested);
     on<ClearErrorMessage>(_onClearErrorMessage);
     on<RefreshReelsFromServer>(_onRefreshReelsFromServer);
-    on<ClearReelsCache>(_onClearReelsCache);
 
     // Update interaction time on any event
     _updateLastInteractionTime();
@@ -108,18 +107,6 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
         );
       },
     );
-  }
-
-  Future<void> _onClearReelsCache(
-    ClearReelsCache event,
-    Emitter<ReelsState> emit,
-  ) async {
-    _updateLastInteractionTime();
-    logger.i('Clearing reels cache');
-
-    // This would clear the cache - implementation depends on the cache layer
-    // For now, just trigger a fresh load
-    add(const RefreshReelsFromServer());
   }
 
   void _onClearErrorMessage(ClearErrorMessage event, Emitter<ReelsState> emit) {

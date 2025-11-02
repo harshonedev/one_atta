@@ -1,10 +1,43 @@
 import 'package:equatable/equatable.dart';
 
+/// Represents a short-form video reel with Cloudflare Stream integration.
+///
+/// ## Cloudflare Stream Integration
+///
+/// All videos are powered by **Cloudflare Stream** providing:
+/// - ✅ **Adaptive Bitrate Streaming**: Automatic quality adjustment (360p-1080p)
+/// - ✅ **Global CDN**: Fast delivery from 200+ locations worldwide
+/// - ✅ **HLS & DASH**: Industry-standard streaming protocols
+/// - ✅ **Auto-generated Thumbnails**: Multiple quality thumbnails
+///
+/// ### Video URL Fields:
+/// - `playbackUrl`: HLS manifest URL (primary, use this for playback)
+/// - `dashUrl`: DASH manifest URL (alternative format)
+/// - `thumbnailUrl`: Auto-generated video thumbnail/poster
+/// - `embedUrl`: Embeddable iframe player URL
+/// - `width`/`height`: Video dimensions in pixels
+///
+/// ### Usage:
+/// ```dart
+/// // Use playbackUrl for HLS streaming
+/// VideoPlayerController.networkUrl(Uri.parse(reel.playbackUrl))
+///
+/// // Use thumbnailUrl for poster/preview
+/// Image.network(reel.thumbnailUrl)
+/// ```
 class ReelEntity extends Equatable {
   final String id;
   final String caption;
-  final String posterUrl;
-  final String videoUrl;
+  // Cloudflare Stream video URLs
+  final String playbackUrl; // HLS manifest URL (primary)
+  final String? dashUrl; // DASH manifest URL (alternative)
+  final String thumbnailUrl; // Auto-generated thumbnail/poster
+  final String? embedUrl; // Embeddable iframe player URL
+  final int? width; // Video width in pixels
+  final int? height; // Video height in pixels
+  // Legacy fields (for backward compatibility)
+  final String? posterUrl;
+  final String? videoUrl;
   final int duration;
   final String formattedDuration;
   final List<String> tags;
@@ -20,8 +53,14 @@ class ReelEntity extends Equatable {
   const ReelEntity({
     required this.id,
     required this.caption,
-    required this.posterUrl,
-    required this.videoUrl,
+    required this.playbackUrl,
+    this.dashUrl,
+    required this.thumbnailUrl,
+    this.embedUrl,
+    this.width,
+    this.height,
+    this.posterUrl,
+    this.videoUrl,
     required this.duration,
     required this.formattedDuration,
     required this.tags,
@@ -39,6 +78,12 @@ class ReelEntity extends Equatable {
   List<Object?> get props => [
     id,
     caption,
+    playbackUrl,
+    dashUrl,
+    thumbnailUrl,
+    embedUrl,
+    width,
+    height,
     posterUrl,
     videoUrl,
     duration,
@@ -57,6 +102,12 @@ class ReelEntity extends Equatable {
   ReelEntity copyWith({
     String? id,
     String? caption,
+    String? playbackUrl,
+    String? dashUrl,
+    String? thumbnailUrl,
+    String? embedUrl,
+    int? width,
+    int? height,
     String? posterUrl,
     String? videoUrl,
     int? duration,
@@ -74,6 +125,12 @@ class ReelEntity extends Equatable {
     return ReelEntity(
       id: id ?? this.id,
       caption: caption ?? this.caption,
+      playbackUrl: playbackUrl ?? this.playbackUrl,
+      dashUrl: dashUrl ?? this.dashUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      embedUrl: embedUrl ?? this.embedUrl,
+      width: width ?? this.width,
+      height: height ?? this.height,
       posterUrl: posterUrl ?? this.posterUrl,
       videoUrl: videoUrl ?? this.videoUrl,
       duration: duration ?? this.duration,
@@ -166,8 +223,16 @@ class ReelDetailEntity extends Equatable {
   final String id;
   final ReelCreatorEntity createdBy;
   final String status;
-  final String videoUrl;
-  final String posterUrl;
+  // Cloudflare Stream video URLs
+  final String playbackUrl; // HLS manifest URL (primary)
+  final String? dashUrl; // DASH manifest URL (alternative)
+  final String thumbnailUrl; // Auto-generated thumbnail/poster
+  final String? embedUrl; // Embeddable iframe player URL
+  final int? width; // Video width in pixels
+  final int? height; // Video height in pixels
+  // Legacy fields (for backward compatibility)
+  final String? videoUrl;
+  final String? posterUrl;
   final int duration;
   final String formattedDuration;
   final String caption;
@@ -183,8 +248,14 @@ class ReelDetailEntity extends Equatable {
     required this.id,
     required this.createdBy,
     required this.status,
-    required this.videoUrl,
-    required this.posterUrl,
+    required this.playbackUrl,
+    this.dashUrl,
+    required this.thumbnailUrl,
+    this.embedUrl,
+    this.width,
+    this.height,
+    this.videoUrl,
+    this.posterUrl,
     required this.duration,
     required this.formattedDuration,
     required this.caption,
@@ -202,6 +273,12 @@ class ReelDetailEntity extends Equatable {
     id,
     createdBy,
     status,
+    playbackUrl,
+    dashUrl,
+    thumbnailUrl,
+    embedUrl,
+    width,
+    height,
     videoUrl,
     posterUrl,
     duration,
