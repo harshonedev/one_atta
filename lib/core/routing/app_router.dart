@@ -76,6 +76,8 @@ class AppRouter {
             state.fullPath == '/otp' ||
             state.fullPath == '/forgot-password';
 
+        final isMaintenanceMode = state.fullPath == '/maintenance';
+
         // If user is authenticated and trying to access auth/onboarding pages, redirect to home
         if (authState is AuthAuthenticated && (isOnAuth || isOnOnboarding)) {
           return '/home';
@@ -85,6 +87,7 @@ class AppRouter {
         if (authState is AuthUnauthenticated &&
             !isOnAuth &&
             !isOnSplash &&
+            !isMaintenanceMode &&
             !isOnOnboarding) {
           return '/onboarding';
         }
