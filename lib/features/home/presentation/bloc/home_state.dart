@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
+import 'package:one_atta/features/home/domain/entities/expiring_item_entity.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 
@@ -24,6 +25,7 @@ class HomeLoaded extends HomeState {
   final List<PublicBlendEntity> trendingBlends;
   final List<RecipeEntity> featuredRecipes;
   final List<BlendItem> readyToSellBlends;
+  final List<ExpiringItemEntity> expiringItems;
   final bool isRefreshing;
 
   const HomeLoaded({
@@ -31,6 +33,7 @@ class HomeLoaded extends HomeState {
     required this.trendingBlends,
     required this.featuredRecipes,
     required this.readyToSellBlends,
+    this.expiringItems = const [],
     this.isRefreshing = false,
   });
 
@@ -39,6 +42,7 @@ class HomeLoaded extends HomeState {
     List<PublicBlendEntity>? trendingBlends,
     List<RecipeEntity>? featuredRecipes,
     List<BlendItem>? readyToSellBlends,
+    List<ExpiringItemEntity>? expiringItems,
     bool? isRefreshing,
   }) {
     return HomeLoaded(
@@ -46,6 +50,7 @@ class HomeLoaded extends HomeState {
       trendingBlends: trendingBlends ?? this.trendingBlends,
       featuredRecipes: featuredRecipes ?? this.featuredRecipes,
       readyToSellBlends: readyToSellBlends ?? this.readyToSellBlends,
+      expiringItems: expiringItems ?? this.expiringItems,
       isRefreshing: isRefreshing ?? this.isRefreshing,
     );
   }
@@ -56,6 +61,7 @@ class HomeLoaded extends HomeState {
     trendingBlends,
     featuredRecipes,
     readyToSellBlends,
+    expiringItems,
     isRefreshing,
   ];
 }
@@ -65,6 +71,7 @@ class HomePartialLoading extends HomeState {
   final List<PublicBlendEntity> trendingBlends;
   final List<RecipeEntity> featuredRecipes;
   final List<BlendItem> readyToSellBlends;
+  final List<ExpiringItemEntity> expiringItems;
   final bool isLoadingBlends;
   final bool isLoadingRecipes;
   final bool isLoadingUser;
@@ -74,6 +81,7 @@ class HomePartialLoading extends HomeState {
     required this.trendingBlends,
     required this.featuredRecipes,
     required this.readyToSellBlends,
+    this.expiringItems = const [],
     this.isLoadingBlends = false,
     this.isLoadingRecipes = false,
     this.isLoadingUser = false,
@@ -85,6 +93,7 @@ class HomePartialLoading extends HomeState {
     trendingBlends,
     featuredRecipes,
     readyToSellBlends,
+    expiringItems,
     isLoadingBlends,
     isLoadingRecipes,
     isLoadingUser,
@@ -97,6 +106,7 @@ class HomeError extends HomeState {
   final List<PublicBlendEntity> trendingBlends;
   final List<RecipeEntity> featuredRecipes;
   final List<BlendItem> readyToSellBlends;
+  final List<ExpiringItemEntity> expiringItems;
 
   const HomeError({
     required this.message,
@@ -104,6 +114,7 @@ class HomeError extends HomeState {
     this.trendingBlends = const [],
     this.featuredRecipes = const [],
     this.readyToSellBlends = const [],
+    this.expiringItems = const [],
   });
 
   @override
@@ -113,6 +124,7 @@ class HomeError extends HomeState {
     trendingBlends,
     featuredRecipes,
     readyToSellBlends,
+    expiringItems,
   ];
 }
 

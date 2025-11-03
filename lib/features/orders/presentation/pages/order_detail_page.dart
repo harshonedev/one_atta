@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/orders/domain/entities/order_entity.dart';
@@ -443,69 +444,79 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           ),
           const SizedBox(height: 16),
           ...order.items.map(
-            (item) => Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            (item) => InkWell(
+              onTap: () {
+                // Navigate to item details if needed
+                if (item.itemType.toLowerCase() == 'product') {
+                  context.push('/daily-essential-details/${item.itemId}');
+                } else if (item.itemType.toLowerCase() == 'blend') {
+                  context.push('/blend-details/${item.itemId}');
+                }
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
 
-                    child: Icon(
-                      item.itemType == 'Blend'
-                          ? Icons.blender
-                          : Icons.inventory_2_outlined,
-                      color: colorScheme.primary,
-                      size: 24,
+                      child: Icon(
+                        item.itemType == 'Blend'
+                            ? Icons.blender
+                            : Icons.inventory_2_outlined,
+                        color: colorScheme.primary,
+                        size: 24,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.itemName,
-                          style: textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.itemName,
+                            style: textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Text(
-                              '${item.quantity.toStringAsFixed(0)} Unit(s)',
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                '${item.quantity.toStringAsFixed(0)} Unit(s)',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${item.weightInKg}Kg × ₹${item.pricePerKg.toStringAsFixed(2)}',
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
+                              const SizedBox(width: 8),
+                              Text(
+                                '${item.weightInKg}Kg × ₹${item.pricePerKg.toStringAsFixed(2)}',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    '₹${item.totalPrice.toStringAsFixed(2)}',
-                    style: textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
+                    Text(
+                      '₹${item.totalPrice.toStringAsFixed(2)}',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

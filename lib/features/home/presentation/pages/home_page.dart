@@ -14,6 +14,8 @@ import 'package:one_atta/features/home/presentation/bloc/home_event.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_state.dart';
 import 'package:one_atta/features/home/presentation/widgets/blend_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/daily_essentials_blend_card.dart';
+import 'package:one_atta/features/home/domain/entities/expiring_item_entity.dart';
+import 'package:one_atta/features/home/presentation/widgets/expiry_reminder_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/recipe_card.dart';
 import 'package:one_atta/features/home/presentation/widgets/section_header.dart';
 import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
@@ -143,6 +145,14 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: CustomScrollView(
               slivers: [
+                // Expiry Reminder Card (if there are expiring items)
+                if (state.expiringItems.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: ExpiryReminderCard(
+                      expiringItem: state.expiringItems.first,
+                    ),
+                  ),
+
                 // Create Your Perfect Atta Section
                 SliverToBoxAdapter(child: _buildCreateAttaSection(context)),
 
@@ -429,6 +439,7 @@ class _HomePageState extends State<HomePage> {
             state.trendingBlends,
             state.featuredRecipes,
             state.readyToSellBlends,
+            state.expiringItems,
           ),
         ),
       ],
@@ -453,6 +464,7 @@ class _HomePageState extends State<HomePage> {
             state.trendingBlends,
             state.featuredRecipes,
             state.readyToSellBlends,
+            state.expiringItems,
           ),
         ),
       ],
@@ -615,6 +627,7 @@ class _HomePageState extends State<HomePage> {
     List<PublicBlendEntity> trendingBlends,
     List<RecipeEntity> featuredRecipes,
     List<BlendItem> readyToSellBlends,
+    List<ExpiringItemEntity> expiringItems,
   ) {
     return RefreshIndicator(
       onRefresh: () async {
@@ -622,6 +635,12 @@ class _HomePageState extends State<HomePage> {
       },
       child: CustomScrollView(
         slivers: [
+          // Expiry Reminder Card (if there are expiring items)
+          if (expiringItems.isNotEmpty)
+            SliverToBoxAdapter(
+              child: ExpiryReminderCard(expiringItem: expiringItems.first),
+            ),
+
           // Create Your Perfect Atta Section
           SliverToBoxAdapter(child: _buildCreateAttaSection(context)),
 

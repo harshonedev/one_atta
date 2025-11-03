@@ -6,6 +6,8 @@ import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/auth/domain/repositories/auth_repository.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/blends/domain/repositories/blends_repository.dart';
+import 'package:one_atta/features/home/domain/entities/expiring_item_entity.dart';
+import 'package:one_atta/features/orders/domain/repositories/order_repository.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 import 'package:one_atta/features/recipes/domain/repositories/recipes_repository.dart';
 import 'package:one_atta/features/daily_essentials/domain/repositories/daily_essentials_repository.dart';
@@ -17,6 +19,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final RecipesRepository recipesRepository;
   final AuthRepository authRepository;
   final DailyEssentialsRepository dailyEssentialsRepository;
+  final OrderRepository orderRepository;
   final Logger logger = Logger();
 
   HomeBloc({
@@ -24,6 +27,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this.recipesRepository,
     required this.authRepository,
     required this.dailyEssentialsRepository,
+    required this.orderRepository,
   }) : super(const HomeInitial()) {
     on<LoadHomeData>(_onLoadHomeData);
     on<SearchBlends>(_onSearchBlends);
@@ -45,11 +49,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         _loadUserProfile(),
         _loadTrendingBlends(),
         _loadFeaturedRecipes(),
+        _loadExpiringItems(),
       ]);
 
       final user = results[0] as UserEntity?;
       final trendingBlends = results[1] as List<PublicBlendEntity>;
       final featuredRecipes = results[2] as List<RecipeEntity>;
+      final expiringItems = results[3] as List<ExpiringItemEntity>;
 
       // Generate ready-to-sell blends (can use daily essentials API if available)
       final readyToSellBlends = await _getReadyToSellBlends();
@@ -60,6 +66,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           trendingBlends: trendingBlends,
           featuredRecipes: featuredRecipes,
           readyToSellBlends: readyToSellBlends,
+          expiringItems: expiringItems,
         ),
       );
     } catch (e) {
@@ -125,17 +132,20 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           _loadUserProfile(),
           _loadTrendingBlends(),
           _loadFeaturedRecipes(),
+          _loadExpiringItems(),
         ]);
 
         final user = results[0] as UserEntity?;
         final trendingBlends = results[1] as List<PublicBlendEntity>;
         final featuredRecipes = results[2] as List<RecipeEntity>;
+        final expiringItems = results[3] as List<ExpiringItemEntity>;
 
         emit(
           currentState.copyWith(
             user: user,
             trendingBlends: trendingBlends,
             featuredRecipes: featuredRecipes,
+            expiringItems: expiringItems,
             isRefreshing: false,
           ),
         );
@@ -147,6 +157,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             trendingBlends: currentState.trendingBlends,
             featuredRecipes: currentState.featuredRecipes,
             readyToSellBlends: currentState.readyToSellBlends,
+            expiringItems: currentState.expiringItems,
           ),
         );
       }
@@ -168,6 +179,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           trendingBlends: currentState.trendingBlends,
           featuredRecipes: currentState.featuredRecipes,
           readyToSellBlends: currentState.readyToSellBlends,
+          expiringItems: currentState.expiringItems,
           isLoadingBlends: true,
         ),
       );
@@ -183,6 +195,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             trendingBlends: currentState.trendingBlends,
             featuredRecipes: currentState.featuredRecipes,
             readyToSellBlends: currentState.readyToSellBlends,
+            expiringItems: currentState.expiringItems,
           ),
         );
       }
@@ -201,6 +214,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           trendingBlends: currentState.trendingBlends,
           featuredRecipes: currentState.featuredRecipes,
           readyToSellBlends: currentState.readyToSellBlends,
+          expiringItems: currentState.expiringItems,
           isLoadingRecipes: true,
         ),
       );
@@ -216,6 +230,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             trendingBlends: currentState.trendingBlends,
             featuredRecipes: currentState.featuredRecipes,
             readyToSellBlends: currentState.readyToSellBlends,
+            expiringItems: currentState.expiringItems,
           ),
         );
       }
@@ -234,6 +249,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           trendingBlends: currentState.trendingBlends,
           featuredRecipes: currentState.featuredRecipes,
           readyToSellBlends: currentState.readyToSellBlends,
+          expiringItems: currentState.expiringItems,
           isLoadingUser: true,
         ),
       );
@@ -249,6 +265,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             trendingBlends: currentState.trendingBlends,
             featuredRecipes: currentState.featuredRecipes,
             readyToSellBlends: currentState.readyToSellBlends,
+            expiringItems: currentState.expiringItems,
           ),
         );
       }
@@ -316,6 +333,74 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       // If any error, fall back to static data
       logger.e('Error loading ready-to-sell blends: $e');
       return [];
+    }
+  }
+
+  Future<List<ExpiringItemEntity>> _loadExpiringItems() async {
+    try {
+      final ordersResult = await orderRepository.getUserOrders(
+        page: 1,
+        limit: 10, // Load last 10 orders
+      );
+
+      return ordersResult.fold(
+        (failure) {
+          logger.e(
+            'Failed to load orders for expiry check: ${failure.message}',
+          );
+          return <ExpiringItemEntity>[];
+        },
+        (orders) {
+          final now = DateTime.now();
+          final expiringItems = <ExpiringItemEntity>[];
+
+          for (final order in orders) {
+            // Only check recent orders (within last 60 days)
+            final daysSinceOrder = now.difference(order.createdAt).inDays;
+            if (daysSinceOrder > 60) continue;
+
+            for (final item in order.items) {
+              // Skip items without expiry information
+              if (item.expiryDays == null) continue;
+
+              final expiryDate = order.createdAt.add(
+                Duration(days: item.expiryDays!),
+              );
+              final daysUntilExpiry = expiryDate.difference(now).inDays;
+
+              // Only include items expiring within 14 days
+              if (daysUntilExpiry >= 0 && daysUntilExpiry <= 14) {
+                expiringItems.add(
+                  ExpiringItemEntity.fromOrderItem(
+                    orderId: order.id,
+                    orderItemId: item.itemId,
+                    itemName: item.itemName,
+                    itemType: item.itemType,
+                    orderDate: order.createdAt,
+                    expiryDays: item.expiryDays!,
+                    quantity: item.quantity,
+                    weightInKg: item.weightInKg,
+                  ),
+                );
+              }
+            }
+          }
+
+          // Sort by urgency (critical first, then by days until expiry)
+          expiringItems.sort((a, b) {
+            if (a.urgency != b.urgency) {
+              return a.urgency.index.compareTo(b.urgency.index);
+            }
+            return a.daysUntilExpiry.compareTo(b.daysUntilExpiry);
+          });
+
+          logger.i('Found ${expiringItems.length} expiring items');
+          return expiringItems;
+        },
+      );
+    } catch (e) {
+      logger.e('Error loading expiring items: $e');
+      return <ExpiringItemEntity>[];
     }
   }
 }

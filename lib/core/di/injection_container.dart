@@ -193,6 +193,7 @@ Future<void> init() async {
       recipesRepository: sl(),
       authRepository: sl(),
       dailyEssentialsRepository: sl(),
+      orderRepository: sl(),
     ),
   );
 

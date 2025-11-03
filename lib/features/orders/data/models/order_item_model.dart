@@ -10,6 +10,7 @@ class OrderItemModel extends OrderItemEntity {
     required super.pricePerKg,
     required super.totalPrice,
     required super.weightInKg,
+    super.expiryDays,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -22,6 +23,7 @@ class OrderItemModel extends OrderItemEntity {
       pricePerKg: (json['price_per_kg'] ?? 0).toDouble(),
       totalPrice: (json['total_price'] ?? 0).toDouble(),
       weightInKg: json['weight_in_kg'] ?? 0,
+      expiryDays: json['item']['expiry_days'],
     );
   }
 
@@ -33,6 +35,7 @@ class OrderItemModel extends OrderItemEntity {
       'price_per_kg': pricePerKg,
       'total_price': totalPrice,
       'weight_in_kg': weightInKg,
+      if (expiryDays != null) 'expiry_days': expiryDays,
     };
   }
 
@@ -45,6 +48,7 @@ class OrderItemModel extends OrderItemEntity {
     double? pricePerKg,
     double? totalPrice,
     int? weightInKg,
+    int? expiryDays,
   }) {
     return OrderItemModel(
       itemType: itemType ?? this.itemType,
@@ -55,6 +59,7 @@ class OrderItemModel extends OrderItemEntity {
       pricePerKg: pricePerKg ?? this.pricePerKg,
       totalPrice: totalPrice ?? this.totalPrice,
       weightInKg: weightInKg ?? this.weightInKg,
+      expiryDays: expiryDays ?? this.expiryDays,
     );
   }
 }

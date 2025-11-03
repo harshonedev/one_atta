@@ -9,6 +9,7 @@ class OrderItemEntity extends Equatable {
   final double pricePerKg;
   final double totalPrice;
   final int weightInKg;
+  final int? expiryDays; // Number of days until product expires from order date
 
   const OrderItemEntity({
     required this.itemType,
@@ -19,6 +20,7 @@ class OrderItemEntity extends Equatable {
     required this.pricePerKg,
     required this.totalPrice,
     required this.weightInKg,
+    this.expiryDays,
   });
 
   @override
@@ -31,5 +33,6 @@ class OrderItemEntity extends Equatable {
     pricePerKg,
     totalPrice,
     weightInKg,
+    expiryDays,
   ];
 }
