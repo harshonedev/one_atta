@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/daily_essentials/domain/entities/daily_essential_entity.dart';
 
 abstract class DailyEssentialsState extends Equatable {
@@ -41,11 +42,12 @@ class DailyEssentialsLoaded extends DailyEssentialsState {
 
 class DailyEssentialsError extends DailyEssentialsState {
   final String message;
+  final Failure? failure;
 
-  const DailyEssentialsError({required this.message});
+  const DailyEssentialsError({required this.message, this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }
 
 class ProductDetailLoading extends DailyEssentialsState {
@@ -63,9 +65,10 @@ class ProductDetailLoaded extends DailyEssentialsState {
 
 class ProductDetailError extends DailyEssentialsState {
   final String message;
+  final Failure? failure;
 
-  const ProductDetailError({required this.message});
+  const ProductDetailError({required this.message, this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }

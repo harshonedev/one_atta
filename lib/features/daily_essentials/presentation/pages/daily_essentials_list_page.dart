@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/features/daily_essentials/domain/entities/daily_essential_entity.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_event.dart';
@@ -29,7 +30,14 @@ class DailyEssentialsListPage extends StatelessWidget {
           }
 
           if (state is DailyEssentialsError) {
-            return _buildErrorView(context, state.message);
+            return ErrorPage(
+              failure: state.failure,
+              onRetry: () {
+                context.read<DailyEssentialsBloc>().add(
+                  const LoadAllProducts(),
+                );
+              },
+            );
           }
 
           if (state is DailyEssentialsLoaded) {
@@ -50,38 +58,6 @@ class DailyEssentialsListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorView(BuildContext context, String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load products',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              context.read<DailyEssentialsBloc>().add(const LoadAllProducts());
-            },
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEmptyView(BuildContext context) {
     return Center(

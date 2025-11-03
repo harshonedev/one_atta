@@ -19,7 +19,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     final result = await orderRepository.getOrderById(event.orderId);
     result.fold(
-      (failure) => emit(OrderError(failure.message)),
+      (failure) => emit(OrderError(failure.message, failure: failure)),
       (order) => emit(OrderLoaded(order)),
     );
   }
@@ -36,7 +36,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     );
 
     result.fold(
-      (failure) => emit(OrderError(failure.message)),
+      (failure) => emit(OrderError(failure.message, failure: failure)),
       (orders) => emit(
         OrdersLoaded(
           orders: orders,
@@ -60,7 +60,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     );
 
     result.fold(
-      (failure) => emit(OrderError(failure.message)),
+      (failure) => emit(OrderError(failure.message, failure: failure)),
       (order) => emit(OrderCancelled(order)),
     );
   }
@@ -79,7 +79,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     );
 
     result.fold(
-      (failure) => emit(OrderError(failure.message)),
+      (failure) => emit(OrderError(failure.message, failure: failure)),
       (order) => emit(OrderReordered(order)),
     );
   }
@@ -90,7 +90,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     final result = await orderRepository.trackOrder(event.orderId);
 
     result.fold(
-      (failure) => emit(OrderError(failure.message)),
+      (failure) => emit(OrderError(failure.message, failure: failure)),
       (trackingData) => emit(OrderTrackingLoaded(trackingData)),
     );
   }

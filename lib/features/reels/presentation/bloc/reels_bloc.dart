@@ -49,7 +49,7 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
     result.fold(
       (failure) {
         logger.e('Failed to load reels feed: ${failure.message}');
-        emit(ReelsError(message: failure.message));
+        emit(ReelsError(message: failure.message, failure: failure));
       },
       (feedData) {
         logger.i('Loaded ${feedData.reels.length} reels');
@@ -94,7 +94,7 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
     result.fold(
       (failure) {
         logger.e('Failed to refresh reels from server: ${failure.message}');
-        emit(ReelsError(message: failure.message));
+        emit(ReelsError(message: failure.message, failure: failure));
       },
       (feedData) {
         logger.i('Refreshed ${feedData.reels.length} reels from server');
@@ -142,7 +142,7 @@ class ReelsBloc extends Bloc<ReelsEvent, ReelsState> {
         (failure) {
           logger.e('Failed to load more reels: ${failure.message}');
           emit(currentState.copyWith(isLoadingMore: false));
-          emit(ReelsError(message: failure.message));
+          emit(ReelsError(message: failure.message, failure: failure));
         },
         (feedData) {
           logger.i('Loaded ${feedData.reels.length} more reels');

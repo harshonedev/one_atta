@@ -110,6 +110,15 @@ class ErrorPage extends StatelessWidget {
               : 'There was a problem accessing local storage.',
           color: Colors.purple,
         );
+      } else if (failure is NotFoundFailure) {
+        return _ErrorInfo(
+          icon: Icons.search_off_rounded,
+          title: 'Not Found',
+          description: failure!.message.isNotEmpty
+              ? failure!.message
+              : 'The requested resource could not be found.',
+          color: Colors.blueGrey,
+        );
       }
     }
 

@@ -74,7 +74,7 @@ class ApiRequest {
               '❌ Endpoint not found: $url - Response: ${e.response!.data}',
             );
             return ApiError(
-              ServerFailure(
+              NotFoundFailure(
                 e.response!.data['message'] ?? 'Resource not found',
               ),
             );

@@ -120,6 +120,7 @@ class _RecipeDetailsPageState extends State<RecipeDetailsPage>
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
               ),
               body: ErrorPage(
+                failure: state.failure,
                 onRetry: () {
                   // Get recipe ID from context or navigation
                   context.read<RecipeDetailsBloc>().add(

@@ -24,7 +24,7 @@ class RecipeDetailsBloc extends Bloc<RecipeDetailsEvent, RecipeDetailsState> {
     final result = await repository.getRecipeById(event.recipeId);
 
     result.fold(
-      (failure) => emit(RecipeDetailsError(failure.message)),
+      (failure) => emit(RecipeDetailsError(failure.message, failure: failure)),
       (recipe) =>
           emit(RecipeDetailsLoaded(recipe: recipe, likesCount: recipe.likes)),
     );

@@ -24,7 +24,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
 
     final result = await paymentRepository.getPaymentMethods();
     result.fold(
-      (failure) => emit(PaymentError(failure.message)),
+      (failure) => emit(PaymentError(failure.message, failure: failure)),
       (paymentMethods) =>
           emit(PaymentMethodsLoaded(paymentMethods: paymentMethods)),
     );
@@ -63,9 +63,12 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       userNote: event.userNote,
     );
 
-    result.fold((failure) => emit(PaymentError(failure.message)), (response) {
-      emit(OrderCreated(order: response.order, razorpay: response.razorpay));
-    });
+    result.fold(
+      (failure) => emit(PaymentError(failure.message, failure: failure)),
+      (response) {
+        emit(OrderCreated(order: response.order, razorpay: response.razorpay));
+      },
+    );
   }
 
   /// Verify Razorpay payment (POST /api/app/payments/verify)
@@ -83,7 +86,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     );
 
     result.fold((failure) {
-      emit(PaymentFailed(message: failure.message));
+      emit(PaymentFailed(message: failure.message, failure: failure));
       final error = {
         'code': 'PAYMENT_FAILED',
         'description': failure.message,
@@ -113,7 +116,8 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     );
 
     result.fold(
-      (failure) => emit(PaymentFailed(message: failure.message)),
+      (failure) =>
+          emit(PaymentFailed(message: failure.message, failure: failure)),
       (order) => emit(PaymentCompleted(order)),
     );
   }
@@ -130,7 +134,8 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     );
 
     result.fold(
-      (failure) => emit(PaymentFailed(message: failure.message)),
+      (failure) =>
+          emit(PaymentFailed(message: failure.message, failure: failure)),
       (order) => emit(PaymentFailed(message: 'Payment failed', order: order)),
     );
   }

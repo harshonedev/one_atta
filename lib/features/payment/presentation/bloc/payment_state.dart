@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/payment/domain/entities/order_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/payment_method_entity.dart';
 import 'package:one_atta/features/payment/domain/entities/razorpay_details_entity.dart';
@@ -73,19 +74,21 @@ class PaymentCompleted extends PaymentState {
 class PaymentFailed extends PaymentState {
   final String message;
   final OrderEntity? order;
+  final Failure? failure;
 
-  const PaymentFailed({required this.message, this.order});
+  const PaymentFailed({required this.message, this.order, this.failure});
 
   @override
-  List<Object?> get props => [message, order];
+  List<Object?> get props => [message, order, failure];
 }
 
 /// General payment error
 class PaymentError extends PaymentState {
   final String message;
+  final Failure? failure;
 
-  const PaymentError(this.message);
+  const PaymentError(this.message, {this.failure});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, failure];
 }

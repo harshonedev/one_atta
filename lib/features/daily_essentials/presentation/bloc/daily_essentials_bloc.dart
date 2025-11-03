@@ -34,7 +34,9 @@ class DailyEssentialsBloc
     );
 
     result.fold(
-      (failure) => emit(DailyEssentialsError(message: failure.message)),
+      (failure) => emit(
+        DailyEssentialsError(message: failure.message, failure: failure),
+      ),
       (products) => emit(DailyEssentialsLoaded(products: products)),
     );
   }
@@ -49,7 +51,7 @@ class DailyEssentialsBloc
 
     result.fold((failure) {
       logger.e('Error loading product by ID: ${failure.message}');
-      emit(ProductDetailError(message: failure.message));
+      emit(ProductDetailError(message: failure.message, failure: failure));
     }, (product) => emit(ProductDetailLoaded(product: product)));
   }
 
@@ -64,7 +66,9 @@ class DailyEssentialsBloc
       final result = await repository.getAllProducts();
 
       result.fold(
-        (failure) => emit(DailyEssentialsError(message: failure.message)),
+        (failure) => emit(
+          DailyEssentialsError(message: failure.message, failure: failure),
+        ),
         (products) => emit(DailyEssentialsLoaded(products: products)),
       );
     } else {

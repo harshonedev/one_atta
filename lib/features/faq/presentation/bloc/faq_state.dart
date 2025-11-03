@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/faq/domain/entities/faq_entity.dart';
 
 abstract class FaqState extends Equatable {
@@ -23,11 +24,12 @@ class FaqLoaded extends FaqState {
 
 class FaqError extends FaqState {
   final String message;
+  final Failure? failure;
 
-  const FaqError(this.message);
+  const FaqError(this.message, {this.failure});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, failure];
 }
 
 class FaqHelpfulMarked extends FaqState {

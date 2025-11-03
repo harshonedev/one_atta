@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_bloc.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_event.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_history/loyalty_history_state.dart';
@@ -80,7 +81,14 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
             }
 
             if (state is LoyaltyHistoryError) {
-              return _buildErrorState(context, state.message);
+              return ErrorPage(
+                failure: state.failure,
+                onRetry: () {
+                  context.read<LoyaltyHistoryBloc>().add(
+                    const GetLoyaltyHistoryRequested(),
+                  );
+                },
+              );
             }
 
             if (state is LoyaltyHistoryLoaded) {
@@ -216,54 +224,6 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: colorScheme.errorContainer.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 64,
-                color: colorScheme.error,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Something went wrong',
-              style: textTheme.titleLarge?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _initializeData,
-              child: const Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildEmptyState(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;

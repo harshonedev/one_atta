@@ -46,6 +46,7 @@ class LoyaltyHistoryBloc
             LoyaltyHistoryError(
               message: failure.message,
               errorType: _getErrorType(failure),
+              failure: failure,
             ),
           );
         }
@@ -101,6 +102,7 @@ class LoyaltyHistoryBloc
             LoyaltyHistoryError(
               message: failure.message,
               errorType: _getErrorType(failure),
+              failure: failure,
             ),
           );
         }

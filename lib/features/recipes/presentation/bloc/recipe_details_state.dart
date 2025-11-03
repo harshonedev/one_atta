@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/recipes/domain/entities/recipe_entity.dart';
 
 abstract class RecipeDetailsState extends Equatable {
@@ -59,9 +60,10 @@ class RecipeDetailsLoaded extends RecipeDetailsState {
 
 class RecipeDetailsError extends RecipeDetailsState {
   final String message;
+  final Failure? failure;
 
-  const RecipeDetailsError(this.message);
+  const RecipeDetailsError(this.message, {this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }

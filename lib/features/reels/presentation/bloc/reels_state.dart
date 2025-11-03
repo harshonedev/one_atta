@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/reels/domain/entities/reel_entity.dart';
 
 abstract class ReelsState extends Equatable {
@@ -59,9 +60,10 @@ class ReelsFeedLoaded extends ReelsState {
 
 class ReelsError extends ReelsState {
   final String message;
+  final Failure? failure;
 
-  const ReelsError({required this.message});
+  const ReelsError({required this.message, this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }

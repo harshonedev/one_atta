@@ -52,6 +52,7 @@ class LikedRecipesView extends StatelessWidget {
 
           if (state is RecipesError) {
             return ErrorPage(
+              failure: state.failure,
               onRetry: () {
                 context.read<RecipesBloc>().add(const LoadLikedRecipes());
               },

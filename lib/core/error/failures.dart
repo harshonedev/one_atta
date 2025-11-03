@@ -22,3 +22,7 @@ class ValidationFailure extends Failure {
 class UnauthorizedFailure extends Failure {
   const UnauthorizedFailure(super.message);
 }
+
+class NotFoundFailure extends Failure {
+  const NotFoundFailure(super.message);
+}

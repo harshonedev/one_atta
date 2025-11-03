@@ -27,7 +27,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     final result = await repository.getAllRecipes();
 
     result.fold(
-      (failure) => emit(RecipesError(failure.message)),
+      (failure) => emit(RecipesError(failure.message, failure: failure)),
       (recipes) =>
           emit(RecipesLoaded(recipes: recipes, filteredRecipes: recipes)),
     );
@@ -42,7 +42,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     final result = await repository.getRecipeById(event.recipeId);
 
     result.fold(
-      (failure) => emit(RecipesError(failure.message)),
+      (failure) => emit(RecipesError(failure.message, failure: failure)),
       (recipe) => emit(RecipeDetailsLoaded(recipe)),
     );
   }
@@ -55,11 +55,14 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
 
     final result = await repository.createRecipe(event.recipe);
 
-    result.fold((failure) => emit(RecipesError(failure.message)), (recipe) {
-      emit(RecipeCreated(recipe));
-      // Reload recipes after creation
-      add(const LoadRecipes());
-    });
+    result.fold(
+      (failure) => emit(RecipesError(failure.message, failure: failure)),
+      (recipe) {
+        emit(RecipeCreated(recipe));
+        // Reload recipes after creation
+        add(const LoadRecipes());
+      },
+    );
   }
 
   Future<void> _onUpdateRecipe(
@@ -70,11 +73,14 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
 
     final result = await repository.updateRecipe(event.id, event.recipe);
 
-    result.fold((failure) => emit(RecipesError(failure.message)), (recipe) {
-      emit(RecipeUpdated(recipe));
-      // Reload recipes after update
-      add(const LoadRecipes());
-    });
+    result.fold(
+      (failure) => emit(RecipesError(failure.message, failure: failure)),
+      (recipe) {
+        emit(RecipeUpdated(recipe));
+        // Reload recipes after update
+        add(const LoadRecipes());
+      },
+    );
   }
 
   Future<void> _onDeleteRecipe(
@@ -85,11 +91,14 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
 
     final result = await repository.deleteRecipe(event.id);
 
-    result.fold((failure) => emit(RecipesError(failure.message)), (recipe) {
-      emit(RecipeDeleted(recipe));
-      // Reload recipes after deletion
-      add(const LoadRecipes());
-    });
+    result.fold(
+      (failure) => emit(RecipesError(failure.message, failure: failure)),
+      (recipe) {
+        emit(RecipeDeleted(recipe));
+        // Reload recipes after deletion
+        add(const LoadRecipes());
+      },
+    );
   }
 
   Future<void> _onFilterRecipesByCategory(
@@ -212,7 +221,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     final result = await repository.getLikedRecipes();
 
     result.fold(
-      (failure) => emit(RecipesError(failure.message)),
+      (failure) => emit(RecipesError(failure.message, failure: failure)),
       (likedRecipes) => emit(LikedRecipesLoaded(likedRecipes)),
     );
   }

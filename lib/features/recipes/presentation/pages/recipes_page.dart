@@ -125,7 +125,7 @@ class _RecipesViewState extends State<RecipesView> {
                 }
 
                 if (state is RecipesError) {
-                  return _buildErrorState(context, state.message);
+                  return _buildErrorState(context, state.message, state);
                 }
 
                 if (state is RecipesLoaded) {
@@ -141,8 +141,13 @@ class _RecipesViewState extends State<RecipesView> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message) {
+  Widget _buildErrorState(
+    BuildContext context,
+    String message,
+    RecipesError state,
+  ) {
     return ErrorPage(
+      failure: state.failure,
       onRetry: () {
         context.read<RecipesBloc>().add(const LoadRecipes());
       },

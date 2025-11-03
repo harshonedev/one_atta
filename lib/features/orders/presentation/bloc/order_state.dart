@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/orders/domain/entities/order_entity.dart';
 
 abstract class OrderState extends Equatable {
@@ -69,11 +70,12 @@ class OrderReordered extends OrderState {
 
 class OrderError extends OrderState {
   final String message;
+  final Failure? failure;
 
-  const OrderError(this.message);
+  const OrderError(this.message, {this.failure});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, failure];
 }
 
 class OrderTrackingLoaded extends OrderState {

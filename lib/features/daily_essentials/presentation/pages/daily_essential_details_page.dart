@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/features/daily_essentials/domain/entities/daily_essential_entity.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_event.dart';
@@ -45,7 +46,14 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
             final product = state.product;
             return _buildProductDetails(product);
           } else if (state is ProductDetailError) {
-            return Center(child: Text(state.message));
+            return ErrorPage(
+              failure: state.failure,
+              onRetry: () {
+                context.read<DailyEssentialsBloc>().add(
+                  LoadProductById(widget.productId),
+                );
+              },
+            );
           } else {
             return const Center(child: Text('Unexpected Error'));
           }

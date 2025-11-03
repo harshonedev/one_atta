@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/feedback/domain/entities/feedback_entity.dart';
 
 abstract class FeedbackState extends Equatable {
@@ -41,9 +42,10 @@ class FeedbackDetailLoaded extends FeedbackState {
 
 class FeedbackError extends FeedbackState {
   final String message;
+  final Failure? failure;
 
-  const FeedbackError(this.message);
+  const FeedbackError(this.message, {this.failure});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, failure];
 }

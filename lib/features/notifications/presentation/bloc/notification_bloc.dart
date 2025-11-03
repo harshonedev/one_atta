@@ -43,10 +43,11 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     final unreadCountResult = await repository.getUnreadCount();
 
     notificationsResult.fold(
-      (failure) => emit(NotificationError(failure.message)),
+      (failure) => emit(NotificationError(failure.message, failure: failure)),
       (notifications) {
         unreadCountResult.fold(
-          (failure) => emit(NotificationError(failure.message)),
+          (failure) =>
+              emit(NotificationError(failure.message, failure: failure)),
           (unreadCount) => emit(
             NotificationLoaded(
               notifications: notifications,
@@ -76,7 +77,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     final result = await repository.markAsRead(event.notificationId);
 
     result.fold(
-      (failure) => emit(NotificationError(failure.message)),
+      (failure) => emit(NotificationError(failure.message, failure: failure)),
       (_) => add(const LoadNotifications()),
     );
   }
@@ -88,7 +89,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     final result = await repository.markAllAsRead();
 
     result.fold(
-      (failure) => emit(NotificationError(failure.message)),
+      (failure) => emit(NotificationError(failure.message, failure: failure)),
       (_) => add(const LoadNotifications()),
     );
   }
@@ -100,7 +101,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     final result = await repository.deleteNotification(event.notificationId);
 
     result.fold(
-      (failure) => emit(NotificationError(failure.message)),
+      (failure) => emit(NotificationError(failure.message, failure: failure)),
       (_) => add(const LoadNotifications()),
     );
   }
@@ -111,9 +112,12 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final result = await repository.clearAllNotifications();
 
-    result.fold((failure) => emit(NotificationError(failure.message)), (_) {
-      emit(const NotificationLoaded(notifications: [], unreadCount: 0));
-    });
+    result.fold(
+      (failure) => emit(NotificationError(failure.message, failure: failure)),
+      (_) {
+        emit(const NotificationLoaded(notifications: [], unreadCount: 0));
+      },
+    );
   }
 
   Future<void> _onRefreshUnreadCount(
@@ -125,7 +129,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       final unreadCountResult = await repository.getUnreadCount();
 
       unreadCountResult.fold(
-        (failure) => emit(NotificationError(failure.message)),
+        (failure) => emit(NotificationError(failure.message, failure: failure)),
         (unreadCount) => emit(currentState.copyWith(unreadCount: unreadCount)),
       );
     }
@@ -137,20 +141,22 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final tokenResult = await authRepository.getToken();
 
-    tokenResult.fold((failure) => emit(NotificationError(failure.message)), (
-      token,
-    ) async {
-      if (token == null) {
-        emit(const NotificationError('User not authenticated'));
-        return;
-      }
+    tokenResult.fold(
+      (failure) => emit(NotificationError(failure.message, failure: failure)),
+      (token) async {
+        if (token == null) {
+          emit(const NotificationError('User not authenticated'));
+          return;
+        }
 
-      final result = await repository.updateFcmToken(token, event.fcmToken);
-      result.fold(
-        (failure) => emit(NotificationError(failure.message)),
-        (message) => emit(FcmTokenUpdated(message)),
-      );
-    });
+        final result = await repository.updateFcmToken(token, event.fcmToken);
+        result.fold(
+          (failure) =>
+              emit(NotificationError(failure.message, failure: failure)),
+          (message) => emit(FcmTokenUpdated(message)),
+        );
+      },
+    );
   }
 
   Future<void> _onRemoveFcmToken(
@@ -159,20 +165,22 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final tokenResult = await authRepository.getToken();
 
-    tokenResult.fold((failure) => emit(NotificationError(failure.message)), (
-      token,
-    ) async {
-      if (token == null) {
-        emit(const NotificationError('User not authenticated'));
-        return;
-      }
+    tokenResult.fold(
+      (failure) => emit(NotificationError(failure.message, failure: failure)),
+      (token) async {
+        if (token == null) {
+          emit(const NotificationError('User not authenticated'));
+          return;
+        }
 
-      final result = await repository.removeFcmToken(token);
-      result.fold(
-        (failure) => emit(NotificationError(failure.message)),
-        (message) => emit(FcmTokenRemoved(message)),
-      );
-    });
+        final result = await repository.removeFcmToken(token);
+        result.fold(
+          (failure) =>
+              emit(NotificationError(failure.message, failure: failure)),
+          (message) => emit(FcmTokenRemoved(message)),
+        );
+      },
+    );
   }
 
   @override

@@ -20,7 +20,7 @@ class FaqBloc extends Bloc<FaqEvent, FaqState> {
     final result = await faqRepository.getFaqs();
 
     result.fold(
-      (failure) => emit(FaqError(failure.message)),
+      (failure) => emit(FaqError(failure.message, failure: failure)),
       (faqs) => emit(FaqLoaded(faqs)),
     );
   }
@@ -34,7 +34,7 @@ class FaqBloc extends Bloc<FaqEvent, FaqState> {
     final result = await faqRepository.getFaqsByCategory(event.category);
 
     result.fold(
-      (failure) => emit(FaqError(failure.message)),
+      (failure) => emit(FaqError(failure.message, failure: failure)),
       (faqs) => emit(FaqLoaded(faqs)),
     );
   }
@@ -45,7 +45,7 @@ class FaqBloc extends Bloc<FaqEvent, FaqState> {
     final result = await faqRepository.searchFaqs(event.searchQuery);
 
     result.fold(
-      (failure) => emit(FaqError(failure.message)),
+      (failure) => emit(FaqError(failure.message, failure: failure)),
       (faqs) => emit(FaqLoaded(faqs)),
     );
   }
@@ -69,15 +69,18 @@ class FaqBloc extends Bloc<FaqEvent, FaqState> {
     emit(FaqHelpfulMarked(updatedFaqs));
     final result = await faqRepository.markFaqAsHelpful(event.faqId);
 
-    result.fold((failure) => emit(FaqError(failure.message)), (response) {
-      final faqs = currentState.faqs.map((faq) {
-        if (faq.id == event.faqId) {
-          return faq.copyWith(helpfulCount: response.newHelpfulCount);
-        }
-        return faq;
-      }).toList();
-      emit(FaqLoaded(faqs));
-    });
+    result.fold(
+      (failure) => emit(FaqError(failure.message, failure: failure)),
+      (response) {
+        final faqs = currentState.faqs.map((faq) {
+          if (faq.id == event.faqId) {
+            return faq.copyWith(helpfulCount: response.newHelpfulCount);
+          }
+          return faq;
+        }).toList();
+        emit(FaqLoaded(faqs));
+      },
+    );
   }
 
   void _onRestoreFaqs(RestoreFaqs event, Emitter<FaqState> emit) {

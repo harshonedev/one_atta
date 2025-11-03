@@ -17,7 +17,7 @@ class LoyaltyBloc extends Bloc<LoyaltyEvent, LoyaltyState> {
     final result = await loyaltyRepository.getLoyaltySettings();
     result.fold(
       (failure) {
-        emit(LoyaltyError(message: failure.message));
+        emit(LoyaltyError(message: failure.message, failure: failure));
       },
       (loyaltySettings) {
         emit(LoyaltySettingsLoaded(loyaltySettingsEntity: loyaltySettings));

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
 
 abstract class CouponState extends Equatable {
@@ -45,11 +46,16 @@ class CouponRemoved extends CouponState {
 class CouponError extends CouponState {
   final String message;
   final String operation;
+  final Failure? failure;
 
-  const CouponError({required this.message, required this.operation});
+  const CouponError({
+    required this.message,
+    required this.operation,
+    this.failure,
+  });
 
   @override
-  List<Object?> get props => [message, operation];
+  List<Object?> get props => [message, operation, failure];
 
   /// Get user-friendly error message
   String get userFriendlyMessage {

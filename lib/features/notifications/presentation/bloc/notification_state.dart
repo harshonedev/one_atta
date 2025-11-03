@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/notifications/domain/entities/notification_entity.dart';
 
 abstract class NotificationState extends Equatable {
@@ -41,11 +42,12 @@ class NotificationLoaded extends NotificationState {
 
 class NotificationError extends NotificationState {
   final String message;
+  final Failure? failure;
 
-  const NotificationError(this.message);
+  const NotificationError(this.message, {this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }
 
 class NotificationActionSuccess extends NotificationState {

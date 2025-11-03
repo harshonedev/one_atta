@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/orders/domain/entities/order_entity.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
@@ -44,7 +45,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           }
 
           if (state is OrderError) {
-            return _buildErrorView(context, state.message);
+            return ErrorPage(
+              failure: state.failure,
+              onRetry: () {
+                context.read<OrderBloc>().add(LoadOrder(widget.orderId));
+              },
+            );
           }
 
           if (state is OrderLoaded) {

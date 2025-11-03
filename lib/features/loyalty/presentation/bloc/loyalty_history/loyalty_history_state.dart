@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/loyalty/domain/entities/loyalty_transaction_entity.dart';
 
 abstract class LoyaltyHistoryState extends Equatable {
@@ -91,11 +92,16 @@ class LoyaltyHistoryLoaded extends LoyaltyHistoryState {
 class LoyaltyHistoryError extends LoyaltyHistoryState {
   final String message;
   final String? errorType;
+  final Failure? failure;
 
-  const LoyaltyHistoryError({required this.message, this.errorType});
+  const LoyaltyHistoryError({
+    required this.message,
+    this.errorType,
+    this.failure,
+  });
 
   @override
-  List<Object?> get props => [message, errorType];
+  List<Object?> get props => [message, errorType, failure];
 
   /// Check if error is due to authentication issues
   bool get isAuthError => errorType == 'unauthorized';

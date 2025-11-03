@@ -31,7 +31,13 @@ class CouponBloc extends Bloc<CouponEvent, CouponState> {
         logger.e(
           'Failed to fetch coupon ${event.couponCode}: ${failure.message}',
         );
-        emit(CouponError(message: failure.message, operation: 'apply'));
+        emit(
+          CouponError(
+            message: failure.message,
+            operation: 'apply',
+            failure: failure,
+          ),
+        );
       },
       (coupon) {
         logger.i('Coupon fetched: $coupon');
