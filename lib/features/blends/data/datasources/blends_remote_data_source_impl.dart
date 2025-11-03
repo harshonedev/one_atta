@@ -83,4 +83,17 @@ class BlendsRemoteDataSourceImpl implements BlendsRemoteDataSource {
       ApiError() => throw response.failure,
     };
   }
+
+  @override
+  Future<BlendDetailsModel> getBlendByShareCode(String shareCode) async {
+    final response = await apiRequest.callRequest(
+      method: HttpMethod.get,
+      url: '$baseUrl/share/$shareCode',
+    );
+
+     return switch (response) {
+      ApiSuccess() => BlendDetailsModel.fromJson(response.data),
+      ApiError() => throw response.failure,
+    };
+  }
 }

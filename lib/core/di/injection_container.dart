@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/network/api_request.dart';
+import 'package:one_atta/features/blends/presentation/bloc/blend_share_bloc.dart';
 import 'package:one_atta/features/loyalty/data/datasources/loyalty_remote_datasource.dart';
 import 'package:one_atta/features/loyalty/data/repositories/loyalty_repository_impl.dart';
 import 'package:one_atta/features/loyalty/domain/repositories/loyalty_repository.dart';
@@ -202,6 +203,7 @@ Future<void> init() async {
   sl.registerFactory(() => BlendsBloc(repository: sl()));
   sl.registerFactory(() => BlendDetailsBloc(repository: sl()));
   sl.registerFactory(() => SavedBlendsBloc(repository: sl()));
+  sl.registerFactory(() => BlendShareBloc(repository: sl()));
 
   // Repository
   sl.registerLazySingleton<BlendsRepository>(

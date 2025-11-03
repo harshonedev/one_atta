@@ -8,6 +8,7 @@ import 'package:one_atta/core/theme/theme.dart';
 import 'package:one_atta/features/address/presentation/bloc/address_event.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:one_atta/features/blends/presentation/bloc/blend_share_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/delivery_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/loyalty/presentation/bloc/loyalty_bloc.dart';
@@ -89,6 +90,7 @@ class MainApp extends StatelessWidget {
         BlocProvider(create: (context) => di.sl<LoyaltyBloc>()),
         BlocProvider(create: (context) => di.sl<LoyaltyHistoryBloc>()),
         BlocProvider(create: (context) => di.sl<DailyEssentialsBloc>()),
+        BlocProvider(create: (context) => di.sl<BlendShareBloc>()),
         BlocProvider(
           create: (context) => di.sl<AddressBloc>()..add(LoadAddresses()),
         ),

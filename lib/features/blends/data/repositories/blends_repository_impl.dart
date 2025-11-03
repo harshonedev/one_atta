@@ -76,4 +76,18 @@ class BlendsRepositoryImpl implements BlendsRepository {
       return Left(ServerFailure('Unexpected error occurred: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, BlendDetailsEntity>> getBlendByShareCode(
+    String shareCode,
+  ) async {
+    try {
+      final result = await remoteDataSource.getBlendByShareCode(shareCode);
+      return Right(result.toEntity());
+    } on Failure catch (failure) {
+      return Left(failure);
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error occurred: $e'));
+    }
+  }
 }

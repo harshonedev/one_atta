@@ -10,6 +10,7 @@ import 'package:one_atta/features/auth/presentation/pages/login_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:one_atta/features/blends/presentation/pages/blend_share_page.dart';
 import 'package:one_atta/features/loyalty/presentation/pages/rewards_page.dart';
 import 'package:one_atta/features/loyalty/presentation/pages/transaction_history_page.dart';
 import 'package:one_atta/features/payment/data/models/order_model.dart';
@@ -345,6 +346,21 @@ class AppRouter {
           builder: (context, state) {
             final orderId = state.pathParameters['orderId']!;
             return OrderDetailPage(orderId: orderId);
+          },
+        ),
+        // Deepilink Routes
+        GoRoute(
+          path: 'share/blends/:shareCode',
+          builder: (context, state) {
+            final shareCode = state.pathParameters['shareCode']!;
+            return BlendSharePage(shareCode: shareCode);
+          },
+        ),
+        GoRoute(
+          path: 'share/product/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return DailyEssentialDetailsPage(productId: id);
           },
         ),
       ],

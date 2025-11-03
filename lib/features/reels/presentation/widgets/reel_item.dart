@@ -95,15 +95,15 @@ class _ReelItemState extends State<ReelItem> {
     context.read<ReelsBloc>().add(ShareReel(widget.reel.id));
     // Also trigger native sharing
     final blendMessage = widget.reel.blend != null
-        ? '"${widget.reel.blend!.name}" blend used in this reel.  Checkout & Shop here: ${AppConstants.shareBaseUrl}/blend/${widget.reel.blend!.id}\n'
+        ? '"${widget.reel.blend!.name}" blend used in this play.  Checkout & Shop here: ${AppConstants.shareBaseUrl}/blend/${widget.reel.blend!.shareCode}\n'
         : '';
     final shareMessage =
-        'Check out this amazing reel! \n${widget.reel.caption} \n\nWatch it here: ${AppConstants.shareBaseUrl}/reel/${widget.reel.id}\n\n$blendMessage';
+        'Check out this amazing play! \n${widget.reel.caption} \n\nWatch on the play section in th app.\n\n$blendMessage';
     SharePlus.instance.share(
       ShareParams(
         text: shareMessage,
-        title: 'OneAtta Amazing Reel',
-        subject: "Check out this amazing reel!",
+        title: 'OneAtta\'s Amazing Play',
+        subject: "Check out this amazing play!",
       ),
     );
   }

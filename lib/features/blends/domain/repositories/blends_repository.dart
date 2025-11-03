@@ -13,22 +13,10 @@ abstract class BlendsRepository {
   /// Get blend details with price analysis
   Future<Either<Failure, BlendDetailsEntity>> getBlendDetails(String id);
 
-  // /// Share a blend
-  // Future<Either<Failure, String>> shareBlend(String id);
-
-  // /// Subscribe to a blend
-  // Future<Either<Failure, void>> subscribeToBlend(String id);
-
-  // /// Update a blend
-  // Future<Either<Failure, BlendEntity>> updateBlend(
-  //   String id,
-  //   UpdateBlendEntity blend,
-  // );
-
-  // /// Get blend by share code
-  // Future<Either<Failure, PublicBlendEntity>> getBlendByShareCode(
-  //   String shareCode,
-  // );
+  /// Get blend by share code
+  Future<Either<Failure, BlendDetailsEntity>> getBlendByShareCode(
+    String shareCode,
+  );
 
   /// Get user's own blends
   Future<Either<Failure, List<BlendEntity>>> getUserBlends();

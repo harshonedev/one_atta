@@ -7,40 +7,41 @@ import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
-import 'package:one_atta/features/blends/presentation/bloc/blend_details_bloc.dart';
-import 'package:one_atta/features/blends/presentation/bloc/blend_details_event.dart';
-import 'package:one_atta/features/blends/presentation/bloc/blend_details_state.dart';
+import 'package:one_atta/features/blends/presentation/bloc/blend_share_bloc.dart';
+import 'package:one_atta/features/blends/presentation/bloc/blend_share_event.dart';
+import 'package:one_atta/features/blends/presentation/bloc/blend_share_state.dart';
 import 'package:one_atta/features/blends/presentation/widgets/ingredients_card.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:share_plus/share_plus.dart';
 
-class BlendDetailsPage extends StatelessWidget {
-  final String blendId;
+class BlendSharePage extends StatelessWidget {
+  final String shareCode;
 
-  const BlendDetailsPage({super.key, required this.blendId});
+  const BlendSharePage({super.key, required this.shareCode});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          BlendDetailsBloc(repository: di.sl())..add(LoadBlendDetails(blendId)),
-      child: BlendDetailsView(blendId: blendId),
+          BlendShareBloc(repository: di.sl())
+            ..add(LoadBlendByShareCode(shareCode)),
+      child: BlendShareView(shareCode: shareCode),
     );
   }
 }
 
-class BlendDetailsView extends StatefulWidget {
-  final String blendId;
+class BlendShareView extends StatefulWidget {
+  final String shareCode;
 
-  const BlendDetailsView({super.key, required this.blendId});
+  const BlendShareView({super.key, required this.shareCode});
 
   @override
-  State<BlendDetailsView> createState() => _BlendDetailsViewState();
+  State<BlendShareView> createState() => _BlendShareViewState();
 }
 
-class _BlendDetailsViewState extends State<BlendDetailsView> {
+class _BlendShareViewState extends State<BlendShareView> {
   int _selectedWeight = 1; // Default to 1Kg
   final List<int> _availableWeights = [1, 3, 5]; // Available weights in Kg
 
@@ -48,49 +49,25 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: BlocConsumer<BlendDetailsBloc, BlendDetailsState>(
-        listener: (context, state) {
-          if (state is BlendDetailsShared) {
-            // _showShareDialog(context, state.shareCode);
-          } else if (state is BlendDetailsSubscribed) {
-            SnackbarUtils.showSuccess(
-              context,
-              'Successfully subscribed to blend!',
-            );
-          } else if (state is BlendDetailsActionError) {
-            SnackbarUtils.showError(context, state.message);
-          }
-        },
+      body: BlocBuilder<BlendShareBloc, BlendShareState>(
         builder: (context, state) {
-          if (state is BlendDetailsLoading) {
+          if (state is BlendShareLoading) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          if (state is BlendDetailsError) {
+          if (state is BlendShareError) {
             return _buildErrorState(context, state.message, state);
           }
 
-          if (state is BlendDetailsLoaded ||
-              state is BlendDetailsActionLoading ||
-              state is BlendDetailsShared ||
-              state is BlendDetailsSubscribed ||
-              state is BlendDetailsActionError) {
-            final blend = state is BlendDetailsLoaded
-                ? state.blend
-                : state is BlendDetailsActionLoading
-                ? state.blend
-                : state is BlendDetailsShared
-                ? state.blend
-                : state is BlendDetailsSubscribed
-                ? state.blend
-                : (state as BlendDetailsActionError).blend;
+          if (state is BlendShareLoaded) {
+            final blend = state.blend;
 
             return _buildBlendDetails(
               context,
               blend,
-              state is BlendDetailsActionLoading,
+              state is BlendShareLoading,
               state,
             );
           }
@@ -104,7 +81,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
   Widget _buildErrorState(
     BuildContext context,
     String message,
-    BlendDetailsError state,
+    BlendShareError state,
   ) {
     return Scaffold(
       appBar: AppBar(
@@ -115,8 +92,8 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
         message: message,
         failure: state.failure,
         onRetry: () {
-          context.read<BlendDetailsBloc>().add(
-            LoadBlendDetails(widget.blendId),
+          context.read<BlendShareBloc>().add(
+            LoadBlendByShareCode(widget.shareCode),
           );
         },
       ),
@@ -127,7 +104,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
     BuildContext context,
     dynamic blend,
     bool isLoading,
-    BlendDetailsState state,
+    BlendShareState state,
   ) {
     return CustomScrollView(
       slivers: [
@@ -161,7 +138,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
               ),
               child: Stack(
                 children: [
-                  // BacKground image
+                  // Background image
                   Positioned.fill(
                     child: Image.network(
                       blend.imageUrl,
@@ -521,7 +498,6 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                             context,
                           ).colorScheme.primary.withValues(alpha: 0.7),
                         ),
-
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -613,7 +589,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
     );
   }
 
-  void _addBlendToCart(BuildContext context, BlendDetailsEntity blendUsed) {
+  void _addBlendToCart(BuildContext context, PublicBlendEntity blendUsed) {
     // Add blend to cart using proper cart bloc
     final cartItem = CartItemEntity(
       productId: blendUsed.id,

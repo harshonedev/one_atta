@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/features/daily_essentials/domain/entities/daily_essential_entity.dart';
 import 'package:one_atta/features/daily_essentials/presentation/bloc/daily_essentials_bloc.dart';
@@ -107,10 +108,13 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
               ),
               child: IconButton(
                 onPressed: () {
+                  final shareUrl =
+                      '${AppConstants.shareBaseUrl}/product/${product.id}';
                   SharePlus.instance.share(
                     ShareParams(
-                      text: 'Check out this amazing product: ${product.name}',
-                      subject: 'Daily Essential - ${product.name}',
+                      text:
+                          'Check out this amazing product: ${product.name}\n$shareUrl',
+                      subject: 'OneAtta\'s ${product.name}',
                     ),
                   );
                 },
