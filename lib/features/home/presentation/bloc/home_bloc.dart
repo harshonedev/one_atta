@@ -359,6 +359,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           final expiringItems = <ExpiringItemEntity>[];
 
           for (final order in orders) {
+            // Only check delivered orders
+            if (order.status != 'delivered') continue;
+
             // Only check recent orders (within last 60 days)
             final daysSinceOrder = now.difference(order.createdAt).inDays;
             if (daysSinceOrder > 60) continue;
