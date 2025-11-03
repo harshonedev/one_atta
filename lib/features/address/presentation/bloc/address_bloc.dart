@@ -30,19 +30,19 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     final tokenResult = await authRepository.getToken();
     logger.i("token result - $tokenResult");
     tokenResult.fold(
-      (failure) => emit(AddressError(failure.message)),
+      (failure) => emit(AddressError(failure.message, failure: failure)),
       (token) => tokenS = token,
     );
     logger.i("User token - $tokenS");
     if (tokenS == null) {
-      return emit(AddressError("User not authenticated"));
+      return emit(const AddressError("User not authenticated"));
     }
     final result = await repository.getAllAddresses(token: tokenS!);
 
     result.fold(
       (failure) {
         logger.e('Failed to load addresses: ${failure.message}');
-        emit(AddressError(failure.message));
+        emit(AddressError(failure.message, failure: failure));
       },
       (addresses) {
         logger.i('Loaded ${addresses.length} addresses');
@@ -59,19 +59,19 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     String? tokenS;
     final tokenResult = await authRepository.getToken();
     tokenResult.fold(
-      (failure) => emit(AddressError(failure.message)),
+      (failure) => emit(AddressError(failure.message, failure: failure)),
       (token) => tokenS = token,
     );
 
     if (tokenS == null) {
-      return emit(AddressError("User not authenticated"));
+      return emit(const AddressError("User not authenticated"));
     }
     final result = await repository.getAllAddresses(token: tokenS!);
 
     result.fold(
       (failure) {
         logger.e('Failed to refresh addresses: ${failure.message}');
-        emit(AddressError(failure.message));
+        emit(AddressError(failure.message, failure: failure));
       },
       (addresses) {
         logger.i('Refreshed ${addresses.length} addresses');
@@ -88,12 +88,12 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     String? tokenS;
     final tokenResult = await authRepository.getToken();
     tokenResult.fold(
-      (failure) => emit(AddressError(failure.message)),
+      (failure) => emit(AddressError(failure.message, failure: failure)),
       (token) => tokenS = token,
     );
 
     if (tokenS == null) {
-      return emit(AddressError("User not authenticated"));
+      return emit(const AddressError("User not authenticated"));
     }
     final result = await repository.getAddressById(
       event.addressId,
@@ -103,7 +103,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     result.fold(
       (failure) {
         logger.e('Failed to load address: ${failure.message}');
-        emit(AddressError(failure.message));
+        emit(AddressError(failure.message, failure: failure));
       },
       (address) {
         logger.i('Loaded address: ${address.id}');
@@ -120,12 +120,12 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     String? tokenS;
     final tokenResult = await authRepository.getToken();
     tokenResult.fold(
-      (failure) => emit(AddressError(failure.message)),
+      (failure) => emit(AddressError(failure.message, failure: failure)),
       (token) => tokenS = token,
     );
 
     if (tokenS == null) {
-      return emit(AddressError("User not authenticated"));
+      return emit(const AddressError("User not authenticated"));
     }
     // logs alll the event parameters
     logger.i(
@@ -177,7 +177,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
         } else if (errorMessage.contains('address_line1')) {
           errorMessage = 'Please fill in the address line 1 field.';
         }
-        emit(AddressError(errorMessage));
+        emit(AddressError(errorMessage, failure: failure));
       },
       (address) {
         logger.i('Created address: ${address.id}');
@@ -197,12 +197,12 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     String? tokenS;
     final tokenResult = await authRepository.getToken();
     tokenResult.fold(
-      (failure) => emit(AddressError(failure.message)),
+      (failure) => emit(AddressError(failure.message, failure: failure)),
       (token) => tokenS = token,
     );
 
     if (tokenS == null) {
-      return emit(AddressError("User not authenticated"));
+      return emit(const AddressError("User not authenticated"));
     }
 
     final result = await repository.updateAddress(
@@ -227,7 +227,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     result.fold(
       (failure) {
         logger.e('Failed to update address: ${failure.message}');
-        emit(AddressError(failure.message));
+        emit(AddressError(failure.message, failure: failure));
       },
       (address) {
         logger.i('Updated address: ${address.id}');
@@ -246,12 +246,12 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     String? tokenS;
     final tokenResult = await authRepository.getToken();
     tokenResult.fold(
-      (failure) => emit(AddressError(failure.message)),
+      (failure) => emit(AddressError(failure.message, failure: failure)),
       (token) => tokenS = token,
     );
 
     if (tokenS == null) {
-      return emit(AddressError("User not authenticated"));
+      return emit(const AddressError("User not authenticated"));
     }
 
     final result = await repository.deleteAddress(
@@ -262,7 +262,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     result.fold(
       (failure) {
         logger.e('Failed to delete address: ${failure.message}');
-        emit(AddressError(failure.message));
+        emit(AddressError(failure.message, failure: failure));
       },
       (address) {
         logger.i('Deleted address: ${address.id}');
@@ -281,12 +281,12 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     String? tokenS;
     final tokenResult = await authRepository.getToken();
     tokenResult.fold(
-      (failure) => emit(AddressError(failure.message)),
+      (failure) => emit(AddressError(failure.message, failure: failure)),
       (token) => tokenS = token,
     );
 
     if (tokenS == null) {
-      return emit(AddressError("User not authenticated"));
+      return emit(const AddressError("User not authenticated"));
     }
 
     final result = await repository.setDefaultAddress(
@@ -297,7 +297,7 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     result.fold(
       (failure) {
         logger.e('Failed to set default address: ${failure.message}');
-        emit(AddressError(failure.message));
+        emit(AddressError(failure.message, failure: failure));
       },
       (address) {
         logger.i('Set default address: ${address.id}');

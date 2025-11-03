@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 import 'package:one_atta/features/home/domain/entities/expiring_item_entity.dart';
@@ -102,6 +103,7 @@ class HomePartialLoading extends HomeState {
 
 class HomeError extends HomeState {
   final String message;
+  final Failure? failure;
   final UserEntity? user;
   final List<PublicBlendEntity> trendingBlends;
   final List<RecipeEntity> featuredRecipes;
@@ -110,6 +112,7 @@ class HomeError extends HomeState {
 
   const HomeError({
     required this.message,
+    this.failure,
     this.user,
     this.trendingBlends = const [],
     this.featuredRecipes = const [],
@@ -120,6 +123,7 @@ class HomeError extends HomeState {
   @override
   List<Object?> get props => [
     message,
+    failure,
     user,
     trendingBlends,
     featuredRecipes,

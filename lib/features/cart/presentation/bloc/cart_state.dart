@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_entity.dart';
 import 'package:one_atta/features/coupons/domain/entities/coupon_entity.dart';
@@ -113,11 +114,12 @@ class CartLoaded extends CartState {
 
 class CartError extends CartState {
   final String message;
+  final Failure? failure;
 
-  const CartError({required this.message});
+  const CartError({required this.message, this.failure});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, failure];
 }
 
 class CartCleared extends CartState {

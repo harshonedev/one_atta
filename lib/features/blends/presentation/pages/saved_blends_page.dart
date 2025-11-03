@@ -55,7 +55,7 @@ class SavedBlendsView extends StatelessWidget {
           }
 
           if (state is SavedBlendsError) {
-            return _buildErrorState(context, state.message);
+            return _buildErrorState(context, state.message, state);
           }
 
           if (state is SavedBlendsLoaded) {
@@ -78,8 +78,14 @@ class SavedBlendsView extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message) {
+  Widget _buildErrorState(
+    BuildContext context,
+    String message,
+    SavedBlendsError state,
+  ) {
     return ErrorPage(
+      message: message,
+      failure: state.failure,
       onRetry: () {
         context.read<SavedBlendsBloc>().add(const LoadUserBlends());
       },

@@ -22,7 +22,7 @@ class SavedBlendsBloc extends Bloc<SavedBlendsEvent, SavedBlendsState> {
     final result = await _repository.getUserBlends();
 
     result.fold(
-      (failure) => emit(SavedBlendsError(failure.message)),
+      (failure) => emit(SavedBlendsError(failure.message, failure: failure)),
       (blends) => emit(SavedBlendsLoaded(blends)),
     );
   }
@@ -35,7 +35,7 @@ class SavedBlendsBloc extends Bloc<SavedBlendsEvent, SavedBlendsState> {
     final result = await _repository.getUserBlends();
 
     result.fold(
-      (failure) => emit(SavedBlendsError(failure.message)),
+      (failure) => emit(SavedBlendsError(failure.message, failure: failure)),
       (blends) => emit(SavedBlendsLoaded(blends)),
     );
   }

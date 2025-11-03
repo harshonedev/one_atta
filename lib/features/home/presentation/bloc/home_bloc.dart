@@ -91,8 +91,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final result = await blendsRepository.getAllPublicBlends();
 
       result.fold(
-        (failure) =>
-            emit(HomeError(message: 'Search failed: ${failure.message}')),
+        (failure) => emit(
+          HomeError(
+            message: 'Search failed: ${failure.message}',
+            failure: failure,
+          ),
+        ),
         (blends) {
           // Filter blends based on search query
           final filteredBlends = blends

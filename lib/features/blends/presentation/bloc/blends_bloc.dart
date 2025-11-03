@@ -22,7 +22,7 @@ class BlendsBloc extends Bloc<BlendsEvent, BlendsState> {
     final result = await _repository.getAllPublicBlends();
 
     result.fold(
-      (failure) => emit(BlendsError(failure.message)),
+      (failure) => emit(BlendsError(failure.message, failure: failure)),
       (blends) => emit(BlendsLoaded(blends)),
     );
   }
@@ -35,7 +35,7 @@ class BlendsBloc extends Bloc<BlendsEvent, BlendsState> {
     final result = await _repository.getAllPublicBlends();
 
     result.fold(
-      (failure) => emit(BlendsError(failure.message)),
+      (failure) => emit(BlendsError(failure.message, failure: failure)),
       (blends) => emit(BlendsLoaded(blends)),
     );
   }

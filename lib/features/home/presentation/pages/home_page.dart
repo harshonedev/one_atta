@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/app_assets.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/core/presentation/widgets/cart_icon_button.dart';
 import 'package:one_atta/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
@@ -55,37 +56,12 @@ class _HomePageState extends State<HomePage> {
               }
 
               if (state is HomeError && state.trendingBlends.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Something went wrong',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        state.message,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<HomeBloc>().add(const LoadHomeData());
-                        },
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
+                return ErrorPage(
+                  message: state.message,
+                  failure: state.failure,
+                  onRetry: () {
+                    context.read<HomeBloc>().add(const LoadHomeData());
+                  },
                 );
               }
 

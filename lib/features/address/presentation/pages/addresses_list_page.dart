@@ -84,6 +84,8 @@ class AddressesListView extends StatelessWidget {
 
           if (state is AddressError) {
             return ErrorPage(
+              message: state.message,
+              failure: state.failure,
               onRetry: () =>
                   context.read<AddressBloc>().add(const LoadAddresses()),
             );

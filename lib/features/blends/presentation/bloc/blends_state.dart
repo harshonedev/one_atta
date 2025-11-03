@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
 
 abstract class BlendsState extends Equatable {
@@ -27,11 +28,12 @@ class BlendsLoaded extends BlendsState {
 
 class BlendsError extends BlendsState {
   final String message;
+  final Failure? failure;
 
-  const BlendsError(this.message);
+  const BlendsError(this.message, {this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }
 
 class BlendShared extends BlendsState {
@@ -62,9 +64,10 @@ class BlendActionLoading extends BlendsState {
 
 class BlendActionError extends BlendsState {
   final String message;
+  final Failure? failure;
 
-  const BlendActionError(this.message);
+  const BlendActionError(this.message, {this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }

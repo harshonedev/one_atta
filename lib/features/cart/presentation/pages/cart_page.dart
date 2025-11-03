@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
@@ -225,37 +226,12 @@ class _CartPageState extends State<CartPage> {
             }
 
             if (cartState is CartError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load cart',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      cartState.message,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<CartBloc>().add(LoadCart());
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+              return ErrorPage(
+                message: cartState.message,
+                failure: cartState.failure,
+                onRetry: () {
+                  context.read<CartBloc>().add(LoadCart());
+                },
               );
             }
 

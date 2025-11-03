@@ -50,7 +50,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await authRepository.sendLoginOtp(event.mobile);
     result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
+      (failure) => emit(AuthError(message: failure.message, failure: failure)),
       (otpResponse) => emit(
         OtpSent(message: otpResponse.message, testOtp: otpResponse.testOtp),
       ),
@@ -65,7 +65,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await authRepository.verifyLoginOtp(event.mobile, event.otp);
     result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
+      (failure) => emit(AuthError(message: failure.message, failure: failure)),
       (authResponse) => emit(AuthAuthenticated(user: authResponse.user)),
     );
   }
@@ -82,7 +82,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       email: event.email,
     );
     result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
+      (failure) => emit(AuthError(message: failure.message, failure: failure)),
       (otpResponse) => emit(
         OtpSent(message: otpResponse.message, testOtp: otpResponse.testOtp),
       ),
@@ -102,7 +102,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       email: event.email,
     );
     result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
+      (failure) => emit(AuthError(message: failure.message, failure: failure)),
       (authResponse) => emit(AuthAuthenticated(user: authResponse.user)),
     );
   }
@@ -115,7 +115,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await authRepository.removeToken();
     result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
+      (failure) => emit(AuthError(message: failure.message, failure: failure)),
       (_) => emit(AuthUnauthenticated()),
     );
   }

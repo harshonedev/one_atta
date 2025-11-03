@@ -54,14 +54,16 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final cartResult = await getCartUseCase();
     final countResult = await getCartItemCountUseCase();
 
-    cartResult.fold((failure) => emit(CartError(message: failure.message)), (
-      cart,
-    ) {
-      countResult.fold(
-        (failure) => emit(CartError(message: failure.message)),
-        (count) => emit(_calculateCartTotals(cart, count)),
-      );
-    });
+    cartResult.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (cart) {
+        countResult.fold(
+          (failure) =>
+              emit(CartError(message: failure.message, failure: failure)),
+          (count) => emit(_calculateCartTotals(cart, count)),
+        );
+      },
+    );
   }
 
   Future<void> _onReloadCart(ReloadCart event, Emitter<CartState> emit) async {
@@ -72,29 +74,32 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final cartResult = await getCartUseCase();
     final countResult = await getCartItemCountUseCase();
 
-    cartResult.fold((failure) => emit(CartError(message: failure.message)), (
-      cart,
-    ) {
-      countResult.fold((failure) => emit(CartError(message: failure.message)), (
-        count,
-      ) {
-        final currentState = state as CartLoaded;
+    cartResult.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (cart) {
+        countResult.fold(
+          (failure) =>
+              emit(CartError(message: failure.message, failure: failure)),
+          (count) {
+            final currentState = state as CartLoaded;
 
-        emit(
-          _calculateCartTotals(
-            cart,
-            count,
-            selectedAddress: currentState.selectedAddress,
-            appliedCoupon: currentState.appliedCoupon,
-            couponDiscount: currentState.couponDiscount,
-            loyaltyDiscount: currentState.loyaltyDiscount,
-            loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
-            deliveryFee: currentState.deliveryFee,
-            deliveryInfo: currentState.deliveryInfo,
-          ),
+            emit(
+              _calculateCartTotals(
+                cart,
+                count,
+                selectedAddress: currentState.selectedAddress,
+                appliedCoupon: currentState.appliedCoupon,
+                couponDiscount: currentState.couponDiscount,
+                loyaltyDiscount: currentState.loyaltyDiscount,
+                loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+                deliveryFee: currentState.deliveryFee,
+                deliveryInfo: currentState.deliveryInfo,
+              ),
+            );
+          },
         );
-      });
-    });
+      },
+    );
   }
 
   // Helper method to calculate all cart totals
@@ -175,9 +180,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   ) async {
     final result = await addToCartUseCase(event.item);
 
-    result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      add(ReloadCart()); // Reload cart to update UI
-    });
+    result.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (_) {
+        add(ReloadCart()); // Reload cart to update UI
+      },
+    );
   }
 
   Future<void> _onRemoveItemFromCart(
@@ -186,9 +194,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   ) async {
     final result = await removeFromCartUseCase(event.productId);
 
-    result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      add(ReloadCart()); // Reload cart to update UI
-    });
+    result.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (_) {
+        add(ReloadCart()); // Reload cart to update UI
+      },
+    );
   }
 
   Future<void> _onUpdateItemQuantity(
@@ -200,9 +211,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       event.quantity,
     );
 
-    result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      add(ReloadCart()); // Reload cart to update UI
-    });
+    result.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (_) {
+        add(ReloadCart()); // Reload cart to update UI
+      },
+    );
   }
 
   Future<void> _onUpdateItemWeight(
@@ -214,17 +228,23 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       event.weightInKg,
     );
 
-    result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      add(ReloadCart()); // Reload cart to update UI
-    });
+    result.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (_) {
+        add(ReloadCart()); // Reload cart to update UI
+      },
+    );
   }
 
   Future<void> _onClearCart(ClearCart event, Emitter<CartState> emit) async {
     final result = await clearCartUseCase();
 
-    result.fold((failure) => emit(CartError(message: failure.message)), (_) {
-      emit(const CartCleared(message: 'Cart cleared'));
-    });
+    result.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (_) {
+        emit(const CartCleared(message: 'Cart cleared'));
+      },
+    );
   }
 
   Future<void> _onLoadCartItemCount(
@@ -233,27 +253,28 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   ) async {
     final result = await getCartItemCountUseCase();
 
-    result.fold((failure) => emit(CartError(message: failure.message)), (
-      count,
-    ) {
-      // If current state is CartLoaded, update only the count
-      if (state is CartLoaded) {
-        final currentState = state as CartLoaded;
-        emit(
-          _calculateCartTotals(
-            currentState.cart,
-            count,
-            selectedAddress: currentState.selectedAddress,
-            appliedCoupon: currentState.appliedCoupon,
-            couponDiscount: currentState.couponDiscount,
-            loyaltyDiscount: currentState.loyaltyDiscount,
-            loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
-            deliveryFee: currentState.deliveryFee,
-            deliveryInfo: currentState.deliveryInfo,
-          ),
-        );
-      }
-    });
+    result.fold(
+      (failure) => emit(CartError(message: failure.message, failure: failure)),
+      (count) {
+        // If current state is CartLoaded, update only the count
+        if (state is CartLoaded) {
+          final currentState = state as CartLoaded;
+          emit(
+            _calculateCartTotals(
+              currentState.cart,
+              count,
+              selectedAddress: currentState.selectedAddress,
+              appliedCoupon: currentState.appliedCoupon,
+              couponDiscount: currentState.couponDiscount,
+              loyaltyDiscount: currentState.loyaltyDiscount,
+              loyaltyPointsRedeemed: currentState.loyaltyPointsRedeemed,
+              deliveryFee: currentState.deliveryFee,
+              deliveryInfo: currentState.deliveryInfo,
+            ),
+          );
+        }
+      },
+    );
   }
 
   Future<void> _onApplyCoupon(

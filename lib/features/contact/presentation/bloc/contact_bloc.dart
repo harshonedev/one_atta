@@ -19,7 +19,7 @@ class ContactBloc extends Bloc<ContactEvent, ContactState> {
     final result = await repository.getContactDetails();
 
     result.fold(
-      (failure) => emit(ContactError(failure.message)),
+      (failure) => emit(ContactError(failure.message, failure: failure)),
       (contact) => emit(ContactLoaded(contact)),
     );
   }

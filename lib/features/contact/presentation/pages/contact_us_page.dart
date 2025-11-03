@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:one_atta/core/presentation/pages/error_page.dart';
 import 'package:one_atta/features/contact/presentation/bloc/contact_bloc.dart';
 import 'package:one_atta/features/contact/presentation/bloc/contact_event.dart';
 import 'package:one_atta/features/contact/presentation/bloc/contact_state.dart';
@@ -22,8 +23,6 @@ class _ContactUsPageState extends State<ContactUsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(title: const Text('Contact Us')),
       body: BlocBuilder<ContactBloc, ContactState>(
@@ -33,45 +32,12 @@ class _ContactUsPageState extends State<ContactUsPage> {
           }
 
           if (state is ContactError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: theme.colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Oops! Something went wrong',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton.icon(
-                    onPressed: () {
-                      context.read<ContactBloc>().add(
-                        const LoadContactDetails(),
-                      );
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                  ),
-                ],
-              ),
+            return ErrorPage(
+              message: state.message,
+              failure: state.failure,
+              onRetry: () {
+                context.read<ContactBloc>().add(const LoadContactDetails());
+              },
             );
           }
 

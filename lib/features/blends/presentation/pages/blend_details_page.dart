@@ -68,7 +68,7 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
           }
 
           if (state is BlendDetailsError) {
-            return _buildErrorState(context, state.message);
+            return _buildErrorState(context, state.message, state);
           }
 
           if (state is BlendDetailsLoaded ||
@@ -100,13 +100,19 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message) {
+  Widget _buildErrorState(
+    BuildContext context,
+    String message,
+    BlendDetailsError state,
+  ) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Blend Details'),
         backgroundColor: Theme.of(context).colorScheme.surface,
       ),
       body: ErrorPage(
+        message: message,
+        failure: state.failure,
         onRetry: () {
           context.read<BlendDetailsBloc>().add(
             LoadBlendDetails(widget.blendId),

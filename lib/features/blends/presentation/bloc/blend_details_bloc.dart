@@ -22,7 +22,7 @@ class BlendDetailsBloc extends Bloc<BlendDetailsEvent, BlendDetailsState> {
     final result = await _repository.getBlendDetails(event.blendId);
 
     result.fold(
-      (failure) => emit(BlendDetailsError(failure.message)),
+      (failure) => emit(BlendDetailsError(failure.message, failure: failure)),
       (blend) => emit(BlendDetailsLoaded(blend)),
     );
   }
@@ -35,7 +35,7 @@ class BlendDetailsBloc extends Bloc<BlendDetailsEvent, BlendDetailsState> {
     final result = await _repository.getBlendDetails(event.blendId);
 
     result.fold(
-      (failure) => emit(BlendDetailsError(failure.message)),
+      (failure) => emit(BlendDetailsError(failure.message, failure: failure)),
       (blend) => emit(BlendDetailsLoaded(blend)),
     );
   }

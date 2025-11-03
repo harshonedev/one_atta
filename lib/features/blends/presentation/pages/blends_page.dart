@@ -67,7 +67,7 @@ class BlendsView extends StatelessWidget {
           }
 
           if (state is BlendsError) {
-            return _buildErrorState(context, state.message);
+            return _buildErrorState(context, state.message, state);
           }
 
           if (state is BlendsLoaded) {
@@ -94,8 +94,14 @@ class BlendsView extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message) {
+  Widget _buildErrorState(
+    BuildContext context,
+    String message,
+    BlendsError state,
+  ) {
     return ErrorPage(
+      message: message,
+      failure: state.failure,
       onRetry: () {
         context.read<BlendsBloc>().add(const LoadPublicBlends());
       },

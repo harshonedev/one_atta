@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthState extends Equatable {
@@ -25,11 +26,12 @@ class AuthUnauthenticated extends AuthState {}
 
 class AuthError extends AuthState {
   final String message;
+  final Failure? failure;
 
-  const AuthError({required this.message});
+  const AuthError({required this.message, this.failure});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, failure];
 }
 
 class AuthSuccess extends AuthState {

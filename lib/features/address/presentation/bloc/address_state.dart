@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/address/domain/entities/address_entity.dart';
 
 abstract class AddressState extends Equatable {
@@ -88,9 +89,10 @@ class DefaultAddressSet extends AddressState {
 
 class AddressError extends AddressState {
   final String message;
+  final Failure? failure;
 
-  const AddressError(this.message);
+  const AddressError(this.message, {this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }

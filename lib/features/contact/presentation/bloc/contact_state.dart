@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/features/contact/domain/entities/contact_entity.dart';
 
 abstract class ContactState extends Equatable {
@@ -27,9 +28,10 @@ class ContactLoaded extends ContactState {
 
 class ContactError extends ContactState {
   final String message;
+  final Failure? failure;
 
-  const ContactError(this.message);
+  const ContactError(this.message, {this.failure});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, failure];
 }
