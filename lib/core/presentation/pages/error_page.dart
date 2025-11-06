@@ -119,6 +119,15 @@ class ErrorPage extends StatelessWidget {
               : 'The requested resource could not be found.',
           color: Colors.blueGrey,
         );
+      } else if (failure is PageNotFoundFailure) {
+        return _ErrorInfo(
+          icon: Icons.error_outline,
+          title: 'Page Not Found',
+          description: failure!.message.isNotEmpty
+              ? failure!.message
+              : 'The page you are looking for does not exist.',
+          color: Colors.red,
+        );
       }
     }
 

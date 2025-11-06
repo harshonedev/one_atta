@@ -26,3 +26,7 @@ class UnauthorizedFailure extends Failure {
 class NotFoundFailure extends Failure {
   const NotFoundFailure(super.message);
 }
+
+class PageNotFoundFailure extends Failure {
+  const PageNotFoundFailure(super.message);
+}
