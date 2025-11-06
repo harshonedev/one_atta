@@ -169,7 +169,9 @@ class _LoyaltyPointsRedemptionWidgetState
                         ],
                         if (isRedeemed && _isPointsApplied)
                           _buildPointsMessage(
-                            maxRedeemablePoints: _availablePoints,
+                            maxRedeemablePoints: _getMaxRedeemablePoints(
+                              _availablePoints,
+                            ),
                             isRedeemed: isRedeemed,
                           ),
                       ],
@@ -233,7 +235,7 @@ class _LoyaltyPointsRedemptionWidgetState
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Save ₹${redeemableAmount.toStringAsFixed(0)} on this order',
+            'Saved ₹${redeemableAmount.toStringAsFixed(0)} on this order',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: _isPointsApplied
                   ? Colors.green

@@ -108,7 +108,7 @@ class OrderCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '₹${item.totalPrice.toStringAsFixed(0)}',
+                            '₹${item.totalPrice.toStringAsFixed(2)}',
                             style: textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
@@ -171,7 +171,7 @@ class OrderCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '₹${order.totalAmount.toStringAsFixed(0)}',
+                          '₹${order.totalAmount.toStringAsFixed(2)}',
                           style: textTheme.titleSmall?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.bold,
