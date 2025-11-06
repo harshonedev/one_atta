@@ -2,6 +2,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/di/injection_container.dart' as di;
 import 'package:one_atta/core/presentation/pages/error_page.dart';
@@ -14,6 +15,7 @@ import 'package:one_atta/features/blends/presentation/widgets/ingredients_card.d
 import 'package:one_atta/features/cart/domain/entities/cart_item_entity.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_state.dart';
 import 'package:share_plus/share_plus.dart';
 
 class BlendDetailsPage extends StatelessWidget {
@@ -43,6 +45,13 @@ class BlendDetailsView extends StatefulWidget {
 class _BlendDetailsViewState extends State<BlendDetailsView> {
   int _selectedWeight = 1; // Default to 1Kg
   final List<int> _availableWeights = [1, 3, 5]; // Available weights in Kg
+
+  @override
+  void initState() {
+    super.initState();
+    // Load cart to check if items are already in cart
+    context.read<CartBloc>().add(LoadCart());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -327,84 +336,107 @@ class _BlendDetailsViewState extends State<BlendDetailsView> {
                     const SizedBox(height: 16),
 
                     // Price section
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    BlocBuilder<CartBloc, CartState>(
+                      builder: (context, cartState) {
+                        // Check if blend is in cart with selected weight
+                        final isInCart =
+                            cartState is CartLoaded &&
+                            cartState.cart.items.any(
+                              (item) =>
+                                  item.productId == blend.id &&
+                                  item.weightInKg == _selectedWeight,
+                            );
+
+                        return Row(
                           children: [
-                            Text(
-                              '₹${blend.pricePerKg.toStringAsFixed(2)}/Kg',
-                              style: Theme.of(context).textTheme.headlineMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '₹${blend.pricePerKg.toStringAsFixed(2)}/Kg',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                ),
+                                Text(
+                                  'Best before ${blend.expiryDays} days',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              'Best before ${blend.expiryDays} days',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        FilledButton(
-                          onPressed: isLoading
-                              ? null
-                              : () {
-                                  _addBlendToCart(context, blend);
-                                },
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 16,
-                            ),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.add_shopping_cart,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Column(
+                            const Spacer(),
+                            FilledButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () {
+                                      if (isInCart) {
+                                        context.push('/cart');
+                                      } else {
+                                        _addBlendToCart(context, blend);
+                                      }
+                                    },
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 16,
+                                ),
+                              ),
+                              child: isLoading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          'Add to Cart',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelLarge
-                                              ?.copyWith(
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.onPrimary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                        Icon(
+                                          isInCart
+                                              ? Icons.shopping_cart
+                                              : Icons.add_shopping_cart,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              isInCart
+                                                  ? 'Go to Cart'
+                                                  : 'Add to Cart',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelLarge
+                                                  ?.copyWith(
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.onPrimary,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                        ),
-                      ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),

@@ -10,6 +10,8 @@ import 'package:one_atta/features/auth/domain/entities/user_entity.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 import 'package:one_atta/features/blends/domain/entities/blend_entity.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:one_atta/features/cart/presentation/bloc/cart_event.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_bloc.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_event.dart';
 import 'package:one_atta/features/home/presentation/bloc/home_state.dart';
@@ -36,6 +38,8 @@ class _HomePageState extends State<HomePage> {
     // Load home data when the page is initialized
     context.read<HomeBloc>().add(const LoadHomeData());
     context.read<UserProfileBloc>().add(GetUserProfileRequested());
+    // Load cart to check if items are already in cart
+    context.read<CartBloc>().add(LoadCart());
   }
 
   @override
