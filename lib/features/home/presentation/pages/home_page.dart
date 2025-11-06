@@ -374,7 +374,7 @@ class _HomePageState extends State<HomePage> {
                 _buildStepItem(
                   context,
                   Icons.shopping_bag_rounded,
-                  'Confirm',
+                  'Buy',
                   true,
                 ),
               ],
