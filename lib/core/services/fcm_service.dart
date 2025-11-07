@@ -227,39 +227,19 @@ class FCMService {
     if (action == null) return 'notifications';
 
     switch (action.toLowerCase()) {
-      case 'order':
+      case 'view_order':
       case 'order_update':
       case 'order_delivered':
       case 'order_cancelled':
         final orderId = data['order_id'] as String?;
         return orderId != null ? 'order:$orderId' : 'orders';
 
-      case 'recipe':
-      case 'new_recipe':
-        final recipeId = data['recipe_id'] as String?;
-        return recipeId != null ? 'recipe:$recipeId' : 'recipes';
+      case 'view_expiring_items':
+        return 'expiring-items';
 
-      case 'blend':
-      case 'custom_blend':
-        final blendId = data['blend_id'] as String?;
-        return blendId != null ? 'blend:$blendId' : 'blends';
-
-      case 'product':
-      case 'daily_essential':
-        final productId = data['product_id'] as String?;
-        return productId != null
-            ? 'product:$productId'
-            : 'daily-essentials-list';
-
-      case 'loyalty':
-      case 'reward':
+      case 'loyalty_points_earned':
+      case 'blend_share_points_earned':
         return 'rewards';
-
-      case 'cart':
-        return 'cart';
-
-      case 'profile':
-        return 'profile';
 
       case 'general':
       case 'announcement':
@@ -370,6 +350,10 @@ class FCMService {
             } else {
               AppRouter.router.push('/daily-essentials-list');
             }
+            break;
+
+          case 'rewards':
+            AppRouter.router.push('/rewards');
             break;
           default:
             AppRouter.router.push('/notifications');
