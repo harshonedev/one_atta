@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:one_atta/features/notifications/domain/entities/notification_entity.dart';
 import 'package:one_atta/core/services/preferences_service.dart';
+import 'package:one_atta/core/routing/app_router.dart';
 
 /// Top-level function to handle background messages
 @pragma('vm:entry-point')
@@ -190,6 +191,9 @@ class FCMService {
     final android = message.notification?.android;
 
     if (notification != null) {
+      // Create a structured payload for navigation
+      final payload = _createNavigationPayload(message.data);
+
       await _localNotifications.show(
         notification.hashCode,
         notification.title,
@@ -210,8 +214,58 @@ class FCMService {
             presentSound: true,
           ),
         ),
-        payload: message.data.toString(),
+        payload: payload,
       );
+    }
+  }
+
+  /// Create navigation payload from notification data
+  String _createNavigationPayload(Map<String, dynamic> data) {
+    if (data.isEmpty) return 'notifications';
+
+    final action = data['action'] as String?;
+    if (action == null) return 'notifications';
+
+    switch (action.toLowerCase()) {
+      case 'order':
+      case 'order_update':
+      case 'order_delivered':
+      case 'order_cancelled':
+        final orderId = data['order_id'] as String?;
+        return orderId != null ? 'order:$orderId' : 'orders';
+
+      case 'recipe':
+      case 'new_recipe':
+        final recipeId = data['recipe_id'] as String?;
+        return recipeId != null ? 'recipe:$recipeId' : 'recipes';
+
+      case 'blend':
+      case 'custom_blend':
+        final blendId = data['blend_id'] as String?;
+        return blendId != null ? 'blend:$blendId' : 'blends';
+
+      case 'product':
+      case 'daily_essential':
+        final productId = data['product_id'] as String?;
+        return productId != null
+            ? 'product:$productId'
+            : 'daily-essentials-list';
+
+      case 'loyalty':
+      case 'reward':
+        return 'rewards';
+
+      case 'cart':
+        return 'cart';
+
+      case 'profile':
+        return 'profile';
+
+      case 'general':
+      case 'announcement':
+      case 'promotional':
+      default:
+        return 'notifications';
     }
   }
 
@@ -222,8 +276,47 @@ class FCMService {
     final notification = _createNotificationEntity(message);
     _notificationController.add(notification);
 
-    // TODO: Handle navigation based on notification type
-    // Example: Navigate to order details if type is 'order'
+    // Handle navigation based on notification type
+    _navigateFromNotification(message.data);
+  }
+
+  /// Navigate to appropriate screen based on notification data
+  void _navigateFromNotification(Map<String, dynamic> data) {
+    if (data.isEmpty) {
+      AppRouter.router.push('/notifications');
+      return;
+    }
+
+    final action = data['action'] as String?;
+
+    if (action == null) {
+      AppRouter.router.push('/notifications');
+      return;
+    }
+
+    switch (action.toLowerCase()) {
+      case 'view_order':
+        final orderId = data['orderId'] as String?;
+        if (orderId != null) {
+          AppRouter.router.push('/order-details/$orderId');
+        } else {
+          AppRouter.router.push('/orders');
+        }
+        break;
+
+      case 'loyalty_points_earned':
+      case 'blend_share_points_earned':
+        AppRouter.router.push('/rewards');
+        break;
+
+      case 'view_expiring_items':
+        AppRouter.router.push('/expiring-items');
+        break;
+
+      default:
+        AppRouter.router.push('/notifications');
+        break;
+    }
   }
 
   /// Handle local notification tap
@@ -232,6 +325,96 @@ class FCMService {
       'Local notification tapped: ${response.payload}',
       name: 'FCMService',
     );
+
+    // Parse the payload and navigate accordingly
+    if (response.payload != null && response.payload!.isNotEmpty) {
+      _navigateFromPayload(response.payload!);
+    } else {
+      AppRouter.router.push('/notifications');
+    }
+  }
+
+  /// Navigate based on structured payload
+  void _navigateFromPayload(String payload) {
+    try {
+      if (payload.contains(':')) {
+        final parts = payload.split(':');
+        final type = parts[0];
+        final id = parts.length > 1 ? parts[1] : null;
+
+        switch (type) {
+          case 'order':
+            if (id != null) {
+              AppRouter.router.push('/order-details/$id');
+            } else {
+              AppRouter.router.push('/orders');
+            }
+            break;
+          case 'recipe':
+            if (id != null) {
+              AppRouter.router.push('/recipe-details/$id');
+            } else {
+              AppRouter.router.push('/recipes');
+            }
+            break;
+          case 'blend':
+            if (id != null) {
+              AppRouter.router.push('/blend-details/$id');
+            } else {
+              AppRouter.router.push('/blends');
+            }
+            break;
+          case 'product':
+            if (id != null) {
+              AppRouter.router.push('/daily-essential-details/$id');
+            } else {
+              AppRouter.router.push('/daily-essentials-list');
+            }
+            break;
+          default:
+            AppRouter.router.push('/notifications');
+            break;
+        }
+      } else {
+        // Handle direct routes
+        switch (payload) {
+          case 'orders':
+            AppRouter.router.push('/orders');
+            break;
+          case 'recipes':
+            AppRouter.router.push('/recipes');
+            break;
+          case 'blends':
+            AppRouter.router.push('/blends');
+            break;
+          case 'daily-essentials-list':
+            AppRouter.router.push('/daily-essentials-list');
+            break;
+          case 'rewards':
+            AppRouter.router.push('/rewards');
+            break;
+          case 'cart':
+            AppRouter.router.push('/cart');
+            break;
+          case 'profile':
+            AppRouter.router.push('/profile');
+            break;
+          case 'notifications':
+          default:
+            AppRouter.router.push('/notifications');
+            break;
+        }
+      }
+    } catch (e) {
+      developer.log(
+        'Error parsing notification payload',
+        name: 'FCMService',
+        level: 900,
+        error: e,
+      );
+      // Fallback navigation
+      AppRouter.router.push('/notifications');
+    }
   }
 
   /// Create notification entity from remote message
@@ -278,6 +461,15 @@ class FCMService {
         error: e,
       );
     }
+  }
+
+  /// Programmatically navigate from notification data (can be called from other services)
+  void navigateFromNotificationData(Map<String, dynamic> data) {
+    developer.log(
+      'Programmatic navigation from notification data: $data',
+      name: 'FCMService',
+    );
+    _navigateFromNotification(data);
   }
 
   /// Dispose resources
