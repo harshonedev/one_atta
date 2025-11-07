@@ -6,9 +6,11 @@ import 'package:one_atta/core/utils/snackbar_utils.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_bloc.dart';
 import 'package:one_atta/features/app_settings/presentation/bloc/app_settings_state.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:one_atta/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_event.dart';
 import 'package:one_atta/features/auth/presentation/bloc/auth_state.dart';
 import 'package:one_atta/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:one_atta/core/di/injection_container.dart' as di;
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -18,9 +20,11 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  final WalkthroughCubit _walkthroughCubit = WalkthroughCubit(di.sl());
   @override
   void initState() {
     super.initState();
+    _walkthroughCubit.checkWalkthroughSeen();
   }
 
   @override
@@ -40,9 +44,9 @@ class _SplashPageState extends State<SplashPage> {
         return MultiBlocListener(
           listeners: [
             BlocListener<UserProfileBloc, UserProfileState>(
-              listener: (context, state) {
+              listener: (context, state) async {
                 if (state is UserProfileLoaded) {
-                  // Navigate to home page after profile is loaded
+                  // Returning user - go to home
                   context.go('/home');
                 } else if (state is UserProfileError) {
                   // If there's an error loading profile, navigate to onboarding
@@ -74,8 +78,10 @@ class _SplashPageState extends State<SplashPage> {
                     GetUserProfileRequested(),
                   );
                 } else if (state is AuthUnauthenticated) {
-                  // User is not logged in, navigate to onboarding
-                  context.go('/onboarding');
+                  // User is not logged in, navigate to walkthrough/onboarding
+                  _walkthroughCubit.state
+                      ? context.go('/onboarding')
+                      : context.go('/walkthrough');
                 }
               },
             ),

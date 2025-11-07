@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 
 /// Represents the urgency level of an expiring item
 enum ExpiryUrgency {
-  normal, // 14-4 days left
-  warning, // 4-3 days left
+  normal, // 14-3 days left
+  warning, // 7 - 3 days left
   critical, // 0-3 days left
 }
 
@@ -66,7 +66,7 @@ class ExpiringItemEntity extends Equatable {
   static ExpiryUrgency _calculateUrgency(int daysLeft) {
     if (daysLeft <= 3) {
       return ExpiryUrgency.critical;
-    } else if (daysLeft <= 4) {
+    } else if (daysLeft <= 7) {
       return ExpiryUrgency.warning;
     } else {
       return ExpiryUrgency.normal;

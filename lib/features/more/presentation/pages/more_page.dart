@@ -371,6 +371,12 @@ class MorePage extends StatelessWidget {
             children: [
               _buildSettingsItem(
                 context,
+                'App Walkthrough',
+                Icons.lightbulb_outline,
+                () => context.push('/walkthrough'),
+              ),
+              _buildSettingsItem(
+                context,
                 'Contact Us',
                 Icons.contact_support_outlined,
                 () => context.push('/contact'),

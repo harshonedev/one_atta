@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 class PreferencesService {
   static const String _notificationsEnabledKey = 'notifications_enabled';
+  static const String _walkthroughSeenKey = 'walkthrough_seen';
 
   final SharedPreferences sharedPreferences;
 
@@ -34,6 +35,35 @@ class PreferencesService {
     } catch (e) {
       developer.log(
         'Error setting notifications enabled status',
+        name: 'PreferencesService',
+        error: e,
+      );
+    }
+  }
+
+  /// Check if the user has seen the walkthrough
+  Future<bool> hasSeenWalkthrough() async {
+    try {
+      // Default to false (hasn't seen it yet)
+      return sharedPreferences.getBool(_walkthroughSeenKey) ?? false;
+    } catch (e) {
+      developer.log(
+        'Error getting walkthrough seen status',
+        name: 'PreferencesService',
+        error: e,
+      );
+      return false;
+    }
+  }
+
+  /// Mark the walkthrough as seen
+  Future<void> setWalkthroughSeen() async {
+    try {
+      await sharedPreferences.setBool(_walkthroughSeenKey, true);
+      developer.log('Walkthrough marked as seen', name: 'PreferencesService');
+    } catch (e) {
+      developer.log(
+        'Error setting walkthrough seen status',
         name: 'PreferencesService',
         error: e,
       );

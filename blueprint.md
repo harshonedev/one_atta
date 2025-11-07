@@ -5,6 +5,53 @@ One Atta is a Flutter application for flour/atta blending and recipe management.
 
 ## Recent Updates
 
+### App Walkthrough Feature Implementation (November 6, 2025)
+**Feature**: Complete walkthrough/onboarding system that introduces new users to the app's key features after their first login.
+
+**Implementation Details**:
+- **Walkthrough Screens**: 6 interactive screens showcasing key app features:
+  1. Create Custom Flour Blends - Custom blend creation and nutritional control
+  2. Browse Pre-Made Blends - Curated blend collection exploration
+  3. Discover Delicious Recipes - Recipe browsing with video guides
+  4. Watch Recipe Reels - Short-form cooking video content
+  5. Earn Atta Points - Loyalty rewards and redemption system
+  6. Order & Track Delivery - Easy checkout and order tracking
+- **User Experience**: 
+  - Swipeable page view for smooth navigation
+  - Gradient icon containers with color-coded themes
+  - Progress indicators showing current screen
+  - Skip button for quick access to app
+  - Back/Next navigation buttons
+  - "Get Started" button on final screen
+- **State Management**: SharedPreferences-based tracking to show walkthrough once per user
+- **Navigation Flow**: Splash → Auth Check → Walkthrough (first time) → Home
+- **Accessibility**: Users can re-access walkthrough from More page under Support section
+
+**Technical Implementation**:
+- **Data Layer**: OnboardingData class with static walkthrough content
+- **Domain Entity**: OnboardingContentEntity with title, description, icon, gradient colors
+- **Presentation**: WalkthroughPage with PageView and animated indicators
+- **Preferences Service**: hasSeenWalkthrough() and setWalkthroughSeen() methods
+- **Router Integration**: Protected route with authentication checks
+- **Splash Logic**: Checks walkthrough status before navigation decision
+
+**UI Features**:
+- **Material Design 3**: Consistent with app's orange primary color scheme
+- **Gradient Icons**: Each screen has unique gradient color scheme
+- **Smooth Animations**: Page transitions and indicator animations
+- **Responsive Design**: Adapts to different screen sizes
+- **Typography**: Consistent Poppins font family usage
+
+**User Flow**:
+1. New user registers/logs in
+2. Profile loads successfully
+3. Splash page checks if walkthrough seen
+4. First-time users see walkthrough
+5. Users can skip or complete walkthrough
+6. Walkthrough marked as seen in preferences
+7. Returning users skip directly to home
+8. Users can replay walkthrough from More > Support > App Walkthrough
+
 ### Firebase Cloud Messaging (FCM) Notifications Implementation (November 1, 2025)
 **Feature**: Complete notification system using Firebase Cloud Messaging with local storage and real-time push notifications.
 

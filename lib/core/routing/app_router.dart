@@ -12,6 +12,7 @@ import 'package:one_atta/features/auth/presentation/pages/login_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/register_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/otp_page.dart';
 import 'package:one_atta/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:one_atta/features/auth/presentation/pages/walkthrough_page.dart';
 import 'package:one_atta/features/blends/presentation/pages/blend_share_page.dart';
 import 'package:one_atta/features/loyalty/presentation/pages/rewards_page.dart';
 import 'package:one_atta/features/loyalty/presentation/pages/transaction_history_page.dart';
@@ -72,6 +73,7 @@ class AppRouter {
 
         final isOnSplash = state.fullPath == '/splash';
         final isOnOnboarding = state.fullPath == '/onboarding';
+        final isOnWalkthrough = state.fullPath == '/walkthrough';
         final isOnAuth =
             state.fullPath == '/login' ||
             state.fullPath == '/register' ||
@@ -90,7 +92,8 @@ class AppRouter {
             !isOnAuth &&
             !isOnSplash &&
             !isMaintenanceMode &&
-            !isOnOnboarding) {
+            !isOnOnboarding &&
+            !isOnWalkthrough) {
           return '/onboarding';
         }
 
@@ -111,6 +114,11 @@ class AppRouter {
           path: '/onboarding',
           name: 'onboarding',
           builder: (context, state) => const OnboardingPage(),
+        ),
+        GoRoute(
+          path: '/walkthrough',
+          name: 'walkthrough',
+          builder: (context, state) => const WalkthroughPage(),
         ),
         GoRoute(
           path: '/login',
