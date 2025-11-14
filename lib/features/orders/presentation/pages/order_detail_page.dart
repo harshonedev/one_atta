@@ -9,6 +9,15 @@ import 'package:one_atta/features/orders/domain/entities/order_entity.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_event.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_state.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:dio/dio.dart';
+import 'package:one_atta/core/constants/constants.dart';
+import 'package:one_atta/core/network/api_request.dart';
+import 'package:one_atta/features/invoices/data/datasources/invoice_remote_data_source.dart';
+import 'package:one_atta/features/invoices/data/repositories/invoice_repository_impl.dart';
+import 'package:one_atta/features/invoices/presentation/services/invoice_pdf_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
@@ -20,11 +29,188 @@ class OrderDetailPage extends StatefulWidget {
 }
 
 class _OrderDetailPageState extends State<OrderDetailPage> {
+  bool _isLoadingInvoice = false;
+
   @override
   void initState() {
     super.initState();
     // Load the specific order
     context.read<OrderBloc>().add(LoadOrder(widget.orderId));
+  }
+
+  Future<void> _downloadInvoice(String orderId) async {
+    setState(() => _isLoadingInvoice = true);
+
+    try {
+      // Get token from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(AppConstants.tokenKey);
+
+      if (token == null) {
+        if (!mounted) return;
+        SnackbarUtils.showError(context, 'Please login to download invoice');
+        setState(() => _isLoadingInvoice = false);
+        return;
+      }
+
+      // Create repository
+      final repository = InvoiceRepositoryImpl(
+        remoteDataSource: InvoiceRemoteDataSourceImpl(
+          apiRequest: ApiRequest(dio: Dio()),
+          token: token,
+        ),
+      );
+
+      // First, get the invoice by order ID
+      final invoiceResult = await repository.getInvoiceByOrderId(orderId);
+
+      await invoiceResult.fold(
+        (failure) async {
+          if (!mounted) return;
+          SnackbarUtils.showError(
+            context,
+            'Invoice not available: ${failure.message}',
+          );
+        },
+        (invoice) async {
+          // Show downloading message
+          if (!mounted) return;
+          SnackbarUtils.showInfo(context, 'Downloading invoice...');
+
+          // Now get the download URL
+          final urlResult = await repository.getInvoiceDownloadUrl(invoice.id);
+
+          await urlResult.fold(
+            (failure) async {
+              if (!mounted) return;
+              SnackbarUtils.showError(
+                context,
+                'Failed to get invoice: ${failure.message}',
+              );
+            },
+            (downloadUrl) async {
+              try {
+                // Download invoice file
+                final filePath = await InvoicePdfService.downloadInvoiceAsPdf(
+                  invoiceUrl: downloadUrl,
+                  invoiceNumber: invoice.invoiceNumber,
+                );
+
+                if (filePath != null) {
+                  if (!mounted) return;
+
+                  // Show success message with file location
+                  final readablePath = InvoicePdfService.getReadableFilePath(
+                    filePath,
+                  );
+
+                  // Show dialog with options
+                  _showInvoiceDownloadedDialog(filePath, readablePath);
+                } else {
+                  if (!mounted) return;
+                  SnackbarUtils.showError(
+                    context,
+                    'Failed to download invoice',
+                  );
+                }
+              } catch (e) {
+                if (!mounted) return;
+                debugPrint('Error downloading invoice: $e');
+                SnackbarUtils.showError(
+                  context,
+                  'Error downloading invoice: ${e.toString()}',
+                );
+              }
+            },
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      SnackbarUtils.showError(context, 'Error: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingInvoice = false);
+      }
+    }
+  }
+
+  void _showInvoiceDownloadedDialog(String filePath, String readablePath) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: Icon(
+          Icons.check_circle_outline,
+          color: Colors.green.shade600,
+          size: 48,
+        ),
+        title: const Text('Invoice Downloaded!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your invoice has been saved to:',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.folder_outlined,
+                    size: 20,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      readablePath,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+          FilledButton.icon(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              // Open PDF file
+              final file = File(filePath);
+              if (await file.exists()) {
+                final uri = Uri.file(filePath);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  if (!mounted) return;
+                  SnackbarUtils.showError(context, 'Cannot open PDF file');
+                }
+              }
+            },
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('Open Invoice'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -840,6 +1026,34 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         children: [
+          // Download Invoice Button (for all orders except pending)
+          if (order.status != 'pending') ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _isLoadingInvoice
+                    ? null
+                    : () => _downloadInvoice(order.id),
+                icon: _isLoadingInvoice
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.download_outlined),
+                label: Text(
+                  _isLoadingInvoice ? 'Loading...' : 'Download Invoice',
+                ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           if (order.status == 'pending' || order.status == 'accepted') ...[
             SizedBox(
               width: double.infinity,
@@ -857,31 +1071,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               ),
             ),
           ],
-          // if (order.status == 'shipped') ...[
-          //   SizedBox(
-          //     width: double.infinity,
-          //     child: FilledButton.icon(
-          //       onPressed: () {
-          //         // TODO: Implement track order functionality
-          //         ScaffoldMessenger.of(context).showSnackBar(
-          //           const SnackBar(
-          //             content: Text('Tracking feature coming soon!'),
-          //           ),
-          //         );
-          //       },
-          //       icon: const Icon(Icons.location_on_outlined),
-          //       label: const Text('Track Order'),
-          //       style: FilledButton.styleFrom(
-          //         backgroundColor: colorScheme.primary,
-          //         foregroundColor: colorScheme.onPrimary,
-          //         padding: const EdgeInsets.symmetric(vertical: 16),
-          //         shape: RoundedRectangleBorder(
-          //           borderRadius: BorderRadius.circular(12),
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-          // ],
         ],
       ),
     );
