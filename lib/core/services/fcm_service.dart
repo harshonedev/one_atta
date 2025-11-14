@@ -266,7 +266,7 @@ class FCMService {
       AppRouter.router.push('/notifications');
       return;
     }
-
+ 
     final action = data['action'] as String?;
 
     if (action == null) {

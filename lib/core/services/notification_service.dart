@@ -1,4 +1,3 @@
-import 'package:one_atta/core/error/failures.dart';
 import 'package:one_atta/core/services/fcm_service.dart';
 import 'package:one_atta/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:one_atta/features/notifications/data/datasources/notification_remote_data_source.dart';
@@ -21,15 +20,18 @@ class NotificationService {
       final fcmToken = fcmService.fcmToken;
       final token = await authLocalDataSource.getToken();
       if (fcmToken != null && token != null) {
-        notificationRemoteDataSource.updateFcmToken(
+        await notificationRemoteDataSource.updateFcmToken(
           token: token,
           fcmToken: fcmToken,
         );
+        developer.log('FCM token registered successfully');
       }
-    } on Failure catch (e) {
-      developer.log("RegisterFCMToken - ${e.message}");
     } catch (e) {
-      developer.log("RegisterFCMToken - $e");
+      developer.log(
+        'Failed to register FCM token',
+        name: 'notification_service',
+        error: e,
+      );
     }
   }
 
@@ -39,9 +41,14 @@ class NotificationService {
       final token = await authLocalDataSource.getToken();
       if (token != null) {
         await notificationRemoteDataSource.removeFcmToken(token: token);
+        developer.log('FCM token unregistered successfully');
       }
     } catch (e) {
-      developer.log("UnregisterFCMToken - $e");
+      developer.log(
+        'Failed to unregister FCM token',
+        name: 'notification_service',
+        error: e,
+      );
     }
   }
 
