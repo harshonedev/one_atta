@@ -97,10 +97,7 @@ class _LoyaltyPointsRedemptionWidgetState
                 if (profileState is UserProfileLoaded) {
                   _availablePoints = profileState.profile.loyaltyPoints;
                   return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
                     padding: const EdgeInsets.all(16),
 
                     child: Column(

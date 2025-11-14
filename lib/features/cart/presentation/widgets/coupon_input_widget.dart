@@ -137,8 +137,8 @@ class _CouponInputWidgetState extends State<CouponInputWidget> {
         }
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

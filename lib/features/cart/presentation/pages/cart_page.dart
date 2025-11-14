@@ -308,14 +308,14 @@ class _CartPageState extends State<CartPage> {
                     if (state is CartLoaded &&
                         state.loyaltyPointsRedeemed > 0) {
                       return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
+                        margin: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.orange.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
