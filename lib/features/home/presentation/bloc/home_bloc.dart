@@ -50,15 +50,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         _loadTrendingBlends(),
         _loadFeaturedRecipes(),
         _loadExpiringItems(),
+        _getReadyToSellBlends(),
       ]);
 
       final user = results[0] as UserEntity?;
       final trendingBlends = results[1] as List<PublicBlendEntity>;
       final featuredRecipes = results[2] as List<RecipeEntity>;
       final expiringItems = results[3] as List<ExpiringItemEntity>;
-
-      // Generate ready-to-sell blends (can use daily essentials API if available)
-      final readyToSellBlends = await _getReadyToSellBlends();
+      final readyToSellBlends = results[4] as List<BlendItem>;
 
       emit(
         HomeLoaded(

@@ -25,6 +25,7 @@ import 'package:one_atta/features/blends/presentation/pages/saved_blends_page.da
 import 'package:one_atta/features/customizer/presentation/pages/customizer_page.dart';
 import 'package:one_atta/features/customizer/presentation/pages/analysis_page.dart';
 import 'package:one_atta/features/home/presentation/pages/home_page.dart';
+import 'package:one_atta/features/home/presentation/pages/expiring_items_page.dart';
 import 'package:one_atta/features/orders/presentation/pages/orders_page.dart';
 import 'package:one_atta/features/reels/presentation/pages/reels_page.dart';
 import 'package:one_atta/features/recipes/presentation/pages/recipes_page.dart';
@@ -230,6 +231,11 @@ class AppRouter {
           path: '/daily-essentials-list',
           name: 'daily-essentials-list',
           builder: (context, state) => const DailyEssentialsListPage(),
+        ),
+        GoRoute(
+          path: '/expiring-items',
+          name: 'expiring-items',
+          builder: (context, state) => const ExpiringItemsPage(),
         ),
         GoRoute(
           path: '/liked-recipes',

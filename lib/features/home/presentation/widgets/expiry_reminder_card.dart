@@ -19,8 +19,8 @@ class ExpiryReminderCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // Navigate to order details
-        context.push('/order-details/${expiringItem.orderId}');
+        // Navigate to expiring items page to see all items
+        context.push('/expiring-items');
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -112,24 +112,30 @@ class ExpiryReminderCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Footer with order info
+            // Footer with action hint
             Row(
               children: [
                 Icon(
-                  Icons.shopping_bag_outlined,
+                  Icons.timer_outlined,
                   size: 14,
                   color: colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Order ID: ${expiringItem.orderId.substring(0, 8)}...',
+                  expiringItem.daysUntilExpiry == 0
+                      ? "Expiring today"
+                      : expiringItem.daysUntilExpiry == 1
+                      ? "Expiring tomorrow"
+                      : expiringItem.daysUntilExpiry < 0
+                      ? "Already expired"
+                      : 'Expiring within ${expiringItem.daysUntilExpiry} days',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  'Tap to view order',
+                  'View all items',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.primary,
                     fontWeight: FontWeight.w500,
@@ -157,7 +163,7 @@ class ExpiryReminderCard extends StatelessWidget {
   IconData _getIcon(ExpiryUrgency urgency) {
     switch (urgency) {
       case ExpiryUrgency.critical:
-        return Icons.warning_rounded;
+        return Icons.schedule_rounded;
       case ExpiryUrgency.warning:
         return Icons.schedule_rounded;
       case ExpiryUrgency.normal:
