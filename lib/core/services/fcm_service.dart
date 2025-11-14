@@ -96,7 +96,7 @@ class FCMService {
   /// Initialize local notifications plugin
   Future<void> _initializeLocalNotifications() async {
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@drawable/ic_launcher',
     );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -206,7 +206,7 @@ class FCMService {
                 'This channel is used for important notifications.',
             importance: Importance.high,
             priority: Priority.high,
-            icon: android?.smallIcon ?? '@mipmap/ic_launcher',
+            icon: android?.smallIcon ?? '@drawable/ic_launcher',
           ),
           iOS: const DarwinNotificationDetails(
             presentAlert: true,
@@ -266,7 +266,7 @@ class FCMService {
       AppRouter.router.push('/notifications');
       return;
     }
- 
+
     final action = data['action'] as String?;
 
     if (action == null) {
