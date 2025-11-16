@@ -119,7 +119,7 @@ GET /api/app/invoices?page=1&limit=10&status=paid
         "tax_type": "INTRA_STATE",
         "status": "paid",
         "payment_status": "completed",
-        "pdf_url": "/invoices/INV-1001.html",
+        "pdf_url": "/invoices/INV-1001.pdf",
         "shipment_details": {
           "awb_number": "AWB123456789",
           "courier_name": "Delhivery",
@@ -210,8 +210,8 @@ GET /api/app/invoices/673def456abc789012345678
 
 ---
 
-### 4. Download Invoice
-Get the download URL for an invoice.
+### 4. Download Invoice PDF
+Download the invoice as a PDF file. This endpoint serves the actual PDF file.
 
 **Endpoint:** `GET /api/app/invoices/:id/download`
 
@@ -221,44 +221,57 @@ GET /api/app/invoices/673def456abc789012345678/download
 ```
 
 **Response (200):**
+```
+HTTP/1.1 200 OK
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="Invoice-INV-1001.pdf"
+
+[Binary PDF Data]
+```
+
+**Alternative - Get URL Only (Preview Mode):**
+
+**Endpoint:** `GET /api/app/invoices/:id/download?preview=true`
+
+**Response (200):**
 ```json
 {
   "success": true,
   "message": "Invoice download URL retrieved",
   "data": {
     "invoice_number": "INV-1001",
-    "download_url": "/invoices/INV-1001.html",
+    "download_url": "/invoices/INV-1001.pdf",
     "pdf_generated_at": "2025-11-14T10:05:00.000Z"
   }
 }
 ```
 
-**Usage:**
+**Frontend Usage:**
 ```javascript
-// In frontend, construct full URL
-const downloadUrl = `${baseURL}${data.download_url}`;
-window.open(downloadUrl, '_blank');
+// Method 1: Direct download (recommended)
+const response = await fetch(`/api/app/invoices/${invoiceId}/download`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const blob = await response.blob();
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `invoice-${invoiceId}.pdf`;
+a.click();
+window.URL.revokeObjectURL(url);
+
+// Method 2: Get URL first (preview mode)
+const response = await fetch(`/api/app/invoices/${invoiceId}/download?preview=true`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const { data } = await response.json();
+window.open(data.download_url, '_blank');
 ```
 
----
-
-### 5. Preview Invoice
-Preview invoice HTML in browser.
-
-**Endpoint:** `GET /api/app/invoices/:id/preview`
-
-**Example Request:**
-```bash
-GET /api/app/invoices/673def456abc789012345678/preview
-```
-
-**Response:** Returns HTML content directly for browser display
-
-**Usage:**
-```javascript
-// Open in new tab
-window.open(`/api/app/invoices/${invoiceId}/preview`, '_blank');
-```
+**Notes:**
+- Default: Downloads PDF file directly
+- With `?preview=true`: Returns JSON with URL
+- Users can only download their own invoices
 
 ---
 
@@ -364,8 +377,16 @@ const response = await fetch(`/api/app/invoices/${invoiceId}/download`, {
 
 const { data } = await response.json();
 
-// Open in new window or download
+// Method 1: Open PDF in new window
 window.open(data.download_url, '_blank');
+
+// Method 2: Trigger direct download
+const link = document.createElement('a');
+link.href = data.download_url;
+link.download = `Invoice-${data.invoice_number}.pdf`;
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
 ```
 
 ### 3. Track Order from Invoice
@@ -409,13 +430,22 @@ if (invoice) {
 ```javascript
 // On order details page
 <button onClick={() => downloadInvoice(order.invoice_id)}>
-  Download Invoice
+  Download Invoice (PDF)
 </button>
 
 function downloadInvoice(invoiceId) {
   fetch(`/api/app/invoices/${invoiceId}/download`)
     .then(res => res.json())
-    .then(data => window.open(data.data.download_url));
+    .then(data => {
+      // Method 1: Open in new tab
+      window.open(data.data.download_url, '_blank');
+      
+      // Method 2: Trigger direct download
+      const link = document.createElement('a');
+      link.href = data.data.download_url;
+      link.download = `${data.data.invoice_number}.pdf`;
+      link.click();
+    });
 }
 ```
 
@@ -443,7 +473,7 @@ function trackShipment(invoiceId) {
 
 ## Invoice PDF Updates
 
-The invoice HTML/PDF now includes:
+The invoice PDF now includes:
 
 ### Shipment Tracking Section
 Located after "Amount in Words" section, displays:
@@ -489,13 +519,23 @@ Located after "Amount in Words" section, displays:
 }
 ```
 
-**Unauthorized Access:**
-```json
-{
-  "success": false,
-  "message": "Not authorized"
-}
-```
+---
+
+## Invoice File Format
+
+### PDF Generation
+- **Format:** All invoices are generated as PDF files (`.pdf`)
+- **Location:** Stored in `/public/invoices/` directory
+- **Naming:** `INV-{invoice_number}.pdf` (e.g., `INV-1001.pdf`)
+- **Download:** Direct download via URL `/invoices/INV-1001.pdf`
+- **Preview:** HTML preview available via `/api/app/invoices/:id/preview` endpoint
+
+### Key Features
+- ✅ **PDF Format:** Professional, print-ready PDF documents
+- ✅ **Downloadable:** Direct download links with proper PDF MIME type
+- ✅ **Secure:** User authentication required for access
+- ✅ **Persistent:** Files stored permanently until deleted
+- ✅ **Compatible:** Works across all devices and browsers
 
 ---
 
@@ -537,7 +577,8 @@ curl -X GET http://localhost:5000/api/app/invoices/OTHER_USER_INVOICE_ID \
 
 ### Services
 - ✅ Updated `invoiceService.js` - Fetch shipment data during invoice generation
-- ✅ Updated `pdfService.js` - Display shipment tracking in invoice HTML
+- ✅ Updated `pdfService.js` - Generate PDF files using html-pdf-node library
+- ✅ Updated `pdfService.js` - Display shipment tracking in invoice PDF
 
 ### Controllers
 - ✅ Created `app/controllers/invoiceController.js` - User-side invoice operations
@@ -549,10 +590,12 @@ curl -X GET http://localhost:5000/api/app/invoices/OTHER_USER_INVOICE_ID \
 ### Features Added
 - ✅ Admin invoices include Shiprocket tracking details
 - ✅ User can view their invoices
-- ✅ User can download their invoices
+- ✅ User can download their invoices as PDF
 - ✅ User can get tracking info from invoices
+- ✅ Invoice generates as PDF with professional formatting
 - ✅ Invoice PDF displays AWB, courier, tracking URL
 - ✅ Access control (users can only see their own invoices)
+- ✅ Direct PDF download functionality
 
 ---
 
@@ -570,13 +613,17 @@ GET    /api/admin/invoices/:id            # Invoice details with tracking
 GET    /api/app/invoices                  # List user's invoices
 GET    /api/app/invoices/:id              # Get invoice details
 GET    /api/app/invoices/order/:orderId   # Get by order ID
-GET    /api/app/invoices/:id/download     # Download invoice
-GET    /api/app/invoices/:id/preview      # Preview invoice
+GET    /api/app/invoices/:id/download     # Download invoice (PDF)
+GET    /api/app/invoices/:id/preview      # Preview invoice (HTML)
 GET    /api/app/invoices/:id/tracking     # Get tracking info
 ```
 
 ---
 
 **Status:** ✅ Complete and Ready to Use
+
+**Updated:** November 15, 2025
+
+**Latest Update:** PDF generation implemented with html-pdf-node library
 
 **Updated:** November 14, 2025

@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:developer' as developer;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:one_atta/features/notifications/domain/entities/notification_entity.dart';
 import 'package:one_atta/core/services/preferences_service.dart';
 import 'package:one_atta/core/routing/app_router.dart';
+import 'package:one_atta/core/services/file_opener_service.dart';
 
 /// Top-level function to handle background messages
 @pragma('vm:entry-point')
@@ -323,6 +325,12 @@ class FCMService {
         final id = parts.length > 1 ? parts[1] : null;
 
         switch (type) {
+          case 'file':
+            // Handle file opening
+            if (id != null) {
+              _openFile(id);
+            }
+            break;
           case 'order':
             if (id != null) {
               AppRouter.router.push('/order-details/$id');
@@ -401,6 +409,39 @@ class FCMService {
     }
   }
 
+  /// Open a file (e.g., PDF invoice)
+  Future<void> _openFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (await file.exists()) {
+        final success = await FileOpenerService.openFile(filePath);
+
+        if (success) {
+          developer.log(
+            'Successfully opened file: $filePath',
+            name: 'FCMService',
+          );
+        } else {
+          developer.log('Failed to open file', name: 'FCMService', level: 900);
+        }
+      } else {
+        developer.log(
+          'File does not exist: $filePath',
+          name: 'FCMService',
+          level: 900,
+        );
+      }
+    } catch (e, s) {
+      developer.log(
+        'Error opening file',
+        name: 'FCMService',
+        level: 1000,
+        error: e,
+        stackTrace: s,
+      );
+    }
+  }
+
   /// Create notification entity from remote message
   NotificationEntity _createNotificationEntity(RemoteMessage message) {
     return NotificationEntity(
@@ -454,6 +495,48 @@ class FCMService {
       name: 'FCMService',
     );
     _navigateFromNotification(data);
+  }
+
+  /// Show a custom local notification (e.g., for invoice download)
+  Future<void> showCustomNotification({
+    required String title,
+    required String body,
+    String? payload,
+    int? id,
+  }) async {
+    try {
+      await _localNotifications.show(
+        id ?? DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            channelDescription:
+                'This channel is used for important notifications.',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@drawable/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: payload,
+      );
+      developer.log('Custom notification shown: $title', name: 'FCMService');
+    } catch (e, s) {
+      developer.log(
+        'Error showing custom notification',
+        name: 'FCMService',
+        level: 1000,
+        error: e,
+        stackTrace: s,
+      );
+    }
   }
 
   /// Dispose resources

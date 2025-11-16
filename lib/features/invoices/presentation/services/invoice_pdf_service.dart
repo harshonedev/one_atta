@@ -5,7 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 
 class InvoicePdfService {
-  /// Download invoice file from URL
+  /// Download invoice PDF from URL
   static Future<String?> downloadInvoiceAsPdf({
     required String invoiceUrl,
     required String invoiceNumber,
@@ -19,30 +19,60 @@ class InvoicePdfService {
         }
       }
 
-      // Fetch HTML content from URL
-      debugPrint('Downloading invoice from: $invoiceUrl');
+      // Fetch PDF content from URL
+      debugPrint('Downloading invoice PDF from: $invoiceUrl');
       final response = await http.get(Uri.parse(invoiceUrl));
 
       if (response.statusCode != 200) {
         throw Exception('Failed to download invoice: ${response.statusCode}');
       }
 
-      // Get the file content
+      // Get the PDF file content as bytes
       final fileContent = response.bodyBytes;
       debugPrint(
-        'Invoice downloaded successfully (${fileContent.length} bytes)',
+        'Invoice PDF downloaded successfully (${fileContent.length} bytes)',
       );
 
-      // Save file to device (as HTML since backend provides HTML)
+      // Save PDF file to device
       final filePath = await _saveFile(
         fileData: fileContent,
         fileName:
-            'Invoice_${invoiceNumber}_${DateTime.now().millisecondsSinceEpoch}.html',
+            'Invoice_${invoiceNumber}_${DateTime.now().millisecondsSinceEpoch}.pdf',
       );
 
       return filePath;
     } catch (e) {
       debugPrint('Error downloading invoice: $e');
+      rethrow;
+    }
+  }
+
+  /// Download invoice PDF directly from bytes
+  static Future<String?> saveInvoicePdfFromBytes({
+    required Uint8List pdfBytes,
+    required String invoiceNumber,
+  }) async {
+    try {
+      // Request storage permission for Android
+      if (Platform.isAndroid) {
+        final status = await _requestStoragePermission();
+        if (!status) {
+          throw Exception('Storage permission denied');
+        }
+      }
+
+      debugPrint('Saving invoice PDF (${pdfBytes.length} bytes)');
+
+      // Save PDF file to device
+      final filePath = await _saveFile(
+        fileData: pdfBytes,
+        fileName:
+            'Invoice_${invoiceNumber}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+
+      return filePath;
+    } catch (e) {
+      debugPrint('Error saving invoice PDF: $e');
       rethrow;
     }
   }
@@ -115,8 +145,8 @@ class InvoicePdfService {
         throw Exception('PDF file not found');
       }
 
-      // Use url_launcher or platform-specific intent to open PDF
-      // This is handled in the UI layer
+      // File exists and can be opened by system PDF viewer
+      // The actual opening is handled in the UI layer using url_launcher or similar
     } catch (e) {
       debugPrint('Error opening PDF: $e');
       rethrow;

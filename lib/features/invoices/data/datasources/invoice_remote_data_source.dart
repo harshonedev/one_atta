@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/error/exceptions.dart';
 import 'package:one_atta/core/network/api_request.dart';
@@ -6,6 +9,7 @@ import 'package:one_atta/features/invoices/data/models/invoice_model.dart';
 abstract class InvoiceRemoteDataSource {
   Future<InvoiceModel> getInvoiceByOrderId(String orderId);
   Future<String> getInvoiceDownloadUrl(String invoiceId);
+  Future<Uint8List> downloadInvoicePdf(String invoiceId);
   Future<ShipmentDetailsModel> getTrackingDetails(String invoiceId);
 }
 
@@ -37,20 +41,50 @@ class InvoiceRemoteDataSourceImpl implements InvoiceRemoteDataSource {
   Future<String> getInvoiceDownloadUrl(String invoiceId) async {
     final response = await apiRequest.callRequest(
       method: HttpMethod.get,
-      url: '${ApiEndpoints.invoices}/$invoiceId/download',
+      url: '${ApiEndpoints.invoices}/$invoiceId/download?preview=true',
       token: token,
     );
 
     return switch (response) {
       ApiSuccess(:final data) => () {
         final downloadUrl = data['data']['download_url'] as String;
-        // Convert relative URL to absolute URL
+        // Convert relative URL to absolute URL if needed
+        if (downloadUrl.startsWith('http')) {
+          return downloadUrl;
+        }
         return 'https://api.oneatta.com$downloadUrl';
       }(),
       ApiError(:final failure) => throw ServerException(
         message: failure.message,
       ),
     };
+  }
+
+  @override
+  Future<Uint8List> downloadInvoicePdf(String invoiceId) async {
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        '${ApiEndpoints.invoices}/$invoiceId/download',
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/pdf',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return Uint8List.fromList(response.data);
+      } else {
+        throw ServerException(
+          message: 'Failed to download PDF: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      throw ServerException(message: 'Error downloading PDF: ${e.toString()}');
+    }
   }
 
   @override

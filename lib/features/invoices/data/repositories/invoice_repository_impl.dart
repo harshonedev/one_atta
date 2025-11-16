@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dartz/dartz.dart';
 import 'package:one_atta/core/error/exceptions.dart';
 import 'package:one_atta/core/error/failures.dart';
@@ -49,6 +51,22 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     try {
       final tracking = await remoteDataSource.getTrackingDetails(invoiceId);
       return Right(tracking);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Uint8List>> downloadInvoicePdf(
+    String invoiceId,
+  ) async {
+    try {
+      final pdfBytes = await remoteDataSource.downloadInvoicePdf(invoiceId);
+      return Right(pdfBytes);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on NetworkException catch (e) {

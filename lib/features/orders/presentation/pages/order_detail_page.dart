@@ -9,7 +9,6 @@ import 'package:one_atta/features/orders/domain/entities/order_entity.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_event.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_state.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import 'package:one_atta/core/constants/constants.dart';
 import 'package:one_atta/core/network/api_request.dart';
@@ -17,7 +16,7 @@ import 'package:one_atta/features/invoices/data/datasources/invoice_remote_data_
 import 'package:one_atta/features/invoices/data/repositories/invoice_repository_impl.dart';
 import 'package:one_atta/features/invoices/presentation/services/invoice_pdf_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
+import 'package:one_atta/core/services/fcm_service.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
@@ -104,8 +103,12 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                     filePath,
                   );
 
-                  // Show dialog with options
-                  _showInvoiceDownloadedDialog(filePath, readablePath);
+                  // Show notification instead of dialog
+                  await _showInvoiceDownloadedNotification(
+                    filePath,
+                    readablePath,
+                    invoice.invoiceNumber,
+                  );
                 } else {
                   if (!mounted) return;
                   SnackbarUtils.showError(
@@ -135,82 +138,31 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
   }
 
-  void _showInvoiceDownloadedDialog(String filePath, String readablePath) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Future<void> _showInvoiceDownloadedNotification(
+    String filePath,
+    String readablePath,
+    String invoiceNumber,
+  ) async {
+    try {
+      // Get FCM service instance
+      final fcmService = FCMService();
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        icon: Icon(
-          Icons.check_circle_outline,
-          color: Colors.green.shade600,
-          size: 48,
-        ),
-        title: const Text('Invoice Downloaded!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your invoice has been saved to:',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.5,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.folder_outlined,
-                    size: 20,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      readablePath,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Close'),
-          ),
-          FilledButton.icon(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              // Open PDF file
-              final file = File(filePath);
-              if (await file.exists()) {
-                final uri = Uri.file(filePath);
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } else {
-                  if (!mounted) return;
-                  SnackbarUtils.showError(context, 'Cannot open PDF file');
-                }
-              }
-            },
-            icon: const Icon(Icons.open_in_new),
-            label: const Text('Open Invoice'),
-          ),
-        ],
-      ),
-    );
+      // Show notification with file path as payload
+      await fcmService.showCustomNotification(
+        title: 'Invoice Downloaded',
+        body: 'Tap to open $invoiceNumber',
+        payload: 'file:$filePath',
+      );
+
+      // Show success snackbar
+      if (!mounted) return;
+      SnackbarUtils.showSuccess(context, 'Invoice saved to $readablePath');
+    } catch (e) {
+      debugPrint('Error showing notification: $e');
+      // Fallback to snackbar if notification fails
+      if (!mounted) return;
+      SnackbarUtils.showSuccess(context, 'Invoice downloaded successfully');
+    }
   }
 
   @override
