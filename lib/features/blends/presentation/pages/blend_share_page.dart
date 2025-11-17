@@ -320,6 +320,17 @@ class _BlendShareViewState extends State<BlendShareView> {
                                   ),
                             ),
                             Text(
+                              '(Inclusive of all taxes)',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
                               'Best before ${blend.expiryDays} days',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(

@@ -325,6 +325,15 @@ class _DailyEssentialDetailsPageState extends State<DailyEssentialDetailsPage> {
                       ],
                     ),
 
+                    const SizedBox(height: 4),
+                    Text(
+                      '(Inclusive of all taxes)',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+
                     const SizedBox(height: 8),
 
                     // Stock status
