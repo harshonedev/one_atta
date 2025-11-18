@@ -51,7 +51,7 @@ class OrdersList extends StatelessWidget {
       buildWhen: (previous, current) {
         return current is OrdersLoading ||
             current is OrdersLoaded ||
-            current is OrderError;
+            current is OrdersError;
       },
       builder: (context, state) {
         if (state is OrdersLoading) {
@@ -120,7 +120,7 @@ class OrdersList extends StatelessWidget {
                       size: 80,
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -153,7 +153,7 @@ class OrdersList extends StatelessWidget {
               itemBuilder: (context, index) {
                 final order = filteredOrders[index];
                 return OrderCard(
-                  order: order, // TODO: Get actual total count from API
+                  order: order,
                   onTap: () {
                     context.push('/order-details/${order.id}');
                   },

@@ -37,11 +37,12 @@ x-api-key: <mobile_api_key>
 ## Table of Contents
 1. [Order Creation](#1-create-order)
 2. [Order Retrieval](#2-get-order-details)
-3. [Order Management](#4-cancel-order)
-4. [Order History](#3-get-user-orders)
-5. [Status Reference](#order-status-values)
-6. [Error Handling](#error-handling)
-7. [Integration Guide](#integration-guide)
+3. [Order History](#3-get-user-orders)
+4. [Order Tracking](#4-track-order)
+5. [Cancel Order](#5-cancel-order)
+6. [Status Reference](#order-status-values)
+7. [Error Handling](#error-handling)
+8. [Integration Guide](#integration-guide)
 
 ---
 
@@ -292,7 +293,7 @@ GET /api/app/orders/user/507f1f77bcf86cd799439010?status=delivered&page=1&limit=
 ### 4. Cancel Order
 **DELETE** `/api/app/orders/:id`
 
-Cancel a pending order. Only orders in `pending` status can be cancelled by users.
+Cancel a pending order. **Only orders in `pending` status (before admin acceptance) can be cancelled by users.** The cancel button should only be displayed for orders with `pending` status.
 
 **Path Parameters:**
 - `id` (string, required): Order ID
@@ -465,9 +466,10 @@ Get order summary statistics for the authenticated user.
 
 ### Business Rules
 1. **Order Cancellation**:
-   - Users can only cancel orders in `pending` status
-   - Orders in `processing` or later stages require admin intervention
-   - Cancellation after admin acceptance may have penalties
+   - **UI Rule**: Only show cancel button for orders with `pending` status
+   - Users can only cancel orders in `pending` status (before admin acceptance)
+   - Once order is `accepted`, `processing`, or later stages, cancel button must be hidden
+   - Orders after acceptance require admin intervention for cancellation
 
 2. **Pricing Rules**:
    - Prices are locked at order creation time
@@ -483,11 +485,11 @@ Get order summary statistics for the authenticated user.
 
 | Status | Description | User Actions Available |
 |--------|-------------|------------------------|
-| `pending` | Order placed, awaiting admin review | Cancel order |
-| `accepted` | Admin approved order | View details |
-| `processing` | Order being prepared for shipment | View details, track |
-| `shipped` | Order shipped, in transit | Track shipment |
-| `delivered` | Order delivered successfully | View details, reorder |
+| `pending` | Order placed, awaiting admin review | **Show Cancel Button** |
+| `accepted` | Admin approved order | View details (No Cancel) |
+| `processing` | Order being prepared for shipment | View details, track (No Cancel) |
+| `shipped` | Order shipped, in transit | Track shipment (No Cancel) |
+| `delivered` | Order delivered successfully | View details, reorder (No Cancel) |
 | `cancelled` | Order cancelled by user/admin | View details |
 | `rejected` | Order rejected by admin with reason | View details, reorder |
 
@@ -667,11 +669,12 @@ curl -X GET "https://api.yourapp.com/api/app/orders/user/507f1f77bcf86cd79943901
 
 **Cancel Order:**
 ```bash
-curl -X DELETE "https://api.yourapp.com/api/app/orders/507f1f77bcf86cd799439014" \
+curl -X POST "https://api.yourapp.com/api/app/orders/507f1f77bcf86cd799439014/cancel" \
   -H "Authorization: Bearer your_jwt_token" \
   -H "x-api-key: your_api_key" \
+  -H "Content-Type: application/json" \
   -d '{
-    "reason": "Changed my mind"
+    "cancellation_reason": "Changed my mind"
   }'
 ```
 
@@ -731,8 +734,155 @@ class OrderService {
 
 ## Frequently Asked Questions
 
+### 5. Cancel Order
+**POST** `/orders/:id/cancel`
+
+**UI Implementation**: Display the cancel button **only** when `order.status === 'pending'`. Once the order status changes to `accepted` or any other status, the cancel button must be hidden.
+
+Cancel a pending order. Only orders in `pending` status (before admin acceptance) can be cancelled by users. Automatically handles:
+- Loyalty points reversal (earned points deducted, redeemed points refunded)
+- Refund record creation for prepaid orders
+- Share points reversal for blend creators
+- Push notification to user
+
+**URL Parameters:**
+- `id`: Order ID (required)
+
+**Request Headers:**
+```
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "cancellation_reason": "Changed my mind" // Optional
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Order cancelled successfully",
+  "data": {
+    "order": {
+      "_id": "507f1f77bcf86cd799439014",
+      "status": "cancelled",
+      "payment_status": "refunded"
+    },
+    "refund": {
+      "_id": "507f1f77bcf86cd799439020",
+      "amount": 1500,
+      "status": "pending",
+      "created_at": "2025-11-18T10:30:00.000Z"
+    },
+    "loyalty": {
+      "points_reversed": 15,
+      "points_redeemed_refunded": 100
+    }
+  }
+}
+```
+
+**Error Responses:**
+
+**400 Bad Request - Cannot Cancel:**
+```json
+{
+  "success": false,
+  "message": "Order cannot be cancelled. Current status: shipped"
+}
+```
+
+**404 Not Found:**
+```json
+{
+  "success": false,
+  "message": "Order not found"
+}
+```
+
+**Cancellation Rules:**
+
+✅ **Show Cancel Button & Can Cancel:**
+- Orders with status: `pending` (before admin accepts)
+
+❌ **Hide Cancel Button & Cannot Cancel:**
+- Orders with status: `accepted`, `processing`, `shipped`, `delivered`, `cancelled`, `rejected`
+- **Important**: Once admin accepts the order (status changes from `pending` to `accepted`), the cancel button must be immediately hidden from the UI
+
+**What Happens When You Cancel:**
+
+1. **Loyalty Points Reversal**
+   - ORDER points (earned): Deducted from your account
+   - REDEEM points (used for discount): Refunded to your account
+   - SHARE points (blend creators): Reversed from creators
+
+2. **Refund Processing** (Prepaid Orders Only)
+   - Refund record created automatically
+   - Status: `pending`
+   - Admin will process the refund
+   - You'll receive notifications on refund status
+
+3. **Order Status Update**
+   - Status changed to `cancelled`
+   - Payment status changed to `refunded` (if prepaid)
+
+4. **Notifications**
+   - Push notification sent with cancellation confirmation
+   - Refund amount and loyalty points information included
+
+**Example Usage:**
+
+```javascript
+// UI Implementation - Show cancel button only for pending orders
+const shouldShowCancelButton = (order) => {
+  return order.status === 'pending';
+};
+
+// Cancel order
+const cancelOrder = async (orderId, reason) => {
+  try {
+    const response = await fetch(`/api/app/orders/${orderId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        cancellation_reason: reason
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Show success message
+      if (result.data.refund) {
+        console.log(`Refund of ₹${result.data.refund.amount} is being processed`);
+      }
+      if (result.data.loyalty.points_redeemed_refunded > 0) {
+        console.log(`${result.data.loyalty.points_redeemed_refunded} loyalty points refunded`);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to cancel order:', error);
+  }
+};
+```
+
+**Important Notes:**
+- COD orders: No refund record created (payment not received)
+- Prepaid orders: Refund record created, admin processes refund
+- All operations are transaction-safe (automatic rollback on failure)
+- Cannot cancel after admin has accepted the order
+
+---
+
 ### Q: Can users modify orders after creation?
-A: No, orders cannot be modified after creation. Users can only cancel pending orders or create a new reorder with modifications.
+A: No, orders cannot be modified after creation. Users can only cancel pending orders (before admin acceptance) or create a new order with modifications.
 
 ### Q: What happens if a product price changes after order creation?
 A: The order locks in prices at creation time. Price changes do not affect existing orders.

@@ -162,6 +162,11 @@ import 'package:one_atta/features/orders/data/repositories/order_repository_impl
 import 'package:one_atta/features/orders/domain/repositories/order_repository.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_bloc.dart';
 
+// Refunds
+import 'package:one_atta/features/refunds/data/datasources/refund_remote_data_source.dart';
+import 'package:one_atta/features/refunds/data/repositories/refund_repository_impl.dart';
+import 'package:one_atta/features/refunds/domain/repositories/refund_repository.dart';
+
 // Network
 import 'package:one_atta/core/network/network_info.dart';
 import 'package:one_atta/core/network/network_info_impl.dart';
@@ -401,7 +406,9 @@ Future<void> init() async {
 
   //! Features - Orders
   // BLoC
-  sl.registerFactory(() => OrderBloc(orderRepository: sl()));
+  sl.registerFactory(
+    () => OrderBloc(orderRepository: sl(), refundRepository: sl()),
+  );
 
   // Repository
   sl.registerLazySingleton<OrderRepository>(
@@ -415,6 +422,21 @@ Future<void> init() async {
   // Data sources
   sl.registerLazySingleton<OrderRemoteDataSource>(
     () => OrderRemoteDataSourceImpl(apiRequest: sl()),
+  );
+
+  //! Features - Refunds
+  // Repository
+  sl.registerLazySingleton<RefundRepository>(
+    () => RefundRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+      authLocalDataSource: sl(),
+    ),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<RefundRemoteDataSource>(
+    () => RefundRemoteDataSourceImpl(apiRequest: sl()),
   );
 
   //! Network

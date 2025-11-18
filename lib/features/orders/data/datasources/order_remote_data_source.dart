@@ -25,11 +25,7 @@ abstract class OrderRemoteDataSource {
     int limit = 20,
   });
 
-  Future<OrderModel> cancelOrder(
-    String token,
-    String orderId, {
-    String? reason,
-  });
+  Future<bool> cancelOrder(String token, String orderId, {String? reason});
 
   Future<Map<String, dynamic>> trackOrder(String token, String orderId);
 

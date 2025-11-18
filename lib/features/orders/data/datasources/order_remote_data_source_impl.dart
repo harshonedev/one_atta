@@ -156,22 +156,24 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   }
 
   @override
-  Future<OrderModel> cancelOrder(
+  Future<bool> cancelOrder(
     String token,
     String orderId, {
     String? reason,
   }) async {
     final response = await apiRequest.callRequest(
-      method: HttpMethod.delete,
-      url: '${ApiEndpoints.orders}/$orderId',
+      method: HttpMethod.post,
+      url: '${ApiEndpoints.orders}/$orderId/cancel',
       token: token,
-      data: {'reason': reason},
+      data: reason != null ? {'cancellation_reason': reason} : null,
     );
 
     return switch (response) {
       ApiSuccess() =>
-        response.data['success'] == true
-            ? OrderModel.fromJson(response.data['data'])
+        response.data['success'] == true &&
+                response.data['data'] != null &&
+                response.data['data']['order']['status'] == 'cancelled'
+            ? true
             : throw ServerException(
                 message: response.data['message'] ?? 'Failed to cancel order',
               ),

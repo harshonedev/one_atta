@@ -18,6 +18,7 @@ class ApiEndpoints {
   static const String appSettings = '$baseUrl/app-settings';
   static const String contact = '$baseUrl/contact';
   static const String invoices = '$baseUrl/invoices';
+  static const String refunds = '$baseUrl/refunds';
 }
 
 class AppConstants {

@@ -52,7 +52,8 @@ enum LoyaltyTransactionReason {
   review('REVIEW'),
   redeem('REDEEM'),
   bonus('BONUS'),
-  referral('REFERRAL');
+  referral('REFERRAL'),
+  refund('REFUND');
 
   const LoyaltyTransactionReason(this.value);
   final String value;
@@ -78,6 +79,8 @@ enum LoyaltyTransactionReason {
         return 'Bonus Points';
       case LoyaltyTransactionReason.referral:
         return 'Referral Reward';
+      case LoyaltyTransactionReason.refund:
+        return 'Order Refund';
     }
   }
 }

@@ -224,7 +224,6 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     );
   }
 
-
   Widget _buildEmptyState(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -319,39 +318,52 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
               ],
             ),
             const SizedBox(height: 16),
-            ...LoyaltyTransactionReason.values.map(
-              (reason) => ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _getReasonColor(reason).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    _getTransactionIcon(reason),
-                    color: _getReasonColor(reason),
-                    size: 20,
-                  ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...LoyaltyTransactionReason.values.map(
+                      (reason) => ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _getReasonColor(
+                              reason,
+                            ).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            _getTransactionIcon(reason),
+                            color: _getReasonColor(reason),
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          reason.displayName,
+                          style: textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        trailing: _selectedFilter == reason
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: colorScheme.primary,
+                              )
+                            : null,
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = _selectedFilter == reason
+                                ? null
+                                : reason;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                title: Text(
-                  reason.displayName,
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                trailing: _selectedFilter == reason
-                    ? Icon(
-                        Icons.check_circle_rounded,
-                        color: colorScheme.primary,
-                      )
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedFilter = _selectedFilter == reason ? null : reason;
-                  });
-                  Navigator.of(context).pop();
-                },
               ),
             ),
             const SizedBox(height: 16),
@@ -385,6 +397,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         return Icons.card_giftcard_rounded;
       case LoyaltyTransactionReason.referral:
         return Icons.people_rounded;
+      case LoyaltyTransactionReason.refund:
+        return Icons.money_off_rounded;
     }
   }
 
@@ -402,6 +416,8 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         return Colors.orange;
       case LoyaltyTransactionReason.referral:
         return Colors.blue;
+      case LoyaltyTransactionReason.refund:
+        return Colors.deepOrange;
     }
   }
 }

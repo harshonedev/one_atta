@@ -17,6 +17,7 @@ import 'package:one_atta/features/invoices/data/repositories/invoice_repository_
 import 'package:one_atta/features/invoices/presentation/services/invoice_pdf_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_atta/core/services/fcm_service.dart';
+import 'package:one_atta/features/refunds/domain/entities/refund_entity.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
@@ -33,7 +34,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Load the specific order
+    // Load the specific order (refund data will be loaded automatically by BLoC)
     context.read<OrderBloc>().add(LoadOrder(widget.orderId));
   }
 
@@ -177,6 +178,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         title: Text('Order Details'),
       ),
       body: BlocBuilder<OrderBloc, OrderState>(
+        buildWhen: (previous, current) {
+          return current is OrderLoading ||
+              current is OrderLoaded ||
+              current is OrderError;
+        },
         builder: (context, state) {
           if (state is OrderLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -192,7 +198,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           }
 
           if (state is OrderLoaded) {
-            return _buildOrderDetails(context, state.order);
+            return _buildOrderDetails(context, state.order, state.refund);
           }
 
           // Try to find order from OrdersLoaded state
@@ -201,7 +207,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               final order = state.orders.firstWhere(
                 (o) => o.id == widget.orderId,
               );
-              return _buildOrderDetails(context, order);
+              return _buildOrderDetails(context, order, null);
             } catch (e) {
               // Order not found in the list
               return _buildErrorView(
@@ -258,13 +264,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
-  Widget _buildOrderDetails(BuildContext context, OrderEntity order) {
+  Widget _buildOrderDetails(
+    BuildContext context,
+    OrderEntity order,
+    RefundEntity? refund,
+  ) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildOrderHeader(context, order),
           _buildOrderStatus(context, order),
+          // Show refund info for cancelled/rejected orders
+          if ((order.status == 'cancelled' || order.status == 'rejected') &&
+              order.paymentMethod != 'COD' &&
+              refund != null)
+            _buildRefundInfo(context, order, refund),
           _buildOrderItems(context, order),
           _buildDeliveryAddress(context, order),
           _buildPriceBreakdown(context, order),
@@ -973,6 +988,236 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
+  Widget _buildRefundInfo(
+    BuildContext context,
+    OrderEntity order,
+    RefundEntity refund,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    MaterialColor statusColor;
+    IconData statusIcon;
+    String statusText;
+
+    switch (refund.status.toLowerCase()) {
+      case 'completed':
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        statusText = 'Completed';
+        break;
+      case 'processing':
+        statusColor = Colors.orange;
+        statusIcon = Icons.hourglass_empty;
+        statusText = 'Processing';
+        break;
+      case 'pending':
+        statusColor = Colors.grey;
+        statusIcon = Icons.schedule;
+        statusText = 'Pending';
+        break;
+      case 'failed':
+        statusColor = Colors.red;
+        statusIcon = Icons.error;
+        statusText = 'Failed';
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusIcon = Icons.info;
+        statusText = refund.status;
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.account_balance_wallet,
+                color: Colors.blue.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Refund Information',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(statusIcon, size: 16, color: statusColor.shade700),
+              const SizedBox(width: 6),
+              Text(
+                'Status: $statusText',
+                style: textTheme.labelLarge?.copyWith(
+                  color: statusColor.shade700,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildRefundRow(
+            'Refund Amount',
+            '₹${refund.amount.toStringAsFixed(2)}',
+            textTheme,
+            colorScheme,
+            valueColor: Colors.blue.shade700,
+            isBold: true,
+          ),
+          const SizedBox(height: 8),
+          _buildRefundRow(
+            'Refund Method',
+            _getRefundMethodText(refund.refundMethod),
+            textTheme,
+            colorScheme,
+          ),
+          if (refund.originalPaymentMethod != null) ...[
+            const SizedBox(height: 8),
+            _buildRefundRow(
+              'Original Payment',
+              refund.originalPaymentMethod!,
+              textTheme,
+              colorScheme,
+            ),
+          ],
+          if (refund.transactionReference != null) ...[
+            const SizedBox(height: 8),
+            _buildRefundRow(
+              'Transaction Ref',
+              refund.transactionReference!,
+              textTheme,
+              colorScheme,
+            ),
+          ],
+          if (refund.loyaltyPointsReversed != null &&
+              refund.loyaltyPointsReversed! > 0) ...[
+            const SizedBox(height: 8),
+            _buildRefundRow(
+              'Atta Points Deducted',
+              '${refund.loyaltyPointsReversed} pts',
+              textTheme,
+              colorScheme,
+              valueColor: Colors.red.shade700,
+            ),
+          ],
+          if (refund.loyaltyPointsRedeemedRefunded != null &&
+              refund.loyaltyPointsRedeemedRefunded! > 0) ...[
+            const SizedBox(height: 8),
+            _buildRefundRow(
+              'Atta Points Refunded',
+              '${refund.loyaltyPointsRedeemedRefunded} pts',
+              textTheme,
+              colorScheme,
+              valueColor: Colors.green.shade700,
+            ),
+          ],
+          if (refund.completedAt != null) ...[
+            const SizedBox(height: 8),
+            _buildRefundRow(
+              'Completed At',
+              DateFormat('dd MMM yyyy, hh:mm a').format(refund.completedAt!),
+              textTheme,
+              colorScheme,
+            ),
+          ],
+          if (refund.failureReason != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 16,
+                    color: Colors.red.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      refund.failureReason!,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRefundRow(
+    String label,
+    String value,
+    TextTheme textTheme,
+    ColorScheme colorScheme, {
+    Color? valueColor,
+    bool isBold = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Text(
+            label,
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: textTheme.bodySmall?.copyWith(
+              color: valueColor ?? colorScheme.onSurface,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getRefundMethodText(String method) {
+    switch (method.toLowerCase()) {
+      case 'original_payment_method':
+        return 'Original Payment Method';
+      case 'wallet':
+        return 'Wallet';
+      case 'bank_transfer':
+        return 'Bank Transfer';
+      case 'upi':
+        return 'UPI';
+      default:
+        return method;
+    }
+  }
+
   Widget _buildActionButtons(BuildContext context, OrderEntity order) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -1006,7 +1251,8 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             ),
             const SizedBox(height: 12),
           ],
-          if (order.status == 'pending' || order.status == 'accepted') ...[
+          // Only show cancel button for pending orders (before admin acceptance)
+          if (order.status == 'pending') ...[
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -1032,6 +1278,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('Cancel Order'),
         content: const Text(
           'Are you sure you want to cancel this order? This action cannot be undone.',
@@ -1049,7 +1296,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 context,
                 'Order cancelled successfully',
               );
-              Navigator.pop(context);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Yes, Cancel'),

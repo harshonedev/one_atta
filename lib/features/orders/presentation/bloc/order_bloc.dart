@@ -2,11 +2,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:one_atta/features/orders/domain/repositories/order_repository.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_event.dart';
 import 'package:one_atta/features/orders/presentation/bloc/order_state.dart';
+import 'package:one_atta/features/refunds/domain/repositories/refund_repository.dart';
 
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final OrderRepository orderRepository;
+  final RefundRepository refundRepository;
 
-  OrderBloc({required this.orderRepository}) : super(OrderInitial()) {
+  OrderBloc({required this.orderRepository, required this.refundRepository})
+    : super(OrderInitial()) {
     on<LoadOrder>(_onLoadOrder);
     on<LoadUserOrders>(_onLoadUserOrders);
     on<CancelOrder>(_onCancelOrder);
@@ -18,9 +21,26 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     emit(OrderLoading());
 
     final result = await orderRepository.getOrderById(event.orderId);
-    result.fold(
-      (failure) => emit(OrderError(failure.message, failure: failure)),
-      (order) => emit(OrderLoaded(order)),
+
+    await result.fold(
+      (failure) async => emit(OrderError(failure.message, failure: failure)),
+      (order) async {
+        // Load refund data if order is cancelled or rejected and not COD
+        if ((order.status == 'cancelled' || order.status == 'rejected') &&
+            order.paymentMethod != 'COD') {
+          final refundResult = await refundRepository.getRefundByOrderId(
+            event.orderId,
+          );
+
+          refundResult.fold(
+            (failure) =>
+                emit(OrderLoaded(order)), // Emit without refund on error
+            (refund) => emit(OrderLoaded(order, refund: refund)),
+          );
+        } else {
+          emit(OrderLoaded(order));
+        }
+      },
     );
   }
 
@@ -36,7 +56,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     );
 
     result.fold(
-      (failure) => emit(OrderError(failure.message, failure: failure)),
+      (failure) => emit(OrdersError(failure.message, failure: failure)),
       (orders) => emit(
         OrdersLoaded(
           orders: orders,
@@ -52,6 +72,12 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     CancelOrder event,
     Emitter<OrderState> emit,
   ) async {
+    if (state is! OrderLoaded) {
+      return;
+    }
+
+    final currentState = state as OrderLoaded;
+
     emit(OrderLoading());
 
     final result = await orderRepository.cancelOrder(
@@ -61,8 +87,17 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     result.fold(
       (failure) => emit(OrderError(failure.message, failure: failure)),
-      (order) => emit(OrderCancelled(order)),
+      (isCancelled) {
+        if (isCancelled) {
+          final updatedOrder = currentState.order.copyWith(status: 'cancelled');
+          emit(OrderCancelled(updatedOrder));
+        } else {
+          emit(OrderError('Failed to cancel the order'));
+        }
+      },
     );
+
+    add(LoadOrder(event.orderId));
   }
 
   Future<void> _onReorderOrder(

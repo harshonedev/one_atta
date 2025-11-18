@@ -25,10 +25,7 @@ abstract class OrderRepository {
     int limit = 20,
   });
 
-  Future<Either<Failure, OrderEntity>> cancelOrder(
-    String orderId, {
-    String? reason,
-  });
+  Future<Either<Failure, bool>> cancelOrder(String orderId, {String? reason});
 
   Future<Either<Failure, OrderEntity>> reorder(
     String originalOrderId, {

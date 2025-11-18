@@ -6,6 +6,7 @@ import 'package:one_atta/features/notifications/presentation/bloc/notification_b
 import 'package:one_atta/features/notifications/presentation/bloc/notification_event.dart';
 import 'package:one_atta/features/notifications/presentation/bloc/notification_state.dart';
 import 'package:one_atta/features/notifications/domain/entities/notification_entity.dart';
+import 'package:go_router/go_router.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -158,11 +159,52 @@ class _NotificationsPageState extends State<NotificationsPage> {
     BuildContext context,
     NotificationEntity notification,
   ) {
-    // TODO: Handle navigation based on notification type
-    // Example:
-    // if (notification.type == 'order') {
-    //   context.go('/orders/${notification.data?['orderId']}');
-    // }
+    // Don't navigate if there's no data or if it would navigate to notifications
+    if (notification.data == null || notification.data!.isEmpty) {
+      return; // Just mark as read, don't navigate
+    }
+
+    final action = notification.data?['action'] as String?;
+
+    if (action == null) {
+      return; // Just mark as read, don't navigate
+    }
+
+    // Handle navigation based on action type, but skip if it's notifications-related
+    switch (action.toLowerCase()) {
+      case 'view_order':
+      case 'order_update':
+      case 'order_delivered':
+      case 'order_cancelled':
+        final orderId =
+            notification.data?['order_id'] as String? ??
+            notification.data?['orderId'] as String?;
+        if (orderId != null) {
+          context.push('/order-details/$orderId');
+        } else {
+          context.push('/orders');
+        }
+        break;
+
+      case 'loyalty_points_earned':
+      case 'blend_share_points_earned':
+        context.push('/rewards');
+        break;
+
+      case 'view_expiring_items':
+        context.push('/expiring-items');
+        break;
+
+      case 'general':
+      case 'announcement':
+      case 'promotional':
+        // These are informational notifications, don't navigate
+        return;
+
+      default:
+        // For unknown actions, don't navigate
+        return;
+    }
   }
 }
 

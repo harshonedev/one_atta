@@ -287,6 +287,8 @@ class OrderCard extends StatelessWidget {
         return Icons.schedule;
       case 'failed':
         return Icons.error;
+      case 'refunded':
+        return Icons.account_balance_wallet;
       default:
         return Icons.info;
     }
@@ -300,6 +302,8 @@ class OrderCard extends StatelessWidget {
         return Colors.orange.shade700;
       case 'failed':
         return Colors.red.shade700;
+      case 'refunded':
+        return Colors.blue.shade700;
       default:
         return Colors.grey.shade700;
     }
@@ -313,6 +317,8 @@ class OrderCard extends StatelessWidget {
         return 'Payment Pending';
       case 'failed':
         return 'Payment Failed';
+      case 'refunded':
+        return 'Refunded';
       default:
         return paymentStatus;
     }

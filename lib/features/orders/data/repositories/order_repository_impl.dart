@@ -112,7 +112,7 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Future<Either<Failure, OrderEntity>> cancelOrder(
+  Future<Either<Failure, bool>> cancelOrder(
     String orderId, {
     String? reason,
   }) async {
@@ -122,12 +122,12 @@ class OrderRepositoryImpl implements OrderRepository {
         if (token == null) {
           return Left(ServerFailure('Authentication required'));
         }
-        final orderModel = await remoteDataSource.cancelOrder(
+        final isCancelled = await remoteDataSource.cancelOrder(
           token,
           orderId,
           reason: reason,
         );
-        return Right(orderModel);
+        return Right(isCancelled);
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
       } catch (e) {

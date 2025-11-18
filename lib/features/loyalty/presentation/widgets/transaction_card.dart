@@ -165,6 +165,8 @@ class TransactionCard extends StatelessWidget {
         return Icons.card_giftcard_rounded;
       case LoyaltyTransactionReason.referral:
         return Icons.people_rounded;
+      case LoyaltyTransactionReason.refund:
+        return Icons.money_rounded;
     }
   }
 }
