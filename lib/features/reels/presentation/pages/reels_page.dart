@@ -23,9 +23,6 @@ class _ReelsPageState extends State<ReelsPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    // Load initial reels
-    context.read<ReelsBloc>().add(RefreshReelsFromServer());
-
     // Hide status bar for immersive experience
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
   }

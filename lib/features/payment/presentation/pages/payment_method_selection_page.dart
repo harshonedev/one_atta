@@ -203,18 +203,6 @@ class _PaymentMethodSelectionPageState
                       ),
                       const SizedBox(height: 16),
 
-                      // COD Option
-                      _buildSimplePaymentMethodTile(
-                        type: 'COD',
-                        name: 'Cash on Delivery',
-                        description: 'Pay with cash when your order arrives',
-                        icon: Icons.money,
-                        iconColor: Colors.green,
-                        isSelected: _selectedPaymentType == 'COD',
-                      ),
-
-                      const SizedBox(height: 12),
-
                       // Prepaid Option (Razorpay)
                       _buildSimplePaymentMethodTile(
                         type: 'Razorpay',
@@ -223,6 +211,18 @@ class _PaymentMethodSelectionPageState
                         icon: Icons.account_balance_wallet,
                         iconColor: Colors.purple,
                         isSelected: _selectedPaymentType == 'Razorpay',
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // COD Option
+                      _buildSimplePaymentMethodTile(
+                        type: 'COD',
+                        name: 'Cash on Delivery',
+                        description: 'Pay with cash when your order arrives',
+                        icon: Icons.money,
+                        iconColor: Colors.green,
+                        isSelected: _selectedPaymentType == 'COD',
                       ),
 
                       // Delivery Instructions
