@@ -92,85 +92,87 @@ class _AnalysisPageState extends State<AnalysisPage> {
           ),
         ),
       ),
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<CartBloc, CartState>(
-            listener: (context, cartState) {
-              // Check if current saved blend is in cart
-              if (cartState is CartLoaded) {
-                final customizerState = context.read<CustomizerBloc>().state;
-                if (customizerState.savedBlend != null) {
-                  final isInCart = cartState.cart.items.any(
-                    (item) => item.productId == customizerState.savedBlend!.id,
-                  );
-                  if (isInCart != _hasItemInCart) {
-                    setState(() {
-                      _hasItemInCart = isInCart;
-                    });
+      body: SafeArea(
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<CartBloc, CartState>(
+              listener: (context, cartState) {
+                // Check if current saved blend is in cart
+                if (cartState is CartLoaded) {
+                  final customizerState = context.read<CustomizerBloc>().state;
+                  if (customizerState.savedBlend != null) {
+                    final isInCart = cartState.cart.items.any(
+                      (item) => item.productId == customizerState.savedBlend!.id,
+                    );
+                    if (isInCart != _hasItemInCart) {
+                      setState(() {
+                        _hasItemInCart = isInCart;
+                      });
+                    }
                   }
                 }
+              },
+            ),
+          ],
+          child: BlocConsumer<CustomizerBloc, CustomizerState>(
+            listener: (context, state) {
+              if (state.error != null) {
+                SnackbarUtils.showError(context, state.error!);
+              }
+              if (state.savedBlend != null) {
+                SnackbarUtils.showSuccess(context, 'Blend saved successfully!');
+              }
+        
+              // Handle add to cart after save
+              if (state.savedBlend != null &&
+                  !state.isSaving &&
+                  state.error == null) {
+                // Check if this was triggered by SaveBlendAndAddToCart
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    _checkAndAddToCartIfPending(context, state.savedBlend!);
+                  }
+                });
               }
             },
+            builder: (context, state) {
+              if (state.isAnalyzing) {
+                return const _AnalyzingLoader();
+              }
+        
+              if (state.analysisResult == null) {
+                return const Center(child: Text('No analysis data available.'));
+              }
+        
+              final analysis = state.analysisResult!;
+        
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _NutritionalInfoCard(analysis: analysis),
+                    const SizedBox(height: 24),
+                    _RotiCharacteristicsCard(analysis: analysis),
+                    const SizedBox(height: 24),
+                    _HealthBenefitsCard(analysis: analysis),
+                    const SizedBox(height: 24),
+                    _AllergensCard(analysis: analysis),
+                    const SizedBox(height: 24),
+                    _SuitabilityNotesCard(analysis: analysis),
+                    const SizedBox(height: 24),
+                    _DisclaimerCard(),
+                    const SizedBox(height: 32),
+                    _ActionButtonsSection(
+                      isSaving: state.isSaving,
+                      hasItemInCart: _hasItemInCart,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              );
+            },
           ),
-        ],
-        child: BlocConsumer<CustomizerBloc, CustomizerState>(
-          listener: (context, state) {
-            if (state.error != null) {
-              SnackbarUtils.showError(context, state.error!);
-            }
-            if (state.savedBlend != null) {
-              SnackbarUtils.showSuccess(context, 'Blend saved successfully!');
-            }
-
-            // Handle add to cart after save
-            if (state.savedBlend != null &&
-                !state.isSaving &&
-                state.error == null) {
-              // Check if this was triggered by SaveBlendAndAddToCart
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  _checkAndAddToCartIfPending(context, state.savedBlend!);
-                }
-              });
-            }
-          },
-          builder: (context, state) {
-            if (state.isAnalyzing) {
-              return const _AnalyzingLoader();
-            }
-
-            if (state.analysisResult == null) {
-              return const Center(child: Text('No analysis data available.'));
-            }
-
-            final analysis = state.analysisResult!;
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _NutritionalInfoCard(analysis: analysis),
-                  const SizedBox(height: 24),
-                  _RotiCharacteristicsCard(analysis: analysis),
-                  const SizedBox(height: 24),
-                  _HealthBenefitsCard(analysis: analysis),
-                  const SizedBox(height: 24),
-                  _AllergensCard(analysis: analysis),
-                  const SizedBox(height: 24),
-                  _SuitabilityNotesCard(analysis: analysis),
-                  const SizedBox(height: 24),
-                  _DisclaimerCard(),
-                  const SizedBox(height: 32),
-                  _ActionButtonsSection(
-                    isSaving: state.isSaving,
-                    hasItemInCart: _hasItemInCart,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            );
-          },
         ),
       ),
     );

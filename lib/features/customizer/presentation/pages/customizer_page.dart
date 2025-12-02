@@ -47,7 +47,7 @@ class _CustomizerPageState extends State<CustomizerPage> {
           return Scaffold(
             backgroundColor: Theme.of(context).colorScheme.surface,
             appBar: _buildAppBar(context),
-            body: _buildBody(context, state),
+            body: SafeArea(child: _buildBody(context, state)),
           );
         },
       ),
