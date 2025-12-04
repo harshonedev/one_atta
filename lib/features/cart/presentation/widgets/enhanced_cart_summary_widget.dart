@@ -15,6 +15,9 @@ class EnhancedCartSummaryWidget extends StatelessWidget {
   final double? loyaltyDiscount;
   final double? savingsTotal;
   final double? toPayTotal;
+  final double? codCharges;
+  final bool? isAddressSelected;
+  final bool? isDeliveryLoaded;
 
   const EnhancedCartSummaryWidget({
     super.key,
@@ -28,6 +31,9 @@ class EnhancedCartSummaryWidget extends StatelessWidget {
     this.loyaltyDiscount,
     this.savingsTotal,
     this.toPayTotal,
+    this.codCharges,
+    this.isAddressSelected,
+    this.isDeliveryLoaded,
   });
 
   @override
@@ -65,12 +71,31 @@ class EnhancedCartSummaryWidget extends StatelessWidget {
             ),
 
             // Delivery Fee
-            _buildSummaryRow(
-              context,
-              'Delivery Fee',
-              delFee == 0 ? 'FREE' : '₹${delFee.toStringAsFixed(2)}',
-              isDeliveryFree: deliveryFee == 0,
-            ),
+            if (isAddressSelected == true && isDeliveryLoaded == true)
+              _buildSummaryRow(
+                context,
+                'Delivery Fee',
+                delFee == 0 ? 'FREE' : '₹${delFee.toStringAsFixed(2)}',
+                isDeliveryFree: deliveryFee == 0,
+              )
+            else
+              _buildSummaryRow(
+                context,
+                'Delivery Fee',
+                'Yet to be calculated',
+                isInfo: true,
+              ),
+
+            // COD Charges (only shown when address selected and delivery loaded)
+            if (isAddressSelected == true &&
+                isDeliveryLoaded == true &&
+                codCharges != null &&
+                codCharges! > 0)
+              _buildSummaryRow(
+                context,
+                'COD Charges',
+                '₹${codCharges!.toStringAsFixed(2)}',
+              ),
 
             // Coupon Discount
             if (appliedCoupon != null && coupDiscount > 0) ...[
@@ -144,6 +169,7 @@ class EnhancedCartSummaryWidget extends StatelessWidget {
     String value, {
     bool isDiscount = false,
     bool isDeliveryFree = false,
+    bool isInfo = false,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -166,7 +192,10 @@ class EnhancedCartSummaryWidget extends StatelessWidget {
                   ? Colors.green
                   : isDeliveryFree
                   ? Colors.green
+                  : isInfo
+                  ? Colors.orange.shade700
                   : Theme.of(context).colorScheme.onSurface,
+              fontStyle: isInfo ? FontStyle.italic : null,
             ),
           ),
         ],

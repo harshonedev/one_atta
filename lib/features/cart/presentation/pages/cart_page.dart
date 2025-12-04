@@ -420,28 +420,46 @@ class _CartPageState extends State<CartPage> {
 
                 // Cart Summary
                 BlocBuilder<CartBloc, CartState>(
-                  builder: (context, state) {
-                    if (state is CartLoaded) {
-                      return EnhancedCartSummaryWidget(
-                        cartItems: cartItems,
-                        appliedCoupon: state.appliedCoupon,
-                        loyaltyPointsRedeemed: state.loyaltyPointsRedeemed,
-                        mrpTotal: state.mrpTotal,
-                        itemTotal: state.itemTotal,
-                        deliveryFee: state.deliveryFee,
-                        couponDiscount: state.couponDiscount,
-                        loyaltyDiscount: state.loyaltyDiscount,
-                        savingsTotal: state.savingsTotal,
-                        toPayTotal: state.toPayTotal,
-                      );
-                    } else {
-                      // Fallback to using the EnhancedCartSummaryWidget's own calculations
-                      return EnhancedCartSummaryWidget(
-                        cartItems: cartItems,
-                        appliedCoupon: null,
-                        loyaltyPointsRedeemed: 0,
-                      );
-                    }
+                  builder: (context, cartState) {
+                    return BlocBuilder<DeliveryBloc, DeliveryState>(
+                      builder: (context, deliveryState) {
+                        if (cartState is CartLoaded) {
+                          final isAddressSelected =
+                              cartState.selectedAddress != null;
+                          final isDeliveryLoaded =
+                              deliveryState is DeliveryLoaded;
+                          final codCharges = deliveryState is DeliveryLoaded
+                              ? deliveryState.codCharges
+                              : null;
+
+                          return EnhancedCartSummaryWidget(
+                            cartItems: cartItems,
+                            appliedCoupon: cartState.appliedCoupon,
+                            loyaltyPointsRedeemed:
+                                cartState.loyaltyPointsRedeemed,
+                            mrpTotal: cartState.mrpTotal,
+                            itemTotal: cartState.itemTotal,
+                            deliveryFee: cartState.deliveryFee,
+                            couponDiscount: cartState.couponDiscount,
+                            loyaltyDiscount: cartState.loyaltyDiscount,
+                            savingsTotal: cartState.savingsTotal,
+                            toPayTotal: cartState.toPayTotal,
+                            codCharges: codCharges,
+                            isAddressSelected: isAddressSelected,
+                            isDeliveryLoaded: isDeliveryLoaded,
+                          );
+                        } else {
+                          // Fallback to using the EnhancedCartSummaryWidget's own calculations
+                          return EnhancedCartSummaryWidget(
+                            cartItems: cartItems,
+                            appliedCoupon: null,
+                            loyaltyPointsRedeemed: 0,
+                            isAddressSelected: false,
+                            isDeliveryLoaded: false,
+                          );
+                        }
+                      },
+                    );
                   },
                 ),
               ],
