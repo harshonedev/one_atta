@@ -281,10 +281,10 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     return totalPercentage >= (1.0 - tolerance);
   }
 
-  void _onShowCapacityExceededSnackbar(
+  Future<void> _onShowCapacityExceededSnackbar(
     ShowCapacityExceededSnackbar event,
     Emitter<CustomizerState> emit,
-  ) {
+  ) async {
     emit(
       state.copyWith(
         error: 'Blend over capacity! Remove ingredients or reduce percentages.',
@@ -292,7 +292,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     );
 
     // Clear the error message after a delay
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    await Future.delayed(const Duration(milliseconds: 2000), () {
       if (!isClosed) {
         emit(state.copyWith(clearError: true));
       }
@@ -306,7 +306,7 @@ class CustomizerBloc extends Bloc<CustomizerEvent, CustomizerState> {
     emit(state.copyWith(isAnalyzing: true, clearError: true));
 
     final start = DateTime.now();
-    const minDuration = Duration(seconds: 8); // ensure animation visible
+    const minDuration = Duration(seconds: 5); // ensure animation visible
 
     BlendAnalysisEntity? successfulAnalysis;
     String? failureMessage;

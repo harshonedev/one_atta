@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -79,6 +78,82 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
   @override
   Widget build(BuildContext context) {
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<CartBloc, CartState>(
+          listener: (context, cartState) {
+            // Check if current saved blend is in cart
+            if (cartState is CartLoaded) {
+              final customizerState = context.read<CustomizerBloc>().state;
+              if (customizerState.savedBlend != null) {
+                final isInCart = cartState.cart.items.any(
+                  (item) => item.productId == customizerState.savedBlend!.id,
+                );
+                if (isInCart != _hasItemInCart) {
+                  setState(() {
+                    _hasItemInCart = isInCart;
+                  });
+                }
+              }
+            }
+          },
+        ),
+      ],
+      child: BlocConsumer<CustomizerBloc, CustomizerState>(
+        listener: (context, state) {
+          if (state.error != null) {
+            SnackbarUtils.showError(context, state.error!);
+          }
+          if (state.savedBlend != null) {
+            SnackbarUtils.showSuccess(context, 'Blend saved successfully!');
+          }
+
+          // Handle add to cart after save
+          if (state.savedBlend != null &&
+              !state.isSaving &&
+              state.error == null) {
+            // Check if this was triggered by SaveBlendAndAddToCart
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _checkAndAddToCartIfPending(context, state.savedBlend!);
+              }
+            });
+          }
+        },
+        builder: (context, state) {
+          if (state.isAnalyzing) {
+            return const _AnalyzingLoader();
+          }
+
+          if (state.analysisResult == null) {
+            return const Center(child: Text('No analysis data available.'));
+          }
+
+          final analysis = state.analysisResult!;
+
+          return _AnalysisResult(
+            analysis: analysis,
+            hasItemInCart: _hasItemInCart,
+            isSaving: state.isSaving,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AnalysisResult extends StatelessWidget {
+  final BlendAnalysisEntity analysis;
+  final bool hasItemInCart;
+  final bool isSaving;
+  const _AnalysisResult({
+    required this.analysis,
+    required this.hasItemInCart,
+    required this.isSaving,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
@@ -93,85 +168,29 @@ class _AnalysisPageState extends State<AnalysisPage> {
         ),
       ),
       body: SafeArea(
-        child: MultiBlocListener(
-          listeners: [
-            BlocListener<CartBloc, CartState>(
-              listener: (context, cartState) {
-                // Check if current saved blend is in cart
-                if (cartState is CartLoaded) {
-                  final customizerState = context.read<CustomizerBloc>().state;
-                  if (customizerState.savedBlend != null) {
-                    final isInCart = cartState.cart.items.any(
-                      (item) => item.productId == customizerState.savedBlend!.id,
-                    );
-                    if (isInCart != _hasItemInCart) {
-                      setState(() {
-                        _hasItemInCart = isInCart;
-                      });
-                    }
-                  }
-                }
-              },
-            ),
-          ],
-          child: BlocConsumer<CustomizerBloc, CustomizerState>(
-            listener: (context, state) {
-              if (state.error != null) {
-                SnackbarUtils.showError(context, state.error!);
-              }
-              if (state.savedBlend != null) {
-                SnackbarUtils.showSuccess(context, 'Blend saved successfully!');
-              }
-        
-              // Handle add to cart after save
-              if (state.savedBlend != null &&
-                  !state.isSaving &&
-                  state.error == null) {
-                // Check if this was triggered by SaveBlendAndAddToCart
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    _checkAndAddToCartIfPending(context, state.savedBlend!);
-                  }
-                });
-              }
-            },
-            builder: (context, state) {
-              if (state.isAnalyzing) {
-                return const _AnalyzingLoader();
-              }
-        
-              if (state.analysisResult == null) {
-                return const Center(child: Text('No analysis data available.'));
-              }
-        
-              final analysis = state.analysisResult!;
-        
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _NutritionalInfoCard(analysis: analysis),
-                    const SizedBox(height: 24),
-                    _RotiCharacteristicsCard(analysis: analysis),
-                    const SizedBox(height: 24),
-                    _HealthBenefitsCard(analysis: analysis),
-                    const SizedBox(height: 24),
-                    _AllergensCard(analysis: analysis),
-                    const SizedBox(height: 24),
-                    _SuitabilityNotesCard(analysis: analysis),
-                    const SizedBox(height: 24),
-                    _DisclaimerCard(),
-                    const SizedBox(height: 32),
-                    _ActionButtonsSection(
-                      isSaving: state.isSaving,
-                      hasItemInCart: _hasItemInCart,
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              );
-            },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NutritionalInfoCard(analysis: analysis),
+              const SizedBox(height: 24),
+              _RotiCharacteristicsCard(analysis: analysis),
+              const SizedBox(height: 24),
+              _HealthBenefitsCard(analysis: analysis),
+              const SizedBox(height: 24),
+              _AllergensCard(analysis: analysis),
+              const SizedBox(height: 24),
+              _SuitabilityNotesCard(analysis: analysis),
+              const SizedBox(height: 24),
+              _DisclaimerCard(),
+              const SizedBox(height: 32),
+              _ActionButtonsSection(
+                isSaving: isSaving,
+                hasItemInCart: hasItemInCart,
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
@@ -762,279 +781,24 @@ class _CharacteristicRow extends StatelessWidget {
       ],
     );
   }
-} // Animated analyzing loader mimicking grain particles falling into a bag
+}
 
-class _AnalyzingLoader extends StatefulWidget {
+// Full-screen GIF animation loader
+class _AnalyzingLoader extends StatelessWidget {
   const _AnalyzingLoader();
 
   @override
-  State<_AnalyzingLoader> createState() => _AnalyzingLoaderState();
-}
-
-class _AnalyzingLoaderState extends State<_AnalyzingLoader>
-    with TickerProviderStateMixin {
-  final GlobalKey _bagKey = GlobalKey();
-  late AnimationController _spawnController; // loops to spawn particles
-  late AnimationController _fallController; // drives particle fall curve
-  final List<_AnalyzeParticle> _particles = [];
-  final Random _random = Random();
-  static const int _maxParticles = 90; // performance cap
-
-  static final List<IconData> _ingredientIcons = [
-    MdiIcons.seed,
-    MdiIcons.corn,
-    MdiIcons.barley,
-    MdiIcons.grain,
-    MdiIcons.seedOutline,
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _spawnController =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 800),
-        )..addStatusListener((status) {
-          if (status == AnimationStatus.completed) {
-            _spawnController.forward(from: 0); // loop
-          }
-        });
-    _fallController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
-    _spawnController.forward();
-    _fallController.repeat();
-    _scheduleParticleSpawn();
-  }
-
-  void _scheduleParticleSpawn() async {
-    // periodically add particles
-    Future.doWhile(() async {
-      if (!mounted) return false;
-      _addParticles(batch: 4 + _random.nextInt(4));
-      await Future.delayed(const Duration(milliseconds: 220));
-      return mounted;
-    });
-  }
-
-  void _addParticles({int batch = 5}) {
-    final renderBox = _bagKey.currentContext?.findRenderObject() as RenderBox?;
-    final bagPos = renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
-    final bagSize = renderBox?.size ?? const Size(120, 120);
-    if (renderBox == null) return; // wait until bag laid out
-    setState(() {
-      if (_particles.length >= _maxParticles) return;
-      final allowed = min(batch, _maxParticles - _particles.length);
-      for (int i = 0; i < allowed; i++) {
-        final icon = _ingredientIcons[_random.nextInt(_ingredientIcons.length)];
-        final screenWidth = MediaQuery.of(context).size.width;
-        final bagCenterX = bagPos.dx + bagSize.width / 2;
-        // Start anywhere across screen width for a uniform rain
-        final startX = _random.nextDouble() * screenWidth;
-        final startY = -60.0 - _random.nextDouble() * 80.0; // higher start
-        // Converge towards bag center with mild jitter
-        final endOffset = Offset(
-          bagCenterX + (_random.nextDouble() * 48 - 24),
-          bagPos.dy + bagSize.height * 0.12, // just inside top of bag
-        );
-        final startOffset = Offset(startX, startY);
-        _particles.add(
-          _AnalyzeParticle(
-            key: UniqueKey(),
-            startOffset: startOffset,
-            endOffset: endOffset,
-            controller: _fallController,
-            icon: icon,
-            onDone: (k) {
-              if (mounted) {
-                setState(() {
-                  _particles.removeWhere((p) => p.key == k);
-                });
-              }
-            },
-          ),
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _spawnController.dispose();
-    _fallController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return Stack(
-      children: [
-        Align(
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: 220,
-                width: 220,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Falling particles
-                    ..._particles,
-                    // Bag image centered bottom
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        key: _bagKey,
-                        height: 130,
-                        width: 130,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        clipBehavior: Clip.none,
-                        child: Image.asset(
-                          'assets/images/wheat_bag.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Analyzing your blend...',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Estimating nutrition & characteristics',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: 140,
-                child: LinearProgressIndicator(
-                  minHeight: 6,
-                  borderRadius: BorderRadius.circular(4),
-                  color: color,
-                ),
-              ),
-            ],
-          ),
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      child: Center(
+        child: Image.asset(
+          'assets/anim/one-atta-anim.gif',
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
         ),
-      ],
-    );
-  }
-}
-
-class _AnalyzeParticle extends StatefulWidget {
-  final Offset startOffset;
-  final Offset endOffset;
-  final AnimationController controller;
-  final void Function(Key) onDone;
-  final IconData icon;
-
-  const _AnalyzeParticle({
-    required Key key,
-    required this.startOffset,
-    required this.endOffset,
-    required this.controller,
-    required this.onDone,
-    required this.icon,
-  }) : super(key: key);
-
-  @override
-  State<_AnalyzeParticle> createState() => _AnalyzeParticleState();
-}
-
-class _AnalyzeParticleState extends State<_AnalyzeParticle> {
-  late Animation<double> _progress;
-  late double _startX;
-  late double _startY;
-  final Random _rand = Random();
-  late double _swayAmp;
-  late double _size;
-  late Color _color;
-  bool _resolved = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _progress = CurvedAnimation(
-      parent: widget.controller,
-      curve: Interval(
-        _rand.nextDouble() * 0.5,
-        0.9 + _rand.nextDouble() * 0.1,
-        curve: Curves.easeIn,
       ),
-    );
-    // Defer inherited + startOffset usage until didChangeDependencies
-    _startX = 0;
-    _startY = 0;
-    _swayAmp = 10 + _rand.nextDouble() * 18;
-    _size = 14 + _rand.nextDouble() * 6; // icon size
-    _color = Colors.amber; // temporary until resolved
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_resolved) {
-      _startX = widget.startOffset.dx;
-      _startY = widget.startOffset.dy;
-      final scheme = Theme.of(context).colorScheme;
-      final seed = _rand.nextInt(3);
-      _color = [
-        scheme.primary,
-        scheme.secondary,
-        scheme.tertiaryContainer,
-      ][seed].withValues(alpha: 0.85);
-      _resolved = true;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _progress,
-      builder: (context, _) {
-        final t = _progress.value;
-        if (t >= 1.0) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            widget.onDone(widget.key!);
-          });
-        }
-        final easeT = Curves.easeIn.transform(t);
-        final dx = _startX + sin(t * pi * 2) * _swayAmp;
-        final dy = _startY + (widget.endOffset.dy - _startY) * easeT;
-        final fade = (1 - t).clamp(0.0, 1.0);
-        return Positioned(
-          left: dx,
-          top: dy,
-          child: Opacity(
-            opacity: fade,
-            child: Icon(
-              widget.icon,
-              size: _size,
-              color: _color,
-              shadows: [
-                Shadow(color: _color.withValues(alpha: 0.4), blurRadius: 4),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
